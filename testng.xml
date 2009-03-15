@@ -1,0 +1,7 @@
+<suite name="knockoff" verbose="1">
+	<test name="knockoff">
+		<packages>
+            <package name="com.tristanhunt.knockoff" />
+		</packages>
+	</test>
+</suite>
