@@ -3,6 +3,69 @@ package com.tristanhunt.knockoff
 import util.parsing.combinator.JavaTokenParsers
 
 /**
+ * At the very end, we have Text contents that are made out of spans.
+ */
+trait Nad {
+    def value:String
+}
+
+trait Spanned extends Nad {
+    
+    def span:Seq[Nad]
+    
+    override def value:String = {
+        val sb = StringBuilder
+        span.foreach(sb.append(_.value)).append(' ')
+        sb.toString
+    }
+}
+
+case class Text(val value:String) extends Nad
+
+/**
+ * Note that this should generally parse, but we only basically match until we find the closing tag.
+ * This means that when you break into HTML, you do it the entire way, because no entitizing will
+ * be done on the content.
+ */ 
+case class HTML(val value:String) extends Nad
+
+/**
+ * This is a standard link; use a ReferenceLink for the [value][ref] format.
+ */
+abstract case class AbstractLink(val span:Seq[Nad], val url:String, val title:String)
+extends Spanned with Nad {
+    
+    assume(span != null)
+    assume(url != null)
+    assume(title != null)
+}
+
+class Link(span:Seq[Nad], url:String, title:String) extends AbtractLink(span, url, title) {
+    
+    def this(span:Seq[Nad], url:String) = this(span, url, "")
+}
+
+case class LinkDefinition(span:Seq[Nad], url:String, title:String)
+extends AbstractLink(value, url, title) {
+    
+    def this(span:Seq[Nad], url:String) = this(span, url, "")
+}
+
+case class ImageLink(span:Seq[Nad], url:String, title:String)
+extends AbstractLink(value, url, title) {
+
+    def this(span:Seq[Nad], url:String) = this(span, url, "")
+}
+
+case class ReferenceLink(val span:Seq[Nad], val reference:String) extends Nad {
+    
+    assume(span != null)
+    assume(reference != null)
+}
+
+
+
+/**
  * A nad is a markdown, er, node. You can get a list of them from a markdown document, which allow
  * you to then, like, mess around with them and shit.
  *
@@ -19,11 +82,11 @@ trait Block {
 /**
  * Whitespace or whatever that is completely insignificant to the HTML generated.
  */
-case class EmptySpace(
-    val markdown:String)
-extends Block {
+case class EmptySpace(val markdown:String) extends Block
+
+case class TextBlock(val markdown:String) extends Block {
+    
 }
-case class TextBlock(val markdown:String) extends Block
 
 case class Header(val markdown:String, val level:Int) extends Block
 
@@ -66,7 +129,6 @@ case class NumberedListBlock(val items:Seq[String]) extends MarkdownList with Bl
         sb.toString
     }
 }
-
 
 /**
  * Should be used at the start to identify block elements. We use empty lines to identify block
