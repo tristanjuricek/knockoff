@@ -12,24 +12,26 @@ extends JavaTokenParsers {
 
 }
 
-
-
-
-
-
-
-
+/**
+ * A Markdown-like parser implementation that returns an object model capable of being easily 
+ * translated into, well, some kind of markup document.
+ *
+ * @author Tristan Juricek <mr.tristan@gmail.com>
+ */
 object KnockOff {
  
+    /**
+     * Return
+     */
     def parse(src:String):Option[List[Block]] = {
         
         // Replace tabs with 4 spaces.
         val src2 = src.replace("\t", "    ")
        
         val blockParser = new BlockParser
-        val blocks = blockParser.parseAll(blockParser.markdownDocument, src2) match {
+        blockParser.parseAll(blockParser.markdownDocument, src2) match {
 
-            case blockParser.Success(list, _) => Some(list).get
+            case blockParser.Success(list, _) => Some(_condenseSpacedLists(blocks, Nil))
 
             case fail:blockParser.Failure => {
                 println(fail.toString)
@@ -38,12 +40,12 @@ object KnockOff {
             
             case _ => return None
         }
-        
-        // TODO condense any sequential lists.
-        Some(_condense(blocks, Nil))
     }
     
-    private def _condense(in:List[Block], out:List[Block]):List[Block] = {
+    /**
+     * Special rule to group any lists that were separated by whitespace, because it is an option.
+     */
+    private def _condenseSpacedLists(in:List[Block], out:List[Block]):List[Block] = {
         
         if (in.isEmpty) {
             return out
