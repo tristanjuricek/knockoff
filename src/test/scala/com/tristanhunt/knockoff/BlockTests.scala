@@ -82,17 +82,11 @@ class BlockTests {
      <span>To HTML</span>
 </div>"""
 
-        val actual:List[Block] = KnockOff.parse(src) match {
-            case Some(list) => list
-            case None => {
-                fail("src not parsed: " + src)
-                null
-            }
-        }
+        val actual:List[Block] = KnockOff.parse(src).get
         
-        val expected = List(TextBlock("  a text block\n"), HTMLBlock("""<div>
-     <span>To HTML</span>
-</div>"""))
+        val expected = List(
+            TextBlock("  a text block\n"),
+            HTMLBlock("<div>\n     <span>To HTML</span>\n</div>"))
 
         assertTrue(expected sameElements actual)
     }
@@ -234,15 +228,15 @@ Perhaps some commands:
 
         val expected = List(
             Header("Code Block", 1),
-            CodeBlock("""    <html>
-        <head></head>
-        <body></body>
-    </html>
+            CodeBlock("""<html>
+    <head></head>
+    <body></body>
+</html>
 """),
             TextBlock("Perhaps some commands:\n"),
-            CodeBlock("""     $ Command one
-    
-     ./ a line!
+            CodeBlock(""" $ Command one
+
+ ./ a line!
 """))
 
         assertTrue(actual sameElements expected)
@@ -276,4 +270,46 @@ __________"""
         assertTrue(actual sameElements expected)
     }
 
+    def linkDefinition = {
+     
+        val src = """
+This is a link definition
+
+[An ID] http://example.com/foo?bar=bat
+
+[An ID] http://example.com/foo?bar=bat "Basic "Title" Link"
+[An ID]    http://example.com/foo?bar=bat 
+    "Basic "Title" Link2"
+
+Some variations:
+
+ [1] http://example.com
+
+  [2] http://example.com 'title'
+   [3] http://google.com (why not?)
+
+    [4] http://code.example.com (Yeah, this is not a link)
+"""
+
+//
+
+        val actual:List[Block] = KnockOff.parse(src).get
+        
+        val expected = List(
+            TextBlock("This is a link definition\n"),
+            LinkDefinitionList(List(
+                LinkDefinition("An ID", "http://example.com/foo?bar=bat", ""))),
+            LinkDefinitionList(List(
+                LinkDefinition("An ID", "http://example.com/foo?bar=bat", """Basic "Title" Link"""),
+                LinkDefinition("An ID", "http://example.com/foo?bar=bat", """Basic "Title" Link2"""))),
+            TextBlock("Some variations:\n"),
+            LinkDefinitionList(List(
+                LinkDefinition("1", "http://example.com", ""))),
+            LinkDefinitionList(List(
+                LinkDefinition("2", "http://example.com", "title"),
+                LinkDefinition("3", "http://google.com", "why not?"))),
+            CodeBlock("[4] http://code.example.com (Yeah, this is not a link)\n"))
+        
+        assertTrue(actual sameElements expected)
+    }
 }

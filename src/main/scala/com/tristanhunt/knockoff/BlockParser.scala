@@ -7,9 +7,12 @@ import util.parsing.combinator._
  * elements solely. (Thus, the rule to allow list items to also appear in the same list is applied
  * elsewhere in a second pass.)
  *
+ * TODO: Need to add the link reference line, and, the current BlockElements are actually 
+ * intermediate stages. Meh.
+ *
  * @author Tristan Juricek <juricek@emarsys.com>
  */
-protected class BlockParser
+class BlockParser
 extends RegexParsers {
     
     /**
@@ -24,8 +27,8 @@ extends RegexParsers {
     def markdownDocument:Parser[List[Block]]  = repsep(thing, emptyLine)
     
     def thing:Parser[Block] =
-        (codeBlock | horizontalRule | listBlock | header | htmlBlock | blockquote | textBlock) ^^
-            (d => d.asInstanceOf[Block])
+        (codeBlock | horizontalRule | listBlock | header | linkDefinition | htmlBlock |
+            blockquote | textBlock) ^^ (d => d.asInstanceOf[Block])
 
     /**
      * Text lines need to retain their newlines. The user can use "hard" formatting with newlines,
@@ -37,10 +40,12 @@ extends RegexParsers {
     /**
      * We don't actually parse HTML, just assume the simple rule of "if it looks like markup, you
      * intended it to be markup". At least until there's some blank space.
+     *
+     * NOTE: We need to avoid the <http://fancy.link> automatic link interface here.
      */
     def htmlBlock:Parser[HTMLBlock]     = htmlLine~rep(textLine)    ^^ (p => HTMLBlock(_concatTextBlocks(p._1 :: p._2)))
-    def htmlLine:Parser[TextBlock]      = """<.*\n?""".r            ^^ (str => TextBlock(str))
-
+    def htmlLine:Parser[TextBlock]      = """<[ ]*[\w="]*[ ]*\n?""".r            ^^ (str => TextBlock(str))
+    
     /**
      * For some reason, this groups bullet lists broken with an empty line into a single list...
      */
@@ -92,10 +97,34 @@ extends RegexParsers {
         rep1(indentedLine) ^^ (list => CodeBlock(_concatTextBlocks(list)))
         
     def indentedLine:Parser[TextBlock] =
-        "    "~(textLine | emptyLine) ^^ (tup => TextBlock(tup._1 + tup._2.markdown))
+        "    "~>(textLine | emptyLine) ^^ (v => TextBlock(v.markdown))
         
     def horizontalRule:Parser[HorizontalRule] =
         """[*\-_][ ]?[*\-_][ ]?[*\-_][ *\-_]*\n?""".r ^^ (rule => HorizontalRule(rule))
+    
+    def linkDefinition:Parser[LinkDefinitionList] = rep1(linkDefinitionItem) ^^ (list => LinkDefinitionList(list))
+    
+    def linkDefinitionItem:Parser[LinkDefinition] = linkBase~opt(linkTitle)<~"""[ ]*\n""".r ^^ (
+        parser => parser._2 match {
+            case Some(title)    => LinkDefinition(parser._1._1, parser._1._2, title)
+            case None           => LinkDefinition(parser._1._1, parser._1._2, "")
+        })
+            
+    def linkBase:Parser[(String,String)] =
+        """[ ]{0,3}\[[^\[\]]*\][ ]+[\w\p{Punct}]+""".r ^^ (str => _readLinkBase(str))
+    
+    def linkTitle:Parser[String] = """\s*""".r~>"""["'(].*["')]""".r ^^
+        (str => str.substring(1, str.length - 1))
+
+    /**
+     * Cheap way of grouping the linkBase regex result. I find this to be an ugly solution.
+     */
+    private def _readLinkBase(str:String):(String,String) = {
+        val regex = new util.matching.Regex("""^\[([^\[\]]+)\][ ]+([\w\p{Punct}]+)$""")
+        val mtch = regex.findFirstMatchIn(str.trim).get
+        (mtch.group(1), mtch.group(2))
+    }
+    
     
     /**
      * Combine hard-wrapped lines together into single blocks.

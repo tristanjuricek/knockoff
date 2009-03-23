@@ -2,20 +2,12 @@ package com.tristanhunt.knockoff
 
 import util.parsing.combinator._
 
-
-/**
- * Ugh. Each span is first broken up by the HTML finder thingy. We then parse each subsection
- * as being not HTML with the span parser.
- */
-class SpanParser
-extends JavaTokenParsers {
-
-}
-
 /**
  * A Markdown-like parser implementation that returns an object model capable of being easily 
  * translated into, well, some kind of markup document.
  *
+ * TODO Use KnockOff to replace stupid HTML in online documentation.
+ * 
  * @author Tristan Juricek <mr.tristan@gmail.com>
  */
 object KnockOff {
@@ -31,7 +23,7 @@ object KnockOff {
         val blockParser = new BlockParser
         blockParser.parseAll(blockParser.markdownDocument, src2) match {
 
-            case blockParser.Success(list, _) => Some(_condenseSpacedLists(blocks, Nil))
+            case blockParser.Success(list, _) => Some(_trim(_condenseSpacedLists(list, Nil)))
 
             case fail:blockParser.Failure => {
                 println(fail.toString)
@@ -40,6 +32,21 @@ object KnockOff {
             
             case _ => return None
         }
+    }
+    
+    /**
+     * Remove empty TextBlocks from the beginning and end.
+     */
+    private def _trim(list:List[Block]):List[Block] = {
+        
+        def nonEmptyBlock(b:Block):Boolean =
+            b.isInstanceOf[TextBlock] == false || b.asInstanceOf[TextBlock].markdown.length > 0
+    
+        val start = list findIndexOf nonEmptyBlock
+    
+        val end = list.length - (list.reverse findIndexOf nonEmptyBlock)
+        
+        list.slice(start, end)
     }
     
     /**
@@ -57,9 +64,9 @@ object KnockOff {
                 case NumberedListBlock(outItems)        => NumberedListBlock(outItems ++ in.head.asInstanceOf[MarkdownList].items)
                 case _ => error("Unknown MarkdownList Class: " + out.head.getClass)
             }
-            return _condense(in.tail, out.dropRight(1) + condensed)
+            return _condenseSpacedLists(in.tail, out.dropRight(1) + condensed)
         }
         
-        return _condense(in.tail, out + in.head)
+        return _condenseSpacedLists(in.tail, out + in.head)
     }
 }
