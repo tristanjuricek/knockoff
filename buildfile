@@ -28,7 +28,7 @@ define "knockoff" do
 
     test.with TESTNG
     
-    task 'testng' do
+    task('testng'=>[compile]) do
         prepare_testng(test.dependencies)
     end
    

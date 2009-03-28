@@ -1,7 +1,15 @@
 package com.tristanhunt.knockoff
 
 /**
- * Parses Markdown span elements.
+ * Parses Markdown span elements, basically by functionally splitting each sequence of spanning 
+ * elements into a list:
+ *
+ * 1. Preceding text (to treat like "stuff you just copy into a paragraph element")
+ * 2. A fancy spanning thing (what we want to recognize)
+ * 3. More stuff to process.
+ *
+ * So it's like a combinator parser, that consumes tokens, but here, we consume chunks of text at
+ * a time. Kind of ugly, but hey, it works.
  *
  * @author Tristan Juricek <mr.tristan@gmail.com>
  */
@@ -47,7 +55,7 @@ class SpanParser {
     def parse(source:String):List[Nad] = {
         
         val pq = new collection.mutable.PriorityQueue[List[Nad]]
-        
+    
         pq += InlineHTMLSplitter.split(source)
         
         pq += StrongUnderscoreSplitter(this).split(source)
@@ -72,6 +80,8 @@ class SpanParser {
 }
 
 object SpanParser {
+    
+    def Parser:SpanParser = apply
  
     def apply:SpanParser = new SpanParser
 }
