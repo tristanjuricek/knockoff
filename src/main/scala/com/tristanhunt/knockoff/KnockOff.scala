@@ -98,7 +98,9 @@ object KnockOff {
     
         // TODO I probably want a special block parser that handles just grabbing the MkBlock
         // sequence, but doing a different mapping at this stage.
-        case blockquote:MkBlockquote => null
+        //
+        // This should always parse to something. Do I want to change the exception when it doesn't?
+        case blockquote:MkBlockquote => Blockquote(parse(blockquote.markdown).get)
     
         case HTMLMkBlock(html) => HTMLBlock(HTML(html))
     

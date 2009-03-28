@@ -48,7 +48,9 @@ protected case class MkBlockquote(val blockquote:String) extends MkBlock {
     def markdown:String = {
         val sb = new StringBuilder
         io.Source.fromString(blockquote).getLines.foreach(line => {
-            sb.append(line.substring(1).trim).append('\n')
+            sb.append(line.substring(1).trim)
+            if (line.endsWith("\n"))
+                sb.append('\n')
         })
         sb.toString
     }
