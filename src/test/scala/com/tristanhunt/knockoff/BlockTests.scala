@@ -218,7 +218,7 @@ Second list
                 Paragraph(List(Text("Here is another block\nquote.\nwith one line"))))))
 
         assertTrue(actual sameElements expected,
-            "[actual sameElements expected == false] actual:" + actual + ", expected:" + expected)
+            "[actual sameElements expected == false]\n\tactual  :" + actual + "\n\texpected:" + expected)
     }
     
     
@@ -324,11 +324,15 @@ This is a [used link definition][an id]
             Paragraph(List(
                 Link(List(Text("Variation 1")), "http://example.com/foo?bar=bat", """Basic "Title" Link"""),
                 Text(" "),
-                Link(List(Text("Variation 2")), "http://example.com/foo?bar=bat", """Basic "Title" Link2"""))),
+                Link(List(Text("Variation 2")), "http://example.com/foo?bar=bat", """Basic "Title" Link2"""),
+                Text(".\n"))),
             Paragraph(List(
                 Link(List(Text("one")), "http://example.com", ""),
+                Text(" "),
                 Link(List(Text("two")), "http://example.com", "title"),
-                Link(List(Text("three")), "http://google.com", "(why not?)"))),
+                Text(" "),
+                Link(List(Text("three")), "http://google.com", "why not?"),
+                Text("\n"))),
             CodeBlock(Text("[4] http://code.example.com (Yeah, this is not a link)\n")))
 
         assertTrue(actual sameElements expected,

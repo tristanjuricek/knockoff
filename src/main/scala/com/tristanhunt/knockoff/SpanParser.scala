@@ -71,6 +71,8 @@ class SpanParser(val links:SortedMap[String, LinkDefinition]) {
         pq += InlineLinkSplitter(this).split(source)
         
         pq += InlineImageLinkSplitter(this).split(source)
+        
+        pq += ReferenceLinkSplitter(this).split(source)
 
         val bestSplit = pq.dequeue
         
@@ -266,4 +268,45 @@ protected case class InlineImageLinkSplitter(val spanParser:SpanParser) extends 
     def construct(nads:List[Nad], url:String, title:String) = ImageLink(nads, url, title)
     
     val starter = new Regex("""!\[([^\]]*)\][ ]*\(([\S&&[^)]]*) "([^)]*)"\)|!\[([^\]]*)\][ ]*\(([\S&&[^)]]*)\)""")
+}
+
+protected case class ReferenceLinkSplitter(spanParser:SpanParser) {
+
+    def split(str:String):List[Nad] = {
+     
+        pattern.findFirstMatchIn(str) match {
+         
+            case Some(mtch) => {
+                
+                val span = mtch.group(1)
+                val refID = mtch.group(2)
+                
+                val nads = new collection.mutable.Queue[Nad]
+                
+                if (spanParser.links.contains(refID)) {
+                    
+                    if (mtch.before.length > 0)
+                        nads += Text(mtch.before.toString)
+                    
+                    nads += Link(
+                        spanParser.parse(span),
+                        spanParser.links(refID).url,
+                        spanParser.links(refID).title)
+                
+                    if (mtch.after.length > 0)
+                        nads += Text(mtch.after.toString)
+                
+                } else {
+                    
+                    nads += Text(str)
+                }
+                
+                nads.toList
+            }
+            
+            case None => List(Text(str))
+        }
+    }
+
+    val pattern = new Regex("""\[([^\]]*)\][ ]*\[([^\]]*)\]""")
 }
