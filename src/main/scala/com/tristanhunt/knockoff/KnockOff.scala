@@ -16,7 +16,8 @@ object KnockOff {
     import collection.immutable._
  
     /**
-     * Return
+     * Parse a full markdown document. Returns the content as a list of Blocks, and a map of the
+     * different link references.
      */
     def parse(src:String):Option[(List[Block], SortedMap[String, LinkDefinition])] = {
         
@@ -55,7 +56,7 @@ object KnockOff {
             
         // Perform MkBlock -> Block mapping
 
-        implicit val parser = SpanParser.Parser
+        implicit val parser = SpanParser(definitions)
         val blocks:List[Block] = mkblks.filter(blk => !_linkDefinitionCheck(blk)).map(_convert).toList
 
         Some(blocks, definitions)

@@ -2,13 +2,14 @@ package com.tristanhunt.knockoff
 
 import org.testng.Assert._
 import org.testng.annotations._
+import collection.immutable.TreeMap.Empty
 
 @Test
 class SpanTests {
  
     def inlineHTML = {
      
-        val actual = (SpanParser.apply).parse("""A block with <span class="strong">Some <br><br> HTML</span> in it.""")
+        val actual = SpanParser(Empty).parse("""A block with <span class="strong">Some <br><br> HTML</span> in it.""")
         
         val expected = List(
             Text("A block with "),
@@ -27,7 +28,7 @@ class SpanTests {
     
     def emphasisUnderscore = {
      
-        val actual = (SpanParser.apply).parse("""_emphasis_ possibly with _two words_""")
+        val actual = SpanParser(Empty).parse("""_emphasis_ possibly with _two words_""")
         
         val expected = List(
             Emphasis(List(Text("emphasis"))),
@@ -39,7 +40,7 @@ class SpanTests {
     
     def emphasisAsterix = {
      
-        val actual = (SpanParser.apply).parse("""*shocking _but_ true*""")
+        val actual = SpanParser(Empty).parse("""*shocking _but_ true*""")
         
         val expected = List(
             Emphasis(List(
@@ -52,7 +53,7 @@ class SpanTests {
     
     def strongUnderscore = {
         
-        val actual = (SpanParser.apply).parse("""This __is a *fucking* test__""")
+        val actual = SpanParser(Empty).parse("""This __is a *fucking* test__""")
         
         val expected = List(
             Text("This "),
@@ -66,7 +67,7 @@ class SpanTests {
     
     def strongAsterix { // != obelix
         
-        val actual = (SpanParser.apply).parse("""**hi** you **guy__**what__?""")
+        val actual = SpanParser(Empty).parse("""**hi** you **guy__**what__?""")
         
         val expected = List(
             Strong(List(Text("hi"))),
@@ -79,7 +80,7 @@ class SpanTests {
     
     def inlineLink {
      
-        val actual = (SpanParser.apply).parse("[First](http://example.com) link has no title." +
+        val actual = SpanParser(Empty).parse("[First](http://example.com) link has no title." +
             "[The *second* link](http://example.com/foo?bar=bat \"Crappy \"Think\" Link\") has a title. And then, " +
             "of course, there's the [Empty]() empty link.")
         
@@ -99,7 +100,7 @@ class SpanTests {
     
     def imageLink {
         
-        val actual = (SpanParser.apply).parse("![Alternative Text](http://path/to/image.jpg \"Title\")")
+        val actual = SpanParser(Empty).parse("![Alternative Text](http://path/to/image.jpg \"Title\")")
         
         val expected = List(ImageLink(List(Text("Alternative Text")), "http://path/to/image.jpg", "Title"))
         

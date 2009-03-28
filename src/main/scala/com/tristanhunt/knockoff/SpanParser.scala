@@ -1,5 +1,7 @@
 package com.tristanhunt.knockoff
 
+import collection.immutable.SortedMap
+
 /**
  * Parses Markdown span elements, basically by functionally splitting each sequence of spanning 
  * elements into a list:
@@ -9,11 +11,11 @@ package com.tristanhunt.knockoff
  * 3. More stuff to process.
  *
  * So it's like a combinator parser, that consumes tokens, but here, we consume chunks of text at
- * a time. Kind of ugly, but hey, it works.
+ * a time. Ugly as hell right now, but hey, it works.
  *
  * @author Tristan Juricek <mr.tristan@gmail.com>
  */
-class SpanParser {
+class SpanParser(val links:SortedMap[String, LinkDefinition]) {
 
     /**
      * How we order the best split done by the parse function. It's fun! (erh...)
@@ -81,9 +83,7 @@ class SpanParser {
 
 object SpanParser {
     
-    def Parser:SpanParser = apply
- 
-    def apply:SpanParser = new SpanParser
+    def apply(links:SortedMap[String, LinkDefinition]):SpanParser = new SpanParser(links)
 }
 
 import util.matching._
