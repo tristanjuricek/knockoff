@@ -106,4 +106,20 @@ class SpanTests {
         
         assertTrue(actual sameElements expected)
     }
+    
+    def referenceLink {
+        
+        import collection.immutable.TreeMap
+     
+        val actual = SpanParser(
+            TreeMap("1" -> LinkDefinition("1", "http://example.com", "Link Reference"))(other.FancyStrings.caseInsensitiveOrder))
+            .parse("""[Link Ref][1] [No Link][2]""")
+        
+        val expected = List(
+            Link(List(Text("Link Ref")), "http://example.com", "Link Reference"),
+            Text(" [No Link][2]"))
+        
+        assertTrue(actual sameElements expected,
+            "[actual sameElements expected == false]\n\tactual:" + actual + "\n\texpected:" + expected)
+    }
 }

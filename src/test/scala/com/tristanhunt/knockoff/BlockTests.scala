@@ -22,7 +22,7 @@ class BlockTests {
             Paragraph(List(Text("Body text."))))
         
         val actual:List[Block] = KnockOff.parse(src) match {
-            case Some((list, _)) => list
+            case Some(list) => list
             case None => {
                 fail("src not parsed: " + src)
                 null
@@ -41,7 +41,7 @@ class BlockTests {
             Paragraph(List(Text("Body text."))))
         
         val actual:List[Block] = KnockOff.parse(src) match {
-            case Some((list, _)) => list
+            case Some(list) => list
             case None => {
                 fail("src not parsed: " + src)
                 null
@@ -67,12 +67,12 @@ class BlockTests {
                 Header(List(Text("Heading # Value")), level))
             
             val actual1 = KnockOff.parse(src1) match {
-                case Some((list, _)) => list
+                case Some(list) => list
                 case None  => {fail("ATX Header Parse Failed: " + src1); null}
             }
             
             val actual2 = KnockOff.parse(src2) match {
-                case Some((list, _)) => list
+                case Some(list) => list
                 case None  => {fail("ATX Header Parse Failed: " + src2); null}
             }
             
@@ -89,7 +89,7 @@ class BlockTests {
      <span>To HTML</span>
 </div>"""
 
-        val actual:List[Block] = KnockOff.parse(src).get._1
+        val actual:List[Block] = KnockOff.parse(src).get
         
         val expected = List(
             Paragraph(List(Text("  a text block\n"))),
@@ -123,7 +123,7 @@ get formatted
 +  Psht, whatever"""
 
         val actual:List[Block] = KnockOff.parse(src) match {
-            case Some((list, _)) => list
+            case Some(list) => list
             case None => {
                 fail("src not parsed: " + src)
                 null
@@ -167,7 +167,7 @@ Second list
 2.  Ass munch
 """
         val actual:List[Block] = KnockOff.parse(src) match {
-            case Some((list, _)) => list
+            case Some(list) => list
             case None => {
                 fail("src not parsed: " + src)
                 null
@@ -202,7 +202,7 @@ Second list
 > with one line"""
 
         val actual:List[Block] = KnockOff.parse(src) match {
-            case Some((list, _)) => list
+            case Some(list) => list
             case None => {
                 fail("src not parsed: " + src)
                 null
@@ -238,7 +238,7 @@ Perhaps some commands:
      ./ a line!
 """
         val actual:List[Block] = KnockOff.parse(src) match {
-            case Some((list, _)) => list
+            case Some(list) => list
             case None => {
                 fail("src not parsed: " + src)
                 null
@@ -273,7 +273,7 @@ Something else
 __________"""
 
         val actual:List[Block] = KnockOff.parse(src) match {
-            case Some((list, _)) => list
+            case Some(list) => list
             case None => {
                 fail("src not parsed: " + src)
                 null
@@ -292,15 +292,17 @@ __________"""
     def linkDefinition = {
      
         val src = """
-This is a link definition
+This is a [used link definition][an id]
 
 [An ID] http://example.com/foo?bar=bat
+
+[Variation 1][an id 2] [Variation 2][an id 3].
 
 [An ID 2] http://example.com/foo?bar=bat "Basic "Title" Link"
 [An ID 3]    http://example.com/foo?bar=bat 
     "Basic "Title" Link2"
 
-Some variations:
+[one][1] [two][2] [three][3]
 
  [1] http://example.com
 
@@ -312,29 +314,25 @@ Some variations:
 
 //
 
-        val (actualContent:List[Block], actualDefs:SortedMap[String, LinkDefinition]) =
-            KnockOff.parse(src).get
+        val actual:List[Block] = KnockOff.parse(src).get
         
-        val expectedContent = List(
-            Paragraph(List(Text("This is a link definition\n"))),
-            Paragraph(List(Text("Some variations:\n"))),
+        val expected = List(
+            Paragraph(List(
+                Text("This is a "),
+                Link(List(Text("used link definition")), "http://example.com/foo?bar=bat", ""),
+                Text("\n"))),
+            Paragraph(List(
+                Link(List(Text("Variation 1")), "http://example.com/foo?bar=bat", """Basic "Title" Link"""),
+                Text(" "),
+                Link(List(Text("Variation 2")), "http://example.com/foo?bar=bat", """Basic "Title" Link2"""))),
+            Paragraph(List(
+                Link(List(Text("one")), "http://example.com", ""),
+                Link(List(Text("two")), "http://example.com", "title"),
+                Link(List(Text("three")), "http://google.com", "(why not?)"))),
             CodeBlock(Text("[4] http://code.example.com (Yeah, this is not a link)\n")))
 
-        assertTrue(actualContent sameElements expectedContent)
+        assertTrue(actual sameElements expected,
+            "[actual sameElements expected == false]\n\tactual  :" + actual + "\n\texpected:" + expected)
+    }
 
-        val expectedDefs = TreeMap(
-            "An ID"     -> LinkDefinition("An ID", "http://example.com/foo?bar=bat", ""),
-            "An ID 2"   -> LinkDefinition("An ID 2", "http://example.com/foo?bar=bat", """Basic "Title" Link"""),
-            "An ID 3"   -> LinkDefinition("An ID 3", "http://example.com/foo?bar=bat", """Basic "Title" Link2"""),
-            "1"         -> LinkDefinition("1", "http://example.com", ""),
-            "2"         -> LinkDefinition("2", "http://example.com", "title"),
-            "3"         -> LinkDefinition("3", "http://google.com", "why not?"))(_caseInsensitiveCheck)
-        
-        assertTrue(actualDefs sameElements expectedDefs,
-            "[actualDefs sameElements expectedDefs == false]\n\tactualDefs:" + actualDefs + "\n\texpectedDefs:" + expectedDefs)
-    }
-    
-    private def _caseInsensitiveCheck(key:String) = new Ordered[String] {
-        def compare(toKey:String):Int = key compareToIgnoreCase toKey
-    }
 }

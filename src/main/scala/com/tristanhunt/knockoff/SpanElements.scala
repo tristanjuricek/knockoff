@@ -22,7 +22,7 @@ case class Strong   (val nads:Seq[Nad]) extends Span
 case class Emphasis (val nads:Seq[Nad]) extends Span
 
 /**
- * This is a standard link; use a ReferenceLink for the [value][ref] format.
+ * 
  */
 abstract class AbstractLink(val nads:Seq[Nad], val url:String, val title:String) extends Span
 

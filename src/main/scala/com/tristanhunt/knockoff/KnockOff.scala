@@ -14,12 +14,13 @@ import util.parsing.combinator._
 object KnockOff {
     
     import collection.immutable._
+    import other.FancyStrings.caseInsensitiveOrder
  
     /**
      * Parse a full markdown document. Returns the content as a list of Blocks, and a map of the
      * different link references.
      */
-    def parse(src:String):Option[(List[Block], SortedMap[String, LinkDefinition])] = {
+    def parse(src:String):Option[List[Block]] = {
         
         // Replace tabs with 4 spaces.
         val src2 = src.replace("\t", "    ")
@@ -41,13 +42,13 @@ object KnockOff {
         // Prepare a separate map of each link definition, which will be the second return value,
         // but also used during parsing to indicate if the link reference is valid or not.
         
-        implicit var definitions:SortedMap[String, LinkDefinition] = TreeMap.Empty(_caseInsensitiveCheck)
+        implicit var definitions:SortedMap[String, LinkDefinition] = TreeMap.Empty(caseInsensitiveOrder)
 
         for (defn <- mkblks.filter(_linkDefinitionCheck)) {
             definitions = definitions ++ {
                 defn match {
                     case MkLinkDefinition(id, url, title) =>
-                        TreeMap((id, LinkDefinition(id, url, title)))(_caseInsensitiveCheck)
+                        TreeMap((id, LinkDefinition(id, url, title)))(caseInsensitiveOrder)
 
                     case list:MkLinkDefinitionList => _convertMkLinkDefinitionList(list)
                 }
@@ -59,7 +60,7 @@ object KnockOff {
         implicit val parser = SpanParser(definitions)
         val blocks:List[Block] = mkblks.filter(blk => !_linkDefinitionCheck(blk)).map(_convert).toList
 
-        Some(blocks, definitions)
+        Some(blocks)
     }
     
     private def _convert(mkblk:MkBlock)(implicit parser:SpanParser):Block = {
@@ -70,21 +71,17 @@ object KnockOff {
             _convertMkBlock(mkblk)
     }
     
-    private def _caseInsensitiveCheck(key:String) = new Ordered[String] {
-        def compare(toKey:String):Int = key compareToIgnoreCase toKey
-    }
-    
     private def _linkDefinitionCheck(blk:MkBlock):Boolean =
         blk.isInstanceOf[MkLinkDefinition] || blk.isInstanceOf[MkLinkDefinitionList]
     
     private def _convertMkLinkDefinitionList(list:MkLinkDefinitionList):
         SortedMap[String, LinkDefinition] = {
     
-        var defs:SortedMap[String, LinkDefinition] = TreeMap.Empty(_caseInsensitiveCheck)
+        var defs:SortedMap[String, LinkDefinition] = TreeMap.Empty(caseInsensitiveOrder)
     
         list.definitions.foreach(defn => {
             defs = defs ++
-                TreeMap((defn.id, LinkDefinition(defn.id, defn.url, defn.title)))(_caseInsensitiveCheck)
+                TreeMap((defn.id, LinkDefinition(defn.id, defn.url, defn.title)))(caseInsensitiveOrder)
         })
         
         defs
