@@ -17,6 +17,21 @@ object KnockOff {
     import other.FancyStrings.caseInsensitiveOrder
  
     /**
+     * Convert a full markdown document to a NodeBuffer that can be injected into another XML
+     * document. Like a full page:
+     *
+     *     <html><head></head><body>{KnockOff.convert(markdown)}</body></html>
+     *
+     * TODO Describe output modification.
+     */
+    def convert(src:String):Option[xml.NodeBuffer] = {
+        parse(src) match {
+            case Some(blocks)    => Some(BlockConverter.convert(blocks))
+            case None            => None
+        }
+    }
+ 
+    /**
      * Parse a full markdown document. Returns the content as a list of Blocks, and a map of the
      * different link references.
      */
