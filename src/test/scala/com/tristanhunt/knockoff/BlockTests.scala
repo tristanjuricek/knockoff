@@ -294,22 +294,22 @@ __________"""
         val src = """
 This is a [used link definition][an id]
 
-[An ID] http://example.com/foo?bar=bat
+[An ID]: http://example.com/foo?bar=bat
 
 [Variation 1][an id 2] [Variation 2][an id 3].
 
-[An ID 2] http://example.com/foo?bar=bat "Basic "Title" Link"
-[An ID 3]    http://example.com/foo?bar=bat 
+[An ID 2]: http://example.com/foo?bar=bat "Basic "Title" Link"
+[An ID 3]:    http://example.com/foo?bar=bat 
     "Basic "Title" Link2"
 
 [one][1] [two][2] [three][3]
 
- [1] http://example.com
+ [1]: http://example.com
 
-  [2] http://example.com 'title'
-   [3] http://google.com (why not?)
+  [2]: http://example.com 'title'
+   [3]: http://google.com (why not?)
 
-    [4] http://code.example.com (Yeah, this is not a link)
+    [4]: http://code.example.com (Yeah, this is not a link)
 """
 
 //
@@ -333,7 +333,7 @@ This is a [used link definition][an id]
                 Text(" "),
                 Link(List(Text("three")), "http://google.com", "why not?"),
                 Text("\n"))),
-            CodeBlock(Text("[4] http://code.example.com (Yeah, this is not a link)\n")))
+            CodeBlock(Text("[4]: http://code.example.com (Yeah, this is not a link)\n")))
 
         assertTrue(actual sameElements expected,
             "[actual sameElements expected == false]\n\tactual  :" + actual + "\n\texpected:" + expected)
