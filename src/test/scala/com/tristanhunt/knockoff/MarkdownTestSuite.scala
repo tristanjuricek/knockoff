@@ -90,6 +90,37 @@ class MarkdownTestSuite {
         "<pre><code>or here: &lt;http://example.com/&gt;</code></pre>"
     )
     
+    /**
+     * I'm not sure why the official test suite did not entitize the quotes.
+     */
+    def blockquotesWithCodeBlocks = _compare(
+        
+        "> Example:\n" +
+        "> \n" +
+        ">     sub status {\n" +
+        ">         print \"working\";\n" +
+        ">     }\n" +
+        "> \n" +
+        "> Or:\n" +
+        "> \n" +
+        ">     sub status {\n" +
+        ">         return \"working\";\n" +
+        ">     }",
+        
+        "<blockquote>" +
+            "<p>Example:\n</p>" +
+            "<pre><code>sub status {\n" +
+            "    print &quot;working&quot;;\n" +
+            "}\n" +
+            "</code></pre>" +
+            "<p>Or:\n</p>" +
+            "<pre><code>sub status {\n" +
+            "    return &quot;working&quot;;\n" +
+            "}" +
+            "</code></pre>" +
+        "</blockquote>"
+    )
+        
 
     /**
      * Doing a couple of tricks so that each of the tests are just a bit easier to read.
@@ -101,7 +132,7 @@ class MarkdownTestSuite {
     }
     
     private def _compare(markdown:String, expected:String) {
-     
+        
         assertEquals({<div>{KnockOff.convert(markdown).get}</div>}.toString,
             "<div>" + expected + "</div>")
     }
