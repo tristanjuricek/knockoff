@@ -164,7 +164,7 @@ object KnockOff {
             return out
         }
         
-        if (in.head.isInstanceOf[MarkdownList] && in.head.getClass == out.last.getClass) {
+        if (in.head.isInstanceOf[MarkdownList] && !out.isEmpty && in.head.getClass == out.last.getClass) {
             val condensed = out.last match {
                 case BulletListMkBlock(outItems)  => BulletListMkBlock(outItems ++ in.head.asInstanceOf[MarkdownList].items)
                 case NumberedListMkBlock(outItems)        => NumberedListMkBlock(outItems ++ in.head.asInstanceOf[MarkdownList].items)

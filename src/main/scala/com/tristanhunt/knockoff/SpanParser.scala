@@ -73,6 +73,8 @@ class SpanParser(val links:SortedMap[String, LinkDefinition]) {
         pq += InlineImageLinkSplitter(this).split(source)
         
         pq += ReferenceLinkSplitter(this).split(source)
+        
+        pq += AutoLinkSplitter().split(source)
 
         val bestSplit = pq.dequeue
         
@@ -309,4 +311,42 @@ protected case class ReferenceLinkSplitter(spanParser:SpanParser) {
     }
 
     val pattern = new Regex("""\[([^\]]*)\][ ]*\[([^\]]*)\]""")
+}
+
+protected case class AutoLinkSplitter {
+ 
+    def split(str:String):List[Nad] = {
+        
+        pattern.findFirstMatchIn(str) match {
+
+            case Some(mtch) => {
+
+                val nads = new collection.mutable.Queue[Nad]
+
+                val url = {
+                    if (mtch.group(1) != null)
+                        mtch.group(1)
+                    else {
+                        // TODO This should be entitized completely.
+                        mtch.group(2)
+                    }
+                }
+
+                if (mtch.before.length > 0)
+                    nads += Text(mtch.before.toString)
+
+                nads += Link(List(Text(url)), url)
+
+                if (mtch.after.length > 0)
+                    nads += Text(mtch.after.toString)
+
+                nads.toList
+            }
+
+            case None => List(Text(str))
+        }
+    }
+    
+    val pattern = new Regex("""<(http://\S*)>|<(\S+@\S+)>""")
+    
 }

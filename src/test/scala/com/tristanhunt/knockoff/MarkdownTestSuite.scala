@@ -10,6 +10,8 @@ import org.testng.annotations._
 @Test
 class MarkdownTestSuite {
     
+    import xml.Utility.trim
+    
     def ampsAndAngleEncoding1 = _compare(
         "AT&T has an ampersand in their name.",
         <p>AT&amp;T has an ampersand in their name.</p>
@@ -51,6 +53,43 @@ class MarkdownTestSuite {
         "Here's an inline [link](</script?foo=1&bar=2>).",
         "<p>Here's an inline <a href=\"/script?foo=1&amp;bar=2\" >link</a>.</p>"
     )
+    
+    def autoLinks1 = _compare(
+        "Link: <http://example.com/>.",
+        "<p>Link: <a href=\"http://example.com/\" >http://example.com/</a>.</p>"
+    )
+    
+    def autoLinks2 = _compare(
+        "With an ampersand: <http://example.com/?foo=1&bar=2>",
+        "<p>With an ampersand: <a href=\"http://example.com/?foo=1&amp;bar=2\" >http://example.com/?foo=1&amp;bar=2</a></p>"
+    )
+    
+    def autoLinks3 = _compare(
+        "* In a list?\n* <http://example.com/>\n* It should.",
+        "<ul>" +
+            "<li>In a list?\n</li>" +
+            "<li><a href=\"http://example.com/\" >http://example.com/</a>\n</li>" +
+            "<li>It should.</li>" +
+        "</ul>"
+    )
+    
+    def autoLinks4 = _compare(
+        "> Blockquoted: <http://example.com/>",
+        "<blockquote>" +
+              "<p>Blockquoted: <a href=\"http://example.com/\" >http://example.com/</a></p>" +
+        "</blockquote>"
+    )
+    
+    def autoLinks5 = _compare(
+        "Auto-links should not occur here: `<http://example.com/>`",
+        <p>Auto-links should not occur here: <code>&lt;http://example.com/&gt;</code></p>
+    )
+
+    def autoLinks6 = _compare(
+        "	or here: <http://example.com/>",
+        "<pre><code>or here: &lt;http://example.com/&gt;</code></pre>"
+    )
+    
 
     /**
      * Doing a couple of tricks so that each of the tests are just a bit easier to read.

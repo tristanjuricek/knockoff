@@ -40,10 +40,10 @@ object BlockConverter {
     }
     
     def toBlockquoteXML(b:Blockquote):Node =
-        <blockquote>convert(b.blocks)</blockquote>
+        <blockquote>{convert(b.blocks)}</blockquote>
     
     def toCodeBlockXML(c:CodeBlock):Node =
-        <pre>{c.preformatted}</pre>
+        <pre><code>{c.preformatted.value}</code></pre>
 
     def toHorizontalRuleXML(r:HorizontalRule):Node =
         <hr/>
@@ -55,7 +55,7 @@ object BlockConverter {
         <ol>{oblst.items.map(toListItemXML)}</ol>
     
     def toListItemXML(b:Block):Node =
-        <li>{toXML(b)}</li>
+        <li>{span(b.nads)}</li>
 
     def convert(blocks:List[Block]):NodeBuffer = {
         val nb = new xml.NodeBuffer
