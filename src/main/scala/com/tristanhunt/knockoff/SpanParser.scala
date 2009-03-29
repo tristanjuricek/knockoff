@@ -98,7 +98,7 @@ protected trait MatchedSplitter {
     
     def spanParser:SpanParser
     
-    def construct(seq:Seq[Nad]):Thing
+    def construct(seq:List[Nad]):Thing
 
     def split(str:String):List[Nad] = {
         
@@ -133,7 +133,7 @@ extends MatchedSplitter {
 
     type Thing = Emphasis
     
-    def construct(seq:Seq[Nad]) = Emphasis(seq)
+    def construct(seq:List[Nad]) = Emphasis(seq)
 }
 
 protected case class EmphasisUnderscoreSplitter(val spanParser:SpanParser)
@@ -157,7 +157,7 @@ extends MatchedSplitter {
 
     type Thing = Strong
 
-    def construct(seq:Seq[Nad]) = Strong(seq)
+    def construct(seq:List[Nad]) = Strong(seq)
 }
 
 protected case class StrongUnderscoreSplitter(val spanParser:SpanParser)

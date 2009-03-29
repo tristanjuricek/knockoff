@@ -42,9 +42,6 @@ protected case class MkHeader(val markdown:String, val level:Int) extends MkBloc
  */
 protected case class MkBlockquote(val blockquote:String) extends MkBlock {
     
-    /**
-     * TODO: Translate the blockquote string to remove the leading '>' character.
-     */
     def markdown:String = {
         val sb = new StringBuilder
         io.Source.fromString(blockquote).getLines.foreach(line => {
