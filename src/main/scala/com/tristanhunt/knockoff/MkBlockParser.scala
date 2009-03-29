@@ -107,7 +107,7 @@ extends RegexParsers {
         })
             
     def linkBase:Parser[(String,String)] =
-        """[ ]{0,3}\[[^\[\]]*\]:[ ]+[\w\p{Punct}]+""".r ^^ (str => _readLinkBase(str))
+        """[ ]{0,3}\[[^\[\]]*\]:[ ]+<?[\w\p{Punct}]+>?""".r ^^ (str => _readLinkBase(str))
     
     def linkTitle:Parser[String] = """\s*""".r~>"""["'(].*["')]""".r ^^
         (str => str.substring(1, str.length - 1))
@@ -116,7 +116,7 @@ extends RegexParsers {
      * Cheap way of grouping the linkBase regex result. I find this to be an ugly solution.
      */
     private def _readLinkBase(str:String):(String,String) = {
-        val regex = new util.matching.Regex("""^\[([^\[\]]+)\]:[ ]+([\w\p{Punct}]+)$""")
+        val regex = new util.matching.Regex("""^\[([^\[\]]+)\]:[ ]+<?([\w\p{Punct}]+)>?$""")
         val mtch = regex.findFirstMatchIn(str.trim).get
         (mtch.group(1), mtch.group(2))
     }

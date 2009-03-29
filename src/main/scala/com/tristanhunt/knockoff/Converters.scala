@@ -80,6 +80,7 @@ object SpanConverter {
         nad match {
             case t:Text         => toTextXML(t)
             case h:HTML         => toHTMLXML(h)
+            case c:Code         => toCodeXML(c)
             case s:Strong       => toStrongXML(s)
             case e:Emphasis     => toEmphasisXML(e)
             case l:Link         => toLinkXML(l)
@@ -90,6 +91,8 @@ object SpanConverter {
     def toTextXML(t:Text):Node = xml.Text(t.value)
     
     def toHTMLXML(h:HTML):Node = xml.Unparsed(h.value)
+    
+    def toCodeXML(c:Code):Node = <code>{xml.Text(c.value)}</code>
     
     def toStrongXML(s:Strong):Node = <strong>{span(s.nads)}</strong>
     

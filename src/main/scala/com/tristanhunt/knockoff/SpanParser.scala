@@ -58,7 +58,11 @@ class SpanParser(val links:SortedMap[String, LinkDefinition]) {
         
         val pq = new collection.mutable.PriorityQueue[List[Nad]]
     
+        pq += CodeSplitter.split(source)
+    
         pq += InlineHTMLSplitter.split(source)
+        
+        pq += EntitySplitter.split(source)
         
         pq += StrongUnderscoreSplitter(this).split(source)
 
@@ -74,10 +78,10 @@ class SpanParser(val links:SortedMap[String, LinkDefinition]) {
         
         pq += ReferenceLinkSplitter(this).split(source)
         
-        pq += AutoLinkSplitter().split(source)
+        pq += AutoLinkSplitter.split(source)
 
         val bestSplit = pq.dequeue
-        
+
         if (bestSplit.length == 1 || bestSplit.last.isInstanceOf[Text] == false)
             return bestSplit
         
@@ -178,6 +182,66 @@ extends StrongSplitter {
     val end = new Regex("""[\S&&[^*]]+(\*\*)""")
 }
 
+protected object CodeSplitter {
+ 
+    def split(str:String):List[Nad] = {
+     
+        regex.findFirstMatchIn(str) match {
+         
+            case Some(mtch) => {
+                
+                val nads = new collection.mutable.Queue[Nad]
+                
+                if (mtch.before.length > 0)
+                    nads += Text(mtch.before.toString)
+
+                nads += Code(mtch.group(1))
+
+                if (mtch.after.length > 0)
+                    nads += Text(mtch.after.toString)
+                
+                nads.toList
+            }
+            
+            case None => {
+                List(Text(str))
+            }
+        }
+    }
+ 
+    val regex = new Regex("""`([^`]+)`""")
+}
+
+protected object EntitySplitter {
+ 
+    def split(str:String):List[Nad] = {
+     
+        regex.findFirstMatchIn(str) match {
+         
+            case Some(mtch) => {
+                
+                val nads = new collection.mutable.Queue[Nad]
+                
+                if (mtch.before.length > 0)
+                    nads += Text(mtch.before.toString)
+
+                nads += HTML(mtch.group(0))
+
+                if (mtch.after.length > 0)
+                    nads += Text(mtch.after.toString)
+                
+                nads.toList
+            }
+            
+            case None => {
+                List(Text(str))
+            }
+        }
+    }
+    
+    val regex = new Regex("""&\w+;""")
+}
+
 protected object InlineHTMLSplitter {
 
     import util.matching._
@@ -255,7 +319,7 @@ protected case class InlineLinkSplitter(val spanParser:SpanParser) extends LinkS
     
     def construct(nads:List[Nad], url:String, title:String) = Link(nads, url, title)
     
-    val starter = new Regex("""\[([^\]]*)\][ ]*\(([\S&&[^)]]*) "([^)]*)"\)|\[([^\]]*)\][ ]*\(([\S&&[^)]]*)\)""")
+    val starter = new Regex("""\[([^\]]*)\][ ]*\(<?([\S&&[^)>]]*)>? "([^)]*)"\)|\[([^\]]*)\][ ]*\(<?([\S&&[^)>]]*)>?\)""")
 }
 
 
@@ -313,7 +377,7 @@ protected case class ReferenceLinkSplitter(spanParser:SpanParser) {
     val pattern = new Regex("""\[([^\]]*)\][ ]*\[([^\]]*)\]""")
 }
 
-protected case class AutoLinkSplitter {
+protected object AutoLinkSplitter {
  
     def split(str:String):List[Nad] = {
         

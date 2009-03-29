@@ -6,6 +6,7 @@ trait Nad {
 
 case class Text(val value:String) extends Nad
 case class HTML(val value:String) extends Nad
+case class Code(val value:String) extends Nad
 
 trait Span extends Nad {
 
@@ -20,6 +21,7 @@ trait Span extends Nad {
 
 case class Strong   (val nads:List[Nad]) extends Span
 case class Emphasis (val nads:List[Nad]) extends Span
+
 
 /**
  * 
