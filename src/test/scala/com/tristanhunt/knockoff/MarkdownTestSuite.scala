@@ -218,10 +218,33 @@ class MarkdownTestSuite {
         "</blockquote>"
     )
     
+    def strongAndEmTogether = {
+        
+        _compare(
+            "***This is strong and em.***",
+            "<p><strong><em>This is strong and em.</em></strong></p>"
+        )
+        
+        _compare(
+            "So is ***this*** word.",
+            "<p>So is <strong><em>this</em></strong> word.</p>"
+        )
+        
+        _compare(
+            "___This is strong and em.___",
+            "<p><strong><em>This is strong and em.</em></strong></p>"
+        )
+        
+        _compare(
+            "So is ___this___ word.",
+            "<p>So is <strong><em>this</em></strong> word.</p>"
+        )
+    }
+    
     def tabs = _compare(
         MarkdownExamples.tabs,
         ConversionExamples.tabs
-    )        
+    )
 
     /**
      * Doing a couple of tricks so that each of the tests are just a bit easier to read.

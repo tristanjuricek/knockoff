@@ -53,7 +53,7 @@ extends RegexParsers {
     def bulletItem:Parser[String] =
         bulletLead~rep(noBulletLine) ^^ (p => p._1 + _concatMkParagraphs(p._2))
 
-    def bulletLead:Parser[String]           = """[*\-+]""".r~textLine               ^^ (l => l._1 + l._2.markdown)
+    def bulletLead:Parser[String]           = """[*\-+] """.r~textLine               ^^ (l => l._1 + l._2.markdown)
     def noBulletLine:Parser[MkParagraph]      = """[ ]*[\S&&[^*\-+]][^\n]*\n?""".r    ^^ (s => MkParagraph(s))
     
     
@@ -96,7 +96,7 @@ extends RegexParsers {
         "    "~(textLine | emptyLine) ^^ (v => MkParagraph(v._1 + v._2.markdown))
         
     def horizontalRule:Parser[MkHorizontalRule] =
-        """[*\-_][ ]?[*\-_][ ]?[*\-_][ *\-_]*\n?""".r ^^ (rule => MkHorizontalRule(rule))
+        """[*\-_][ ]?[*\-_][ ]?[*\-_][ *\-_]*\n""".r ^^ (rule => MkHorizontalRule(rule))
     
     def linkDefinition:Parser[MkLinkDefinitionList] = rep1(linkDefinitionItem) ^^ (list => MkLinkDefinitionList(list))
     

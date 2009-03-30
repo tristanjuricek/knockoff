@@ -171,17 +171,17 @@ extends MatchedSplitter {
 protected case class StrongUnderscoreSplitter(val spanParser:SpanParser)
 extends StrongSplitter {
 
-    val start = new Regex("""(__)[\S&&[^_]]+""")
+    val start = new Regex("""(__)\S+""")
 
-    val end = new Regex("""[\S&&[^_]]+(__)""")
+    val end = new Regex("""\S+(__)""")
 }
 
 protected case class StrongAsterixSplitter(val spanParser:SpanParser)
 extends StrongSplitter {
 
-    val start = new Regex("""(\*\*)[\S&&[^*]]+""")
+    val start = new Regex("""(\*\*)\S+""")
 
-    val end = new Regex("""[\S&&[^*]]+(\*\*)""")
+    val end = new Regex("""\S+(\*\*)""")
 }
 
 protected object CodeSplitter {

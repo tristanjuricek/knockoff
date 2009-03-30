@@ -270,7 +270,8 @@ Perhaps some commands:
 
 Something else
 
-__________"""
+__________
+"""
 
         val actual:List[Block] = KnockOff.parse(src) match {
             case Some(list) => list
