@@ -26,9 +26,8 @@ define "knockoff" do
     project.version = VERSION_NUMBER
     project.group = GROUP
     manifest["Implementation-Vendor"] = COPYRIGHT
+
     package(:jar, :id => "knockoff")
 
-    # Right now, I know that there are failures, because the entire Markdown system is not fully
-    # implemented, and there are a few things I might not do.
     test.using :testng, :fail_on_failure=>false
 end

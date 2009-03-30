@@ -88,7 +88,17 @@ object SpanConverter {
         }
     }
     
-    def toTextXML(t:Text):Node = xml.Text(t.value)
+    def toTextXML(t:Text):Node = xml.Text(unescape(t.value))
+    
+    val escapeableChars = List("\\", "`", "*", "_", "{", "}", "[", "]", "(", ")", "#", "+", "-",
+        ".", "!", ">")
+
+    def unescape(source:String):String = {
+        var buf:String = source
+        for ((escaped, unescaped) <- escapeableChars.map(ch => ("\\" + ch, ch)))
+            buf = buf.replace(escaped, unescaped)
+        buf
+    }
     
     def toHTMLXML(h:HTML):Node = xml.Unparsed(h.value)
     

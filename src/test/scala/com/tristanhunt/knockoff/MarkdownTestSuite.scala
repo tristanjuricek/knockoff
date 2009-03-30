@@ -90,6 +90,103 @@ class MarkdownTestSuite {
         "<pre><code>or here: &lt;http://example.com/&gt;</code></pre>"
     )
     
+    def backslashEscapes1Backslash = _compare(
+        """Backslash: \\""",
+        """<p>Backslash: \</p>"""
+    )
+        
+    def backslashEscapes2Backtick = _compare(
+        """Backtick: \`""",
+        """<p>Backtick: `</p>"""
+    )
+
+    def backslashEscapesAsterisk = _compare(
+		"""Asterisk: \*""",
+		"""<p>Asterisk: *</p>"""
+	)
+
+    def backslashEscapesUnderscore = _compare(
+		"""Underscore: \_""",
+		"""<p>Underscore: _</p>"""
+	)
+
+    def backslashEscapesLeftbrace = _compare(
+		"""Left brace: \{""",
+		"""<p>Left brace: {</p>"""
+	)
+
+    def backslashEscapesRightbrace = _compare(
+		"""Right brace: \}""",
+		"""<p>Right brace: }</p>"""
+	)
+
+    def backslashEscapesLeftbracket = _compare(
+		"""Left bracket: \[""",
+		"""<p>Left bracket: [</p>"""
+	)
+
+    def backslashEscapesRightbracket = _compare(
+		"""Right bracket: \]""",
+		"""<p>Right bracket: ]</p>"""
+	)
+
+    def backslashEscapesLeftparen = _compare(
+		"""Left paren: \(""",
+		"""<p>Left paren: (</p>"""
+	)
+
+    def backslashEscapesRightparen = _compare(
+		"""Right paren: \)""",
+		"""<p>Right paren: )</p>"""
+	)
+
+    /**
+     * This is an intentional break from the Markdown Test Suite. I have no clue why we would want
+     * to ever write a normal > symbol in XHTML. I think this was mostly to provide escaping 
+     * control, and that's what it achieves.
+     *
+     * Of course, I could be wrong. We'll see.
+     */
+    def backslashEscapesGreaterThan = _compare(
+		"""Greater-than: \>""",
+		"""<p>Greater-than: &gt;</p>"""
+	)
+
+    def backslashEscapesHash = _compare(
+		"""Hash: \#""",
+		"""<p>Hash: #</p>"""
+	)
+
+    def backslashEscapesPeriod = _compare(
+		"""Period: \.""",
+		"""<p>Period: .</p>"""
+	)
+
+    def backslashEscapesBang = _compare(
+		"""Bang: \!""",
+		"""<p>Bang: !</p>"""
+	)
+
+    def backslashEscapesPlus = _compare(
+		"""Plus: \+""",
+		"""<p>Plus: +</p>"""
+	)
+
+    def backslashEscapesMinus = _compare(
+		"""Minus: \-""",
+		"""<p>Minus: -</p>"""
+	)
+    
+    def backslashEscapesCodeBlock = _compare(
+        MarkdownExamples.backslashEscapesCodeBlock,
+        ConversionExamples.backslashEscapesCodeBlock
+    )
+    
+    def backslashEscapesCodeSpans = _compare(
+        MarkdownExamples.backslashEscapesCodeSpans,
+        ConversionExamples.backslashEscapesCodeSpans
+    )
+    
     /**
      * I'm not sure why the official test suite did not entitize the quotes.
      */
@@ -136,4 +233,143 @@ class MarkdownTestSuite {
         assertEquals({<div>{KnockOff.convert(markdown).get}</div>}.toString,
             "<div>" + expected + "</div>")
     }
+}
+
+
+/**
+ * Scala's multiline strings are a little weak, and can be hard to read when tossed in the middle
+ * of code. This contains a few "documents" placed inline.
+ */
+object MarkdownExamples {
+    
+    val backslashEscapesCodeBlock = """These should not, because they occur within a code block:
+
+    Backslash: \\
+    
+    Backtick: \`
+    
+    Asterisk: \*
+    
+    Underscore: \_
+    
+    Left brace: \{
+    
+    Right brace: \}
+    
+    Left bracket: \[
+    
+    Right bracket: \]
+    
+    Left paren: \(
+    
+    Right paren: \)
+    
+    Greater-than: \>
+    
+    Hash: \#
+    
+    Period: \.
+    
+    Bang: \!
+    
+    Plus: \+
+    
+    Minus: \-
+"""
+
+    val backslashEscapesCodeSpans = """Nor should these, which occur in code spans:
+
+Backslash: `\\`
+
+Backtick: `` \` ``
+
+Asterisk: `\*`
+
+Underscore: `\_`
+
+Left brace: `\{`
+
+Right brace: `\}`
+
+Left bracket: `\[`
+
+Right bracket: `\]`
+
+Left paren: `\(`
+
+Right paren: `\)`
+
+Greater-than: `\>`
+
+Hash: `\#`
+
+Period: `\.`
+
+Bang: `\!`
+
+Plus: `\+`
+
+Minus: `\-`
+"""
+}
+
+/**
+ * Markdown conversion examples stored inline. Note that these examples are altered to match the
+ * current Knockoff expectations, which may be a bit different from the official suite.
+ */
+object ConversionExamples {
+ 
+    val backslashEscapesCodeBlock = """<p>These should not, because they occur within a code block:
+</p><pre><code>Backslash: \\
+
+Backtick: \`
+
+Asterisk: \*
+
+Underscore: \_
+
+Left brace: \{
+
+Right brace: \}
+
+Left bracket: \[
+
+Right bracket: \]
+
+Left paren: \(
+
+Right paren: \)
+
+Greater-than: \&gt;
+
+Hash: \#
+
+Period: \.
+
+Bang: \!
+
+Plus: \+
+
+Minus: \-
+</code></pre>"""
+
+    val backslashEscapesCodeSpans = """<p>Nor should these, which occur in code spans:
+</p><p>Backslash: <code>\\</code>
+</p><p>Backtick: <code> \` </code>
+</p><p>Asterisk: <code>\*</code>
+</p><p>Underscore: <code>\_</code>
+</p><p>Left brace: <code>\{</code>
+</p><p>Right brace: <code>\}</code>
+</p><p>Left bracket: <code>\[</code>
+</p><p>Right bracket: <code>\]</code>
+</p><p>Left paren: <code>\(</code>
+</p><p>Right paren: <code>\)</code>
+</p><p>Greater-than: <code>\&gt;</code>
+</p><p>Hash: <code>\#</code>
+</p><p>Period: <code>\.</code>
+</p><p>Bang: <code>\!</code>
+</p><p>Plus: <code>\+</code>
+</p><p>Minus: <code>\-</code>
+</p>"""
+
 }

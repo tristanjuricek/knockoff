@@ -58,6 +58,8 @@ class SpanParser(val links:SortedMap[String, LinkDefinition]) {
         
         val pq = new collection.mutable.PriorityQueue[List[Nad]]
     
+        pq += DoubledCodeSplitter.split(source)
+        
         pq += CodeSplitter.split(source)
     
         pq += InlineHTMLSplitter.split(source)
@@ -211,6 +213,40 @@ protected object CodeSplitter {
  
     val regex = new Regex("""`([^`]+)`""")
 }
+
+/**
+ * A variation of the backtick escaping that delimits with two backtickts: ``
+ */
+protected object DoubledCodeSplitter {
+ 
+    def split(str:String):List[Nad] = {
+     
+        regex.findFirstMatchIn(str) match {
+         
+            case Some(mtch) => {
+                
+                val nads = new collection.mutable.Queue[Nad]
+                
+                if (mtch.before.length > 0)
+                    nads += Text(mtch.before.toString)
+
+                nads += Code(mtch.group(1))
+
+                if (mtch.after.length > 0)
+                    nads += Text(mtch.after.toString)
+                
+                nads.toList
+            }
+            
+            case None => {
+                List(Text(str))
+            }
+        }
+    }
+ 
+    val regex = new Regex("""``(.+)``""")
+}
+
 
 protected object EntitySplitter {
  
