@@ -96,7 +96,7 @@ extends RegexParsers {
         "    "~(textLine | emptyLine) ^^ (v => MkParagraph(v._1 + v._2.markdown))
         
     def horizontalRule:Parser[MkHorizontalRule] =
-        """[*\-_][ ]?[*\-_][ ]?[*\-_][ *\-_]*\n""".r ^^ (rule => MkHorizontalRule(rule))
+        """[ ]{0,3}[*\-_][ ]?[*\-_][ ]?[*\-_][ *\-_]*\n""".r ^^ (rule => MkHorizontalRule(rule))
     
     def linkDefinition:Parser[MkLinkDefinitionList] = rep1(linkDefinitionItem) ^^ (list => MkLinkDefinitionList(list))
     

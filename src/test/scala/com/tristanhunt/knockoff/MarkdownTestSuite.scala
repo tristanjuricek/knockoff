@@ -234,6 +234,24 @@ class MarkdownTestSuite {
         "<p>Here's one with a bullet.\n* criminey.\n</p>"
     )
     
+    def horizontalRules = {
+     
+        _compare(
+            MarkdownExamples.horizontalRulesDashes,
+            ConversionExamples.horizontalRulesDashes
+        )
+        
+        _compare(
+            MarkdownExamples.horizontalRulesAsterisks,
+            ConversionExamples.horizontalRulesAsterisks
+        )
+        
+        _compare(
+            MarkdownExamples.horizontalRulesUnderscores,
+            ConversionExamples.horizontalRulesUnderscores
+        )
+    }
+    
     def strongAndEmTogether = {
         
         _compare(
@@ -355,6 +373,74 @@ Plus: `\+`
 Minus: `\-`
 """
 
+    def horizontalRulesDashes = """Dashes:
+
+---
+
+ ---
+
+  ---
+
+   ---
+
+	---
+
+- - -
+
+ - - -
+
+  - - -
+
+   - - -
+
+	- - -
+"""
+    def horizontalRulesAsterisks = """Asterisks:
+
+***
+
+ ***
+
+  ***
+
+   ***
+
+	***
+
+* * *
+
+ * * *
+
+  * * *
+
+   * * *
+
+	* * *
+"""
+
+    def horizontalRulesUnderscores = """Underscores:
+
+___
+
+ ___
+
+  ___
+
+   ___
+
+    ___
+
+_ _ _
+
+ _ _ _
+
+  _ _ _
+
+   _ _ _
+
+    _ _ _
+"""
+
     val tabs = """+	this is a list item
 	indented with tabs
 
@@ -437,6 +523,21 @@ Minus: \-
 </p><p>Plus: <code>\+</code>
 </p><p>Minus: <code>\-</code>
 </p>"""
+
+    def horizontalRulesDashes = """<p>Dashes:
+</p><hr></hr><hr></hr><hr></hr><hr></hr><pre><code>---
+</code></pre><hr></hr><hr></hr><hr></hr><hr></hr><pre><code>- - -
+</code></pre>"""
+
+    def horizontalRulesAsterisks = """<p>Asterisks:
+</p><hr></hr><hr></hr><hr></hr><hr></hr><pre><code>***
+</code></pre><hr></hr><hr></hr><hr></hr><hr></hr><pre><code>* * *
+</code></pre>"""
+
+    def horizontalRulesUnderscores = """<p>Underscores:
+</p><hr></hr><hr></hr><hr></hr><hr></hr><pre><code>___
+</code></pre><hr></hr><hr></hr><hr></hr><hr></hr><pre><code>_ _ _
+</code></pre>"""
 
     val tabs = """<ul><li>this is a list item
     indented with tabs

@@ -46,7 +46,7 @@ object BlockConverter {
         <pre><code>{c.preformatted.value}</code></pre>
 
     def toHorizontalRuleXML(r:HorizontalRule):Node =
-        <hr/>
+        <hr />
     
     def toUnorderedBlockListXML(ublst:UnorderedBlockList):Node =
         <ul>{ublst.items.map(toListItemXML)}</ul>
