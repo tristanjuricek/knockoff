@@ -218,6 +218,22 @@ class MarkdownTestSuite {
         "</blockquote>"
     )
     
+    def hardWrappedParagraphsWithListLikeLines = _compare(
+        "In Markdown 1.0.0 and earlier. Version\n" +
+        "8. This line turns into a list item.\n" +
+        "Because a hard-wrapped line in the\n" +
+        "middle of a paragraph looked like a\n" +
+        "list item.\n" +
+        "\nHere's one with a bullet.\n" +
+        "* criminey.\n",
+        "<p>In Markdown 1.0.0 and earlier. Version\n" +
+        "8. This line turns into a list item.\n" +
+        "Because a hard-wrapped line in the\n" +
+        "middle of a paragraph looked like a\n" +
+        "list item.\n</p>" +
+        "<p>Here's one with a bullet.\n* criminey.\n</p>"
+    )
+    
     def strongAndEmTogether = {
         
         _compare(
