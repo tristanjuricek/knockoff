@@ -292,6 +292,20 @@ class MarkdownTestSuite {
         MarkdownExamples.tabs,
         ConversionExamples.tabs
     )
+    
+    def tidyness = _compare(
+        "> A list within a blockquote:\n" +
+        "> \n" +
+        "> *	asterisk 1\n" +
+        "> *	asterisk 2\n" +
+        "> *	asterisk 3\n",
+        "<blockquote><p>A list within a blockquote:\n" +
+        "</p><ul><li>asterisk 1\n" +
+        "</li><li>asterisk 2\n" +
+        "</li><li>asterisk 3\n" +
+        "</li></ul></blockquote>"
+    )
+        
 
     /**
      * Doing a couple of tricks so that each of the tests are just a bit easier to read.
