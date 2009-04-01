@@ -252,6 +252,19 @@ class MarkdownTestSuite {
         )
     }
     
+    def inlineHTML = {
+     
+        _compare(
+            MarkdownExamples.inlineHTMLAdvanced,
+            ConversionExamples.inlineHTMLAdvanced,
+        )
+        
+        _compare(
+            MarkdownExamples.inlineHTMLSimple,
+            ConversionExamples.inlineHTMLSimple
+        )
+    }
+    
     def strongAndEmTogether = {
         
         _compare(
@@ -441,6 +454,92 @@ _ _ _
     _ _ _
 """
 
+    val inlineHTMLAdvanced = """Simple block on one line:
+
+<div>foo</div>
+
+And nested without indentation:
+
+<div>
+<div>
+<div>
+foo
+</div>
+</div>
+<div>bar</div>
+</div>
+"""
+
+    val inlineHTMLSimple = """Here's a simple block:
+
+<div>
+	foo
+</div>
+
+This should be a code block, though:
+
+	<div>
+		foo
+	</div>
+
+As should this:
+
+	<div>foo</div>
+
+Now, nested:
+
+<div>
+	<div>
+		<div>
+			foo
+		</div>
+	</div>
+</div>
+
+This should just be an HTML comment:
+
+<!-- Comment -->
+
+Multiline:
+
+<!--
+Blah
+Blah
+-->
+
+Code block:
+
+	<!-- Comment -->
+
+Just plain comment, with trailing spaces on the line:
+
+<!-- foo -->   
+
+Code:
+
+	<hr />
+
+Hr's:
+
+<hr>
+
+<hr/>
+
+<hr />
+
+<hr>   
+
+<hr/>  
+
+<hr /> 
+
+<hr class="foo" id="bar" />
+
+<hr class="foo" id="bar"/>
+
+<hr class="foo" id="bar" >
+"""
+
     val tabs = """+	this is a list item
 	indented with tabs
 
@@ -538,6 +637,62 @@ Minus: \-
 </p><hr></hr><hr></hr><hr></hr><hr></hr><pre><code>___
 </code></pre><hr></hr><hr></hr><hr></hr><hr></hr><pre><code>_ _ _
 </code></pre>"""
+
+    def inlineHTMLAdvanced = """<p>Simple block on one line:
+</p><div>foo</div>
+<p>And nested without indentation:
+</p><div>
+<div>
+<div>
+foo
+</div>
+</div>
+<div>bar</div>
+</div>
+"""    
+
+    def inlineHTMLSimple = """<p>Here's a simple block:
+</p><div>
+    foo
+</div>
+<p>This should be a code block, though:
+</p><pre><code>&lt;div&gt;
+    foo
+&lt;/div&gt;
+</code></pre><p>As should this:
+</p><pre><code>&lt;div&gt;foo&lt;/div&gt;
+</code></pre><p>Now, nested:
+</p><div>
+    <div>
+        <div>
+            foo
+        </div>
+    </div>
+</div>
+<p>This should just be an HTML comment:
+</p><!-- Comment -->
+<p>Multiline:
+</p><!--
+Blah
+Blah
+-->
+<p>Code block:
+</p><pre><code>&lt;!-- Comment --&gt;
+</code></pre><p>Just plain comment, with trailing spaces on the line:
+</p><!-- foo -->   
+<p>Code:
+</p><pre><code>&lt;hr /&gt;
+</code></pre><p>Hr's:
+</p><hr>
+<hr/>
+<hr />
+<hr>   
+<hr/>  
+<hr /> 
+<hr class="foo" id="bar" />
+<hr class="foo" id="bar"/>
+<hr class="foo" id="bar" >
+"""
 
     val tabs = """<ul><li>this is a list item
     indented with tabs
