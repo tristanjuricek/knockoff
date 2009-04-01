@@ -263,6 +263,26 @@ class MarkdownTestSuite {
             MarkdownExamples.inlineHTMLSimple,
             ConversionExamples.inlineHTMLSimple
         )
+        
+        _compare(
+            "Paragraph one.\n\n" +
+            "<!-- This is a simple comment -->\n\n" +
+            "<!--\n" +
+            "	This is another comment.\n" +
+            "-->\n\n" +
+            "Paragraph two.\n\n" +
+            "<!-- one comment block -- -- with two comments -->\n\n" +
+            "The end.\n",
+         
+            "<p>Paragraph one.\n</p>" +
+            "<!-- This is a simple comment -->\n" +
+            "<!--\n" +
+            "    This is another comment.\n" +
+            "-->\n" +
+            "<p>Paragraph two.\n</p>" +
+            "<!-- one comment block -- -- with two comments -->\n" +
+            "<p>The end.\n</p>"
+        )
     }
     
     def strongAndEmTogether = {
