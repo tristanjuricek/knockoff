@@ -355,7 +355,7 @@ protected case class InlineLinkSplitter(val spanParser:SpanParser) extends LinkS
     
     def construct(nads:List[Nad], url:String, title:String) = Link(nads, url, title)
     
-    val starter = new Regex("""\[([^\]]*)\][ ]*\(<?([\S&&[^)>]]*)>? "([^)]*)"\)|\[([^\]]*)\][ ]*\(<?([\S&&[^)>]]*)>?\)""")
+    val starter = new Regex("""\[([^\]]*)\][ ]*\(<?([\S&&[^)>]]*)>?[ ]+"([^)]*)"\)|\[([^\]]*)\][ ]*\(<?([\S&&[^)>]]*)>?\)""")
 }
 
 
@@ -369,49 +369,200 @@ protected case class InlineImageLinkSplitter(val spanParser:SpanParser) extends 
     
     def construct(nads:List[Nad], url:String, title:String) = ImageLink(nads, url, title)
     
-    val starter = new Regex("""!\[([^\]]*)\][ ]*\(([\S&&[^)]]*) "([^)]*)"\)|!\[([^\]]*)\][ ]*\(([\S&&[^)]]*)\)""")
+    val starter = new Regex("""!\[([^\]]*)\][ ]*\(([\S&&[^)]]*)[ ]+"([^)]*)"\)|!\[([^\]]*)\][ ]*\(([\S&&[^)]]*)\)""")
 }
 
-protected case class ReferenceLinkSplitter(spanParser:SpanParser) {
+/**
+ * Returns the closing bracket found in the source searching from the indicated index.
+ */
+class ParenMatcher(val str:String, val open:Char, val close:Char) {
 
-    def split(str:String):List[Nad] = {
-     
-        pattern.findFirstMatchIn(str) match {
+    /**
+     * Will the search for matching parens from the indicated index. The open paren *must be* at
+     * or after the starting fromIndex position.
+     */
+    def indexOfClose(fromIndex:Int):Int = {
+        
+        val openIndex = str.indexOf ( open, fromIndex )
+        
+        if ( ( openIndex == -1 ) || ( str.length == openIndex + 1 ) )
+            return -1
+        
+        return _indexOfClose ( openIndex + 1, 1 )
+    }
+    
+    /**
+     * Recursive method that returns positively when we find the matched paren for this paren.
+     * Or -1 when it's not found.
+     */
+    private def _indexOfClose(fromStart:Int, opens:Int):Int = {
+        
+        val nextOpenIndex   = str.indexOf ( open,   fromStart )
+        
+        val closeIndex      = str.indexOf ( close,  fromStart )
+
+        // If we don't find the closing paren, return -1
+        
+        if ( closeIndex == -1 )
+            return -1
+        
+        // If an open index exists before the current closing index, we increase the number of opens
+        // and search from that position.    
+        
+        if ( ( nextOpenIndex != -1 ) && ( nextOpenIndex < closeIndex ) ) {
          
-            case Some(mtch) => {
+            if ( str.length == nextOpenIndex + 1 )
+                return -1
+            
+            return _indexOfClose ( nextOpenIndex + 1, opens + 1 )
+        }
+        
+        // If the number of opens is 1, we're done, otherwise, we continue the search from this 
+        // position with 1 fewer open.
+        
+        if ( opens > 1 ) {
+         
+            if ( str.length == closeIndex + 1 )
+                return -1
+            
+            return _indexOfClose ( closeIndex + 1, opens - 1 )
+        }
+        
+        return closeIndex
+    }
+}
+
+object ParenMatcher {
+    
+    def apply ( str:String, open:Char, close:Char ) :ParenMatcher =
+        new ParenMatcher ( str, open, close )
+        
+    def apply ( str:String ):ParenMatcher =
+        new ParenMatcher ( str, '(', ')' )
+}
+
+/**
+ * TODO This needs to be able to handle brackets inside the link definition, which means that this
+ *      needs to switch from a regular expression to a scanning parser. ... which might use a regular
+ *      expression.
+ *
+ * The main feature here we're supporting is embedded, balanced parens. This means we scan and keep
+ * a stack of seen parens.
+ */
+protected case class ReferenceLinkSplitter(spanParser:SpanParser) {
+    
+    /**
+     * Returns true if you find two balanced bracket sections after each other, like
+     * `[link][reference]`.
+     *
+     * - The brackets can be separated by whitespace.
+     * - The link can have brackets embedded.
+     *
+     * We search the string for the open brackets, then use the ParenMatcher to return the
+     * (open, close) sequences of both matching pairs.
+     */
+    def split ( source:String ) :List[Nad] = {
+        
+        _findNextLink(source) match {
+         
+            case Some ( ( link, referenceLinkStart, referenceLinkEnd ) ) => {
                 
-                val span = mtch.group(1)
-                val refID = mtch.group(2)
+                // Add the last node if there's still string in use
                 
-                val nads = new collection.mutable.Queue[Nad]
-                
-                if (spanParser.links.contains(refID)) {
-                    
-                    if (mtch.before.length > 0)
-                        nads += Text(mtch.before.toString)
-                    
-                    nads += Link(
-                        spanParser.parse(span),
-                        spanParser.links(refID).url,
-                        spanParser.links(refID).title)
-                
-                    if (mtch.after.length > 0)
-                        nads += Text(mtch.after.toString)
-                
-                } else {
-                    
-                    nads += Text(str)
+                var toks :List[Nad] = {
+                    if ( source.length > referenceLinkEnd )
+                        List ( Text ( source.substring ( referenceLinkEnd ) ) )
+                    else
+                        Nil
                 }
                 
-                nads.toList
+                // Always add the middle node
+                
+                toks = link :: toks
+                
+                // Add the start node if we started in the middle of the text
+                
+                toks = {
+                    if ( referenceLinkStart > 0 )
+                        Text ( source.substring ( 0, referenceLinkStart ) ) :: toks
+                    else
+                        toks
+                }
+                
+                return toks
             }
-            
-            case None => List(Text(str))
+         
+            case None => List ( Text ( source ) )
         }
     }
+    
+    /**
+     * Identifies the first link, then sees if we can get to the next link 
+     */
+    private def _findNextLink ( source :String ) :Option [ ( Link, Int, Int ) ] = {
+        
+        val firstOpenParen = source.indexOf ( '[' )
+        
+        if ( firstOpenParen == -1 )
+            return None
+            
+        val firstCloseParen = ParenMatcher ( source, '[', ']' ).indexOfClose ( firstOpenParen )
+        
+        if ( firstCloseParen == -1 )
+            return None
+        
+        if ( source.length == firstCloseParen )
+            return None
+        
+        val secondSource = source.substring(firstCloseParen + 1)
+        
+        val secondOpenParen = {
+            val secondOpenPattern = new Regex("""^\s*(\[)""")
+               
+            secondOpenPattern.findFirstMatchIn ( secondSource ) match {
+                case Some ( m ) => m.start(1)
+                case None => return None
+            }
+        }
+        
+        val secondCloseParen = ParenMatcher ( secondSource, '[', ']' ).indexOfClose ( secondOpenParen )
+        
+        if ( secondCloseParen == -1 )
+            return None
+            
+        // The reference ID of a reference link falls back to the primary content in case it is
+        // empty.
+            
+        val referenceID = {
+            val content = secondSource.substring ( secondOpenParen + 1, secondCloseParen )
+            
+            if (!content.isEmpty)
+                content
+            else
+                source.substring ( firstOpenParen + 1, firstCloseParen )
+        }
+        
+        if ( spanParser.links.contains(referenceID) ) {
+            return Some (
+                (
+                    Link (
+                        spanParser.parse (
+                            source.substring ( firstOpenParen + 1, firstCloseParen )
+                        ),
+                        spanParser.links ( referenceID ).url,
+                        spanParser.links ( referenceID ).title
+                    ),
+                    firstOpenParen,
+                    firstCloseParen + 1 + secondCloseParen + 1
+                )
+            )
+        }
+            
+        return None
+    }
 
-    val pattern = new Regex("""\[([^\]]*)\][ ]*\[([^\]]*)\]""")
 }
+
 
 protected object AutoLinkSplitter {
  

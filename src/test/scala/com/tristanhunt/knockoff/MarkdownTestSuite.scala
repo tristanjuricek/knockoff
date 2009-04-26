@@ -285,6 +285,55 @@ class MarkdownTestSuite {
         )
     }
     
+    def linksInlineStyle = {
+     
+        _compare(
+            "Just a [URL](/url/).",
+            "<p>Just a <a href=\"/url/\" >URL</a>.</p>"
+        )
+        
+        _compare(
+            "[URL and title](/url/ \"title\").",
+            "<p><a href=\"/url/\" title=\"title\">URL and title</a>.</p>"
+        )
+        
+        _compare(
+            "[URL and title](/url/  \"title preceded by two spaces\").",
+            "<p><a href=\"/url/\" title=\"title preceded by two spaces\">URL and title</a>.</p>"
+        )
+
+        _compare(
+            "[URL and title](/url/	\"title preceded by a tab\").",
+            "<p><a href=\"/url/\" title=\"title preceded by a tab\">URL and title</a>.</p>"
+        )
+
+        _compare(
+            "[Empty]().",
+            "<p><a href=\"\" >Empty</a>.</p>"
+        )
+    }
+    
+    def linksReferenceStyle = _compare(
+        MarkdownExamples.linksReferenceStyle,
+        ConversionExamples.linksReferenceStyle
+    )
+    
+    
+    def literalQuotesInTitles = {
+        
+        val quotesInTitles =
+            "Foo [bar][].\n\n" +
+            """Foo [bar](/url/ "Title with "quotes" inside").""" + "\n\n\n" +
+            """  [bar]: /url/ "Title with "quotes" inside" """ + "\n\n"
+        
+        val processedQuotesInTitles =
+            "<p>Foo <a href=\"/url/\" title=\"Title with &quot;quotes&quot; inside\">bar</a>.\n</p>" +
+            "<p>Foo <a href=\"/url/\" title=\"Title with &quot;quotes&quot; inside\">bar</a>.\n</p>"
+            
+        _compare(quotesInTitles, processedQuotesInTitles)
+    }
+    
+    
     def strongAndEmTogether = {
         
         _compare(
@@ -574,6 +623,39 @@ Hr's:
 <hr class="foo" id="bar" >
 """
 
+    val linksReferenceStyle = """Foo [bar] [1].
+
+Foo [bar][1].
+
+Foo [bar]
+[1].
+
+[1]: /url/  "Title"
+
+
+With [embedded [brackets]] [b].
+
+
+Indented [once][].
+
+Indented [twice][].
+
+Indented [thrice][].
+
+Indented [four][] times.
+
+ [once]: /url
+
+  [twice]: /url
+
+   [thrice]: /url
+
+    [four]: /url
+
+
+[b]: /url/
+"""
+
     val tabs = """+	this is a list item
 	indented with tabs
 
@@ -727,6 +809,17 @@ Blah
 <hr class="foo" id="bar"/>
 <hr class="foo" id="bar" >
 """
+    
+    val linksReferenceStyle = """<p>Foo <a href="/url/" title="Title">bar</a>.
+</p><p>Foo <a href="/url/" title="Title">bar</a>.
+</p><p>Foo <a href="/url/" title="Title">bar</a>.
+</p><p>With <a href="/url/" >embedded [brackets]</a>.
+</p><p>Indented <a href="/url" >once</a>.
+</p><p>Indented <a href="/url" >twice</a>.
+</p><p>Indented <a href="/url" >thrice</a>.
+</p><p>Indented [four][] times.
+</p><pre><code>[four]: /url
+</code></pre>"""
 
     val tabs = """<ul><li>this is a list item
     indented with tabs
