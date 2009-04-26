@@ -26,7 +26,7 @@ object KnockOff {
      */
     def convert(src:String):Option[xml.NodeBuffer] = {
         parse(src) match {
-            case Some(blocks)    => Some(BlockConverter.convert(blocks))
+            case Some(blocks)    => Some(BlockConverter.toXML(blocks))
             case None            => None
         }
     }
