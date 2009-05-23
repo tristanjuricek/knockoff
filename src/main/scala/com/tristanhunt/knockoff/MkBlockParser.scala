@@ -18,20 +18,31 @@ extends RegexParsers {
     override def skipWhitespace = false
     
     /**
-     * A markdown document
+     * A markdown document is a sequence of things separated by empty whitespace. Note that this
+     * parser combinator expects that the input will not "ram" things together.
      */
-    def markdownDocument:Parser[List[MkBlock]]  = repsep(thing, emptyLine)
+    def markdownDocument : Parser[ List[ MkBlock ] ]  = repsep( thing, emptyLine )
+
     
-    def thing:Parser[MkBlock] =
-        (codeMkBlock | horizontalRule | listMkBlock | header | linkDefinition | htmlMkBlock |
-            blockquote | textMkBlock) ^^ (d => d.asInstanceOf[MkBlock])
+    def thing : Parser[ MkBlock ] = (
+    
+        codeMkBlock | horizontalRule | listMkBlock | header | linkDefinition | htmlMkBlock |
+        blockquote | textMkBlock
+    
+    ) ^^ ( blockElement => blockElement.asInstanceOf[ MkBlock ] )
+
 
     /**
      * Text lines need to retain their newlines. The user can use "hard" formatting with newlines,
      * and also indicate two spaces at the end of the line to force a paragraph break.
      */
-    def textLine:Parser[MkParagraph]      = """[ ]*\S[^\n]*\n?""".r   ^^ (str => MkParagraph(str))
-    def textMkBlock:Parser[MkParagraph]     = rep(textLine)     ^^ (list => MkParagraph(_concatMkParagraphs(list)))
+    def textLine : Parser[ MkParagraph ] =
+        """[ ]*\S[^\n]*\n?""".r ^^ ( str => MkParagraph( str ) )
+
+
+    def textMkBlock : Parser[ MkParagraph ] =
+        rep( textLine ) ^^ ( list => MkParagraph( _concatMkParagraphs( list ) ) )
+    
     
     /**
      * We don't actually parse HTML, just assume the simple rule of "if it looks like markup, you
@@ -39,8 +50,16 @@ extends RegexParsers {
      *
      * NOTE: We need to avoid the <http://fancy.link> automatic link interface here.
      */
-    def htmlMkBlock:Parser[HTMLMkBlock]     = htmlLine~rep(textLine)    ^^ (p => HTMLMkBlock(_concatMkParagraphs(p._1 :: p._2)))
-    def htmlLine:Parser[MkParagraph]      = """<[ ]*[\w="]*[ ]*\n?""".r            ^^ (str => MkParagraph(str))
+    def htmlMkBlock : Parser[ HTMLMkBlock ] = {
+        htmlLine ~ rep( textLine ) ^^ (
+            paras => HTMLMkBlock( _concatMkParagraphs( paras._1 :: paras._2 ) )
+        )
+    }
+
+
+    def htmlLine : Parser[ MkParagraph ] =
+        """<[ ]*[\w="]*[ ]*\n?""".r ^^ ( str => MkParagraph( str ) )
+
     
     /**
      * For some reason, this groups bullet lists broken with an empty line into a single list...
@@ -68,18 +87,34 @@ extends RegexParsers {
         
     def noNumberLine:Parser[MkParagraph] = not(numberedLead)~>textLine
     
+    
     /**
      * One or more blank lines mostly is used to break blocks apart from each other in the list.
      * This should be generally passed over in blocks. Note that this should generally capture
      * more lines as a single empty space element.
      */
-    def emptyLine:Parser[EmptySpace]    = """\s*\n""".r     ^^ (s => EmptySpace(s))
+    def emptyLine:Parser[ EmptySpace ] =
+        """\s*\n""".r ^^ (s => EmptySpace(s))
     
-    def header:Parser[MkHeader]           = (setextHeader1 | setextHeader2 | atxHeader)
-    def setextHeader1:Parser[MkHeader]    = textLine<~equalsLine  ^^ (md => MkHeader(md.markdown.trim, 1))
-    def setextHeader2:Parser[MkHeader]    = textLine<~dashLine    ^^ (md => MkHeader(md.markdown.trim, 2))
+    
+    def header : Parser[ MkHeader ] =
+        ( setextHeader1 | setextHeader2 | atxHeader )
+        
+
+    def setextHeader1 : Parser[ MkHeader ] =
+        textLine <~ equalsLine ^^ ( mkParagraph => MkHeader( mkParagraph.markdown.trim, 1 ) )
+
+
+    def setextHeader2 : Parser[ MkHeader ] =
+        textLine <~ dashLine ^^ ( mkParagraph => MkHeader( mkParagraph.markdown.trim, 2 ) )
+
+
     def equalsLine:Parser[Any]          = """=+\n?""".r
+
+
     def dashLine:Parser[Any]            = """-+\n?""".r
+
+
     def atxHeader:Parser[MkHeader]        = """#+ .*\n?""".r       ^^ (str => _atxHeader(str.trim))
     
     

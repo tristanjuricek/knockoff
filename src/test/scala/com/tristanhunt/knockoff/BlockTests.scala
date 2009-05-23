@@ -37,8 +37,9 @@ class BlockTests {
         val src = "heading 2\n--------\n \nBody text."
     
         val expected = List(
-            Header(List(Text("heading 2")), 2),
-            Paragraph(List(Text("Body text."))))
+            Header( List( Text( "heading 2" ) ), 2 ),
+            Paragraph( List( Text( "Body text." ) ) )
+        )
         
         val actual:List[Block] = KnockOff.parse(src) match {
             case Some(list) => list
@@ -49,6 +50,27 @@ class BlockTests {
         }
         
         assertTrue(expected sameElements actual)
+    }
+    
+    /**
+     * Use an immediately trailing paragraph text.
+     */
+    def setextHeader3 {
+       
+        val src = "heading 1\n===========\nBody Text"
+       
+        val expected = List(
+            Header( List( Text( "heading 1" ) ), 1 ),
+            Paragraph( List( Text( "Body Text" ) ) )
+        )
+        
+        val actual:List[ Block ] = KnockOff.parse( src ).get
+        
+        assertTrue(
+            expected sameElements actual,
+            "\nexpected : " + expected +
+            "\nactual   : " + actual + "\n"
+        )
     }
 
 

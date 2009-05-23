@@ -35,23 +35,37 @@ object KnockOff {
      * Parse a full markdown document. Returns the content as a list of Blocks, and a map of the
      * different link references.
      */
-    def parse(src:String):Option[List[Block]] = {
+    def parse( src:String ):Option[ List[ Block ] ] = {
         
         // Replace tabs with 4 spaces.
         val src2 = src.replace("\t", "    ")
+        
+        // Add extra lines after things that look a lot like headers.
+        
+        // ATX headers
+        val src3 = src2.replaceAll( """(?m)^(#{1,6}[^\n]*#{1,6})$""", "$1\n" )
+        
+        // Setext headers
+        val src4 = src3.replaceAll( """(?m)^([-=]{3,})\s*$""", "$1\n" )
+        
+        // Do combinator parsing run, which will break down the markdown into "blocks".
        
         val mkBlockParser = new MkBlockParser
         
-        val mkblks:List[MkBlock] = mkBlockParser.parseAll(mkBlockParser.markdownDocument, src2) match {
+        val mkblks:List[MkBlock] = {
+        
+            mkBlockParser.parseAll( mkBlockParser.markdownDocument, src4 ) match {
 
-            case mkBlockParser.Success(list, _) => _trim(_condenseSpacedLists(list, Nil))
+                case mkBlockParser.Success(list, _) => _trim( _condenseSpacedLists( list, Nil ) )
 
-            case fail:mkBlockParser.Failure => {
-                println(fail.toString)
-                return None
-            }
+                case fail:mkBlockParser.Failure => {
+
+                    println( fail.toString )
+                    return None
+                }
             
-            case _ => return None
+                case _ => return None
+            }
         }
         
         // Prepare a separate map of each link definition, which will be the second return value,
