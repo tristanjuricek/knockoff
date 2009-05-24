@@ -81,6 +81,17 @@ extends BlockList
 case class OrderedBlockList(val items:Seq[Block])
 extends BlockList
 
+trait ComplexBlockList extends Block {
+    def items:Seq[ Seq[ Block ] ]
+    def nads:List[Nad] = items.flatMap( blocks => blocks.flatMap(_.nads).toList ).toList
+}
+
+case class UnorderedComplexBlockList( val items : Seq[ Seq[ Block ] ] )
+extends ComplexBlockList
+
+case class OrderedComplexBlockList( val items : Seq[ Seq[ Block ] ] )
+extends ComplexBlockList
+
 /**
  * Each link definition should basically should match the ID case insensitively. 
  *

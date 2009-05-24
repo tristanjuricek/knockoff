@@ -95,8 +95,10 @@ object KnockOff {
     
     private def _convert(mkblk:MkBlock)(implicit parser:SpanParser):Block = {
 
-        if (mkblk.isInstanceOf[MarkdownList])
-            _convertMarkdownList(mkblk.asInstanceOf[MarkdownList])
+        if ( mkblk.isInstanceOf[ MarkdownList ] )
+            _convertMarkdownList( mkblk.asInstanceOf[ MarkdownList ] )
+        else if ( mkblk.isInstanceOf[ ComplexMarkdownList ] )
+            _convertComplexMarkdownList( mkblk.asInstanceOf[ ComplexMarkdownList ] )
         else 
             _convertMkBlock(mkblk)
     }
@@ -117,7 +119,7 @@ object KnockOff {
         defs
     }
     
-    private def _convertMkBlock(mkblk:MkBlock)(implicit parser:SpanParser):Block = mkblk match {
+    private def _convertMkBlock( mkblk:MkBlock )( implicit parser:SpanParser ):Block = mkblk match {
 
         case EmptySpace(_) => null
 
@@ -139,11 +141,32 @@ object KnockOff {
         case MkHorizontalRule(_) => HorizontalRule()
     }
     
-    private def _convertMarkdownList(list:MarkdownList)(implicit parser:SpanParser):BlockList = {
-        val blocks = list.markdownSeq.map(_mapListItem)
+    private def _convertMarkdownList(
+            list    : MarkdownList
+        ) ( implicit
+            parser  : SpanParser
+        ) : BlockList = {
+
+        val blocks = list.items.map( _mapListItem )
+
         list match {
-            case BulletListMkBlock(_)       => UnorderedBlockList(blocks)
-            case NumberedListMkBlock(_)     => OrderedBlockList(blocks)
+
+            case BulletListMkBlock( _ )    => UnorderedBlockList ( blocks )
+            case NumberedListMkBlock( _ )  => OrderedBlockList   ( blocks )
+        }
+    }
+    
+    private def _convertComplexMarkdownList(
+            complexList : ComplexMarkdownList
+        ) ( implicit
+            parser      : SpanParser
+        ):ComplexBlockList = {
+     
+        val blocks = complexList.items.map( mkBlocks => mkBlocks.map( _convert ) )
+        
+        return complexList match {
+            case bulleted:ComplexBulletListMkBlock => UnorderedComplexBlockList( blocks )
+            case numbered:ComplexNumberedListMkBlock => OrderedComplexBlockList( blocks )
         }
     }
     
@@ -173,21 +196,146 @@ object KnockOff {
     /**
      * Special rule to group any lists that were separated by whitespace, because it is an option.
      */
-    private def _condenseSpacedLists(in:List[MkBlock], out:List[MkBlock]):List[MkBlock] = {
+    private def _condenseSpacedLists(
+            /** We consume this list and recurse until it's empty. */
+            in  : List[ MkBlock ],
+            /** Where we stick the output... which, by the way, will be pulled from when condensing. */
+            out : List[ MkBlock ]
+        ) : List[ MkBlock ] = {
         
         if (in.isEmpty) {
             return out
         }
         
-        if (in.head.isInstanceOf[MarkdownList] && !out.isEmpty && in.head.getClass == out.last.getClass) {
-            val condensed = out.last match {
-                case BulletListMkBlock(outItems)  => BulletListMkBlock(outItems ++ in.head.asInstanceOf[MarkdownList].items)
-                case NumberedListMkBlock(outItems)        => NumberedListMkBlock(outItems ++ in.head.asInstanceOf[MarkdownList].items)
-                case _ => error("Unknown MarkdownList Class: " + out.head.getClass)
+        // First, look for the case where either are complex. If this is the case, when we condense
+        // we'll always convert both lists to the complex case.
+        //
+        // TODO This looks like its time for a better generic class... brain... melting... whatever...
+        
+        if ( ! out.isEmpty ) {
+
+            if (
+                (
+                    ( in.head.isInstanceOf[ ComplexNumberedListMkBlock ] ) &&
+                    (
+                        out.last.isInstanceOf[ NumberedListMkBlock ] ||
+                        out.last.isInstanceOf[ ComplexNumberedListMkBlock ]
+                    )
+                ) ||
+                (
+                    ( in.head.isInstanceOf[ NumberedListMkBlock ] ) &&
+                    ( out.last.isInstanceOf[ ComplexNumberedListMkBlock ] )
+                )
+            ) {
+                
+                val rightItems:Seq[ Seq[ MkBlock ] ] = {
+                    
+                    in.head match {
+                        
+                        case complexList : ComplexNumberedListMkBlock =>
+                            complexList.items
+                        
+                        case list : NumberedListMkBlock =>
+                            list.items.map( item => List( MkParagraph( item ) ) )
+                    }
+                }
+                
+                val condensed = {
+                    out.last match {
+                 
+                        case list : NumberedListMkBlock => {
+                            ComplexNumberedListMkBlock(
+                                list.items.map( item => List( MkParagraph( item ) ) ) ++ rightItems
+                            )
+                        }
+                    
+                        case complexList : ComplexNumberedListMkBlock => {
+                            ComplexNumberedListMkBlock(
+                                complexList.items ++ rightItems
+                            )
+                        }
+                    }
+                }
+                
+                return _condenseSpacedLists( in.tail, out.dropRight(1) + condensed )
+                
+            } else if (
+                ( in.head.isInstanceOf[ NumberedListMkBlock ] ) &&
+                ( out.last.isInstanceOf[ NumberedListMkBlock ] )
+            ) {
+                
+                val right = in.head.asInstanceOf[ NumberedListMkBlock ]
+                
+                val left = out.last.asInstanceOf[ NumberedListMkBlock ]
+                
+                val condensed = NumberedListMkBlock( left.items ++ right.items )
+                
+                return _condenseSpacedLists( in.tail, out.dropRight(1) + condensed )
+                
+            } else if (
+                (
+                    ( in.head.isInstanceOf[ ComplexBulletListMkBlock ] ) &&
+                    (
+                        out.last.isInstanceOf[ BulletListMkBlock ] ||
+                        out.last.isInstanceOf[ ComplexBulletListMkBlock ]
+                    )
+                ) ||
+                (
+                    ( in.head.isInstanceOf[ BulletListMkBlock ] ) &&
+                    ( out.last.isInstanceOf[ ComplexBulletListMkBlock ] )
+                )
+            ) {
+
+                val rightItems:Seq[ Seq[ MkBlock ] ] = {
+
+                    in.head match {
+
+                        case complexList : ComplexBulletListMkBlock =>
+                            complexList.items
+
+                        case list : BulletListMkBlock =>
+                            list.items.map( item => List( MkParagraph( item ) ) )
+                    }
+                }
+
+                val condensed = {
+                    
+                    out.last match {
+
+                        case list : BulletListMkBlock => {
+                            ComplexBulletListMkBlock(
+                                list.items.map( item => List( MkParagraph( item ) ) ) ++ rightItems
+                            )
+                        }
+
+                        case complexList : ComplexBulletListMkBlock => {
+                            ComplexBulletListMkBlock(
+                                complexList.items ++ rightItems
+                            )
+                        }
+                    }
+                }
+
+                return _condenseSpacedLists( in.tail, out.dropRight(1) + condensed )
+
+            } else if (
+                ( in.head.isInstanceOf[ BulletListMkBlock ] ) &&
+                ( out.last.isInstanceOf[ BulletListMkBlock ] )
+            ) {
+                
+                val right = in.head.asInstanceOf[ BulletListMkBlock ]
+                
+                val left = out.last.asInstanceOf[ BulletListMkBlock ]
+                
+                val condensed = BulletListMkBlock( left.items ++ right.items )
+                
+                return _condenseSpacedLists( in.tail, out.dropRight(1) + condensed )
             }
-            return _condenseSpacedLists(in.tail, out.dropRight(1) + condensed)
+            
         }
         
-        return _condenseSpacedLists(in.tail, out + in.head)
+        // OK, we're not at a list, so just move the current item to the next list.
+        
+        return _condenseSpacedLists( in.tail, out + in.head )
     }
 }

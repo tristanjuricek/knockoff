@@ -26,12 +26,12 @@ extends RegexParsers {
     
     def thing : Parser[ MkBlock ] = (
     
-        codeMkBlock | horizontalRule | listMkBlock | header | linkDefinition | htmlMkBlock |
+        horizontalRule | listMkBlock | codeMkBlock | header | linkDefinition | htmlMkBlock |
         blockquote | textMkBlock
     
     ) ^^ ( blockElement => blockElement.asInstanceOf[ MkBlock ] )
-
-
+    
+    
     /**
      * Text lines need to retain their newlines. The user can use "hard" formatting with newlines,
      * and also indicate two spaces at the end of the line to force a paragraph break.
@@ -64,28 +64,74 @@ extends RegexParsers {
     /**
      * For some reason, this groups bullet lists broken with an empty line into a single list...
      */
-    def listMkBlock:Parser[MkBlock] = bulletList | numberedList
+    def listMkBlock : Parser[ MkBlock ] =
+        complexBulletList | bulletList | complexNumberedList | numberedList
 
-    def bulletList:Parser[BulletListMkBlock] =
-        rep1(bulletItem) ^^ (list => BulletListMkBlock(list))
 
-    def bulletItem:Parser[String] =
-        bulletLead~rep(noBulletLine) ^^ (p => p._1 + _concatMkParagraphs(p._2))
+    def complexBulletList : Parser[ ComplexBulletListMkBlock ] = {
+        
+        bulletItem ~ rep1( indentedThing ) ^^ (
+            stringAndBlocks => ComplexBulletListMkBlock(
+                List( MkParagraph( stringAndBlocks._1 ) :: stringAndBlocks._2.toList )
+            )
+        )
+    }
 
-    def bulletLead:Parser[String]           = """[*\-+] """.r~textLine               ^^ (l => l._1 + l._2.markdown)
-    def noBulletLine:Parser[MkParagraph]      = """[ ]*[\S&&[^*\-+]][^\n]*\n?""".r    ^^ (s => MkParagraph(s))
+    
+    def complexNumberedList : Parser[ ComplexNumberedListMkBlock ] = {
+        
+        numberedItem ~ rep1( indentedThing ) ^^ (
+            stringAndBlocks => ComplexNumberedListMkBlock(
+                List( MkParagraph( stringAndBlocks._1 ) :: stringAndBlocks._2.toList )
+            )
+        )
+    }
     
     
-    def numberedList:Parser[NumberedListMkBlock] =
-        rep1(numberedItem) ^^ (list => NumberedListMkBlock(list))
+    /**
+     * Indented blocks have *optional* tabs, but it's the leading line (only) that determines 
+     * that this is an indented block.
+     */
+    def indentedThing : Parser[ MkBlock ] = {
+        ( opt( emptyLine ) ~ "    " ) ~> thing ^^ ( block => block.unindentedClone )
+    }
 
-    def numberedItem:Parser[String] =
-        numberedLead~rep(noNumberLine) ^^ (p => p._1 + _concatMkParagraphs(p._2))
+
+    def bulletList : Parser[ BulletListMkBlock ] =
+        rep1( bulletItem ) ^^ ( list => BulletListMkBlock( list ) )
+
+
+    def bulletItem : Parser[ String ] = {
+        bulletLead ~ rep( noBulletLine ) ^^ (
+            stringAndPara => stringAndPara._1 + _concatMkParagraphs( stringAndPara._2 )
+        )
+    }
+    
+
+    def bulletLead : Parser[ String ] = {
+        """[ ]{0,3}[*\-+]\s+""".r ~> textLine ^^ ( para => para.markdown )
+    }
+    
+
+    def noBulletLine : Parser[ MkParagraph ] =
+        """[ ]*[\S&&[^*\-+]][^\n]*\n?""".r ^^ ( string => MkParagraph( string ) )
+    
+    
+    def numberedList : Parser[ NumberedListMkBlock ] =
+        rep1( numberedItem ) ^^ ( list => NumberedListMkBlock( list ) )
+
+
+    def numberedItem : Parser[ String ] =
+        numberedLead ~ rep( noNumberLine ) ^^ (
+            stringAndParas => stringAndParas._1 + _concatMkParagraphs( stringAndParas._2 )
+        )
+
         
-    def numberedLead:Parser[String] =
-        """\d+\.""".r~textLine ^^ (pair => pair._1 + pair._2.markdown)
+    def numberedLead : Parser[ String ] =
+        """[ ]{0,3}\d+\.\s+""".r ~> textLine ^^ ( para => para.markdown )
+
         
-    def noNumberLine:Parser[MkParagraph] = not(numberedLead)~>textLine
+    def noNumberLine : Parser[ MkParagraph ] = not( numberedLead ) ~> textLine
     
     
     /**
@@ -120,59 +166,84 @@ extends RegexParsers {
     
     def blockquote:Parser[MkBlockquote] =
         rep1(blockquotedLine) ^^ (list => MkBlockquote(_concatMkParagraphs(list)))
+
     
     def blockquotedLine:Parser[MkParagraph] =
         ">"~(textLine | emptyLine) ^^ (tup => MkParagraph(tup._1 + tup._2.markdown))
+
         
     def codeMkBlock:Parser[CodeMkBlock] =
         rep1(indentedLine) ^^ (list => CodeMkBlock(_concatMkParagraphs(list)))
+
         
     def indentedLine:Parser[MkParagraph] =
         "    "~(textLine | emptyLine) ^^ (v => MkParagraph(v._1 + v._2.markdown))
+
         
     def horizontalRule:Parser[MkHorizontalRule] =
         """[ ]{0,3}[*\-_][ ]?[*\-_][ ]?[*\-_][ *\-_]*\n""".r ^^ (rule => MkHorizontalRule(rule))
+
     
-    def linkDefinition:Parser[MkLinkDefinitionList] = rep1(linkDefinitionItem) ^^ (list => MkLinkDefinitionList(list))
+    def linkDefinition : Parser[ MkLinkDefinitionList ] =
+        rep1( linkDefinitionItem ) ^^ ( list => MkLinkDefinitionList( list ) )
+
     
-    def linkDefinitionItem:Parser[MkLinkDefinition] = linkBase~opt(linkTitle)<~"""[ ]*\n?""".r ^^ (
-        parser => parser._2 match {
-            case Some(title)    => MkLinkDefinition(parser._1._1, parser._1._2, title)
-            case None           => MkLinkDefinition(parser._1._1, parser._1._2, "")
-        })
-            
+    def linkDefinitionItem : Parser[ MkLinkDefinition ] = {
+
+        linkBase ~ opt( linkTitle ) <~ """[ ]*\n?""".r ^^ (
+            parser => parser._2 match {
+                case Some(title)    => MkLinkDefinition(parser._1._1, parser._1._2, title)
+                case None           => MkLinkDefinition(parser._1._1, parser._1._2, "")
+            }
+        )
+    }
+
+
     def linkBase:Parser[(String,String)] =
         """[ ]{0,3}\[[^\[\]]*\]:[ ]+<?[\w\p{Punct}]+>?""".r ^^ (str => _readLinkBase(str))
+
     
-    def linkTitle:Parser[String] = """\s*""".r~>"""["'(].*["')]""".r ^^
-        (str => str.substring(1, str.length - 1))
+    def linkTitle:Parser[ String ] =
+        """\s*""".r ~> """["'(].*["')]""".r ^^ ( str => str.substring( 1, str.length - 1 ) )
+
 
     /**
      * Cheap way of grouping the linkBase regex result. I find this to be an ugly solution.
      */
-    private def _readLinkBase(str:String):(String,String) = {
-        val regex = new util.matching.Regex("""^\[([^\[\]]+)\]:[ ]+<?([\w\p{Punct}]+)>?$""")
-        val mtch = regex.findFirstMatchIn(str.trim).get
-        (mtch.group(1), mtch.group(2))
+    private def _readLinkBase( linkString:String ):( String,String ) = {
+
+        val linkMatch = {
+            """^\[([^\[\]]+)\]:[ ]+<?([\w\p{Punct}]+)>?$""".r.findFirstMatchIn(
+                linkString.trim
+            ).get
+        }
+
+        return ( linkMatch.group( 1 ), linkMatch.group( 2 ) )
     }
     
     
     /**
      * Combine hard-wrapped lines together into single blocks.
      */
-    private def _concatMkParagraphs(list:List[MkParagraph]):String = {
+    private def _concatMkParagraphs( list:List[ MkParagraph]  ):String = {
+
         val sb = new StringBuilder
-        list.foreach(tb => sb.append(tb.markdown))
-        sb.toString
+        
+        list.foreach( para => sb.append( para.markdown ) )
+
+        return sb.toString
     }
+    
     
     /**
      * Remove any leading and trailing # characters, but use the leading # character to determine 
      * level of the header.
      */
-    private def _atxHeader(txt:String):MkHeader = {
-        import util.matching.Regex
-        val r = new Regex("""^(#+) (.*?)\s?#*+$""")
-        MkHeader(r.replaceFirstIn(txt, "$2").trim, r.replaceFirstIn(txt, "$1").length)
+    private def _atxHeader( text:String ):MkHeader = {
+
+        val content         = """^#+ (.*?)\s?#*+$""".r.replaceFirstIn( text, "$1" )
+        val leadingHashes   = """^(#+) .*?\s?#*+$""".r.replaceFirstIn( text, "$1" )
+
+        return MkHeader( content, leadingHashes.length )
     }
 }

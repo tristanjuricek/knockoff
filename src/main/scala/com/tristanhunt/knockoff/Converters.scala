@@ -17,6 +17,8 @@ trait BlockConverter {
              case r:HorizontalRule       => toHorizontalRuleXML(r)
              case l:UnorderedBlockList   => toUnorderedBlockListXML(l)
              case l:OrderedBlockList     => toOrderedBlockListXML(l)
+             case l:UnorderedComplexBlockList   => toUnorderedComplexBlockListXML(l)
+             case l:OrderedComplexBlockList     => toOrderedComplexBlockListXML(l)
          }
      }
     
@@ -35,6 +37,10 @@ trait BlockConverter {
     def toUnorderedBlockListXML(ublst:UnorderedBlockList):Node
 
     def toOrderedBlockListXML(oblst:OrderedBlockList):Node
+
+    def toUnorderedComplexBlockListXML(ublst:UnorderedComplexBlockList):Node
+
+    def toOrderedComplexBlockListXML(oblst:OrderedComplexBlockList):Node
     
     def toListItemXML(b:Block):Node
 
@@ -72,9 +78,18 @@ class DefaultBlockConverter extends BlockConverter {
 
     def toOrderedBlockListXML(oblst:OrderedBlockList):Node =
        <ol>{oblst.items.map(toListItemXML)}</ol>
+       
+    def toUnorderedComplexBlockListXML( list:UnorderedComplexBlockList ):Node =
+        <ul>{ list.items.map( toListItemXML ) }</ul>
+
+    def toOrderedComplexBlockListXML( list:OrderedComplexBlockList ):Node =
+        <ol>{ list.items.map( toListItemXML ) }</ol>
 
     def toListItemXML(b:Block):Node =
-       <li>{span(b.nads)}</li>
+       <li>{ span( b.nads ) }</li>
+       
+    def toListItemXML( blocks : Seq[ Block ] ) : Node =
+        <li>{ convert( blocks.toList ) }</li>
 
     def convert(blocks:List[Block]):NodeBuffer = {
        val nb = new xml.NodeBuffer
