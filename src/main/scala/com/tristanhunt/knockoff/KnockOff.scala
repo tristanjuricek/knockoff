@@ -228,7 +228,10 @@ object KnockOff {
        
        // TODO I've got to figure out a better way to keep this stuff organized.
         
-        _createComplexListsFromEmbeddedBulletLists( in, out )
+        _createComplexListsFromEmbeddedNumberedLists(
+            _createComplexListsFromEmbeddedBulletLists( in, out ),
+            Nil
+        )
     }
     
     /**
@@ -288,6 +291,35 @@ object KnockOff {
         return _createNextBlock( sources.tail, blocks + sources.head )
     }
     
+    
+    /**
+     * 
+     */
+    private def _createComplexListsFromEmbeddedNumberedLists(
+            in : List[ MkBlock ],
+            out : List[ MkBlock ]
+        ) : List[ MkBlock ] = {
+    
+        if ( in.isEmpty )
+            return out
+        
+        if ( in.head.isInstanceOf[ NumberedListMkBlock ] ) {
+         
+            val bulletList = in.head.asInstanceOf[ NumberedListMkBlock ]
+
+            if ( bulletList.items.find( _.contains( "\n     " ) ).isDefined ) {
+
+                val complexList = ComplexNumberedListMkBlock(
+                    bulletList.items.map( _convertItemToBlocks )
+                )
+                
+                return _createComplexListsFromEmbeddedNumberedLists( in.tail, out + complexList )
+            }
+        }
+        
+        return _createComplexListsFromEmbeddedNumberedLists( in.tail, out + in.head )
+    }
+
     
     /**
      * Special rule to group any lists that were separated by whitespace, because it is an option.
