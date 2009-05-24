@@ -189,9 +189,9 @@ class MarkdownSuiteListTests {
                 "<ul>" +
                     "<li>Tab\n" +
                         "<ul>" +
-                            "<li>Tab\n"
+                            "<li>Tab\n" +
                                 "<ul>" +
-                                    "<li>Tab</li>" +
+                                    "<li>Tab\n</li>" +
                                 "</ul>" +
                             "</li>" +
                         "</ul>" +

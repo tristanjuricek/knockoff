@@ -65,36 +65,7 @@ extends RegexParsers {
      * For some reason, this groups bullet lists broken with an empty line into a single list...
      */
     def listMkBlock : Parser[ MkBlock ] =
-        complexBulletList | bulletList | complexNumberedList | numberedList
-
-
-    def complexBulletList : Parser[ ComplexBulletListMkBlock ] = {
-        
-        bulletItem ~ rep1( indentedThing ) ^^ (
-            stringAndBlocks => ComplexBulletListMkBlock(
-                List( MkParagraph( stringAndBlocks._1 ) :: stringAndBlocks._2.toList )
-            )
-        )
-    }
-
-    
-    def complexNumberedList : Parser[ ComplexNumberedListMkBlock ] = {
-        
-        numberedItem ~ rep1( indentedThing ) ^^ (
-            stringAndBlocks => ComplexNumberedListMkBlock(
-                List( MkParagraph( stringAndBlocks._1 ) :: stringAndBlocks._2.toList )
-            )
-        )
-    }
-    
-    
-    /**
-     * Indented blocks have *optional* tabs, but it's the leading line (only) that determines 
-     * that this is an indented block.
-     */
-    def indentedThing : Parser[ MkBlock ] = {
-        ( opt( emptyLine ) ~ "    " ) ~> thing ^^ ( block => block.unindentedClone )
-    }
+        bulletList | numberedList
 
 
     def bulletList : Parser[ BulletListMkBlock ] =
@@ -102,7 +73,7 @@ extends RegexParsers {
 
 
     def bulletItem : Parser[ String ] = {
-        bulletLead ~ rep( noBulletLine ) ^^ (
+        bulletLead ~ rep( noBulletLine | indentedLine ) ^^ (
             stringAndPara => stringAndPara._1 + _concatMkParagraphs( stringAndPara._2 )
         )
     }
@@ -114,24 +85,26 @@ extends RegexParsers {
     
 
     def noBulletLine : Parser[ MkParagraph ] =
-        """[ ]*[\S&&[^*\-+]][^\n]*\n?""".r ^^ ( string => MkParagraph( string ) )
+        """[ ]{0,3}[\S&&[^*\-+]][^\n]*\n?""".r ^^ ( string => MkParagraph( string ) )
     
     
     def numberedList : Parser[ NumberedListMkBlock ] =
         rep1( numberedItem ) ^^ ( list => NumberedListMkBlock( list ) )
 
 
-    def numberedItem : Parser[ String ] =
-        numberedLead ~ rep( noNumberLine ) ^^ (
+    def numberedItem : Parser[ String ] = {
+        numberedLead ~ rep( noNumberLine | indentedLine ) ^^ (
             stringAndParas => stringAndParas._1 + _concatMkParagraphs( stringAndParas._2 )
         )
+    }
 
         
     def numberedLead : Parser[ String ] =
         """[ ]{0,3}\d+\.\s+""".r ~> textLine ^^ ( para => para.markdown )
 
         
-    def noNumberLine : Parser[ MkParagraph ] = not( numberedLead ) ~> textLine
+    def noNumberLine : Parser[ MkParagraph ] =
+        not( numberedLead ) ~> textLine
     
     
     /**
@@ -139,7 +112,7 @@ extends RegexParsers {
      * This should be generally passed over in blocks. Note that this should generally capture
      * more lines as a single empty space element.
      */
-    def emptyLine:Parser[ EmptySpace ] =
+    def emptyLine : Parser[ EmptySpace ] =
         """\s*\n""".r ^^ (s => EmptySpace(s))
     
     
@@ -161,26 +134,27 @@ extends RegexParsers {
     def dashLine:Parser[Any]            = """-+\n?""".r
 
 
-    def atxHeader:Parser[MkHeader]        = """#+ .*\n?""".r       ^^ (str => _atxHeader(str.trim))
+    def atxHeader : Parser[ MkHeader ] =
+        """#+ .*\n?""".r       ^^ (str => _atxHeader(str.trim))
     
     
-    def blockquote:Parser[MkBlockquote] =
+    def blockquote : Parser[ MkBlockquote ] =
         rep1(blockquotedLine) ^^ (list => MkBlockquote(_concatMkParagraphs(list)))
 
     
-    def blockquotedLine:Parser[MkParagraph] =
+    def blockquotedLine : Parser[ MkParagraph ] =
         ">"~(textLine | emptyLine) ^^ (tup => MkParagraph(tup._1 + tup._2.markdown))
 
         
-    def codeMkBlock:Parser[CodeMkBlock] =
-        rep1(indentedLine) ^^ (list => CodeMkBlock(_concatMkParagraphs(list)))
+    def codeMkBlock : Parser[ CodeMkBlock ] =
+        rep1( indentedLine ) ^^ (list => CodeMkBlock(_concatMkParagraphs(list)))
 
         
-    def indentedLine:Parser[MkParagraph] =
+    def indentedLine : Parser[ MkParagraph ] =
         "    "~(textLine | emptyLine) ^^ (v => MkParagraph(v._1 + v._2.markdown))
 
         
-    def horizontalRule:Parser[MkHorizontalRule] =
+    def horizontalRule : Parser[ MkHorizontalRule ] =
         """[ ]{0,3}[*\-_][ ]?[*\-_][ ]?[*\-_][ *\-_]*\n""".r ^^ (rule => MkHorizontalRule(rule))
 
     
@@ -199,7 +173,7 @@ extends RegexParsers {
     }
 
 
-    def linkBase:Parser[(String,String)] =
+    def linkBase:Parser[ ( String, String ) ] =
         """[ ]{0,3}\[[^\[\]]*\]:[ ]+<?[\w\p{Punct}]+>?""".r ^^ (str => _readLinkBase(str))
 
     
