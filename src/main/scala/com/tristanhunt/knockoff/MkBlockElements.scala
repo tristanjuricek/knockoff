@@ -14,39 +14,23 @@ protected trait MkBlock {
     /**
      * The markdown chunk of this MkBlock.
      */
-    def markdown:String
-    
-    /**
-     * In the case of multiline indents, this will return the block without the extra four spaces.
-     */
-    def unindentedClone:MkBlock = clone( markdown.replace( "\n    ", "\n" ) )
-    
-    def clone( markdown : String ):MkBlock = error( "should not be called" )
+    def markdown:String    
 }
 
 /**
  * Whitespace or whatever that is completely insignificant to the HTML generated.
  */
-protected case class EmptySpace(val markdown:String) extends MkBlock {
- 
-    override def clone( markdown : String ) = EmptySpace( markdown )
-}
+protected case class EmptySpace(val markdown:String) extends MkBlock
 
 /**
  * An "other" type that's probably most of the actual markdown content.
  */
-protected case class MkParagraph(val markdown:String) extends MkBlock {
-    
-    override def clone( markdown : String ) = MkParagraph( markdown )
-}
+protected case class MkParagraph(val markdown:String) extends MkBlock
 
 /**
  * A chunk of markdown tagged to being included as a header element.
  */
-protected case class MkHeader(val markdown:String, val level:Int) extends MkBlock {
- 
-    override def clone( markdown : String ) = MkHeader( markdown, level )
-}
+protected case class MkHeader(val markdown:String, val level:Int) extends MkBlock
 
 /**
  * A blockquote is somewhat interesting, because it's basically a markdown element tree. So we
@@ -74,10 +58,7 @@ protected case class MkBlockquote(val blockquote:String) extends MkBlock {
  *
  * NOTE: Contents are _not_ a URL.
  */
-protected case class HTMLMkBlock(val markdown:String) extends MkBlock {
-    
-    override def clone( markdown : String ) = HTMLMkBlock( markdown )
-}
+protected case class HTMLMkBlock(val markdown:String) extends MkBlock
 
 /**
  * The sexy code block.
@@ -89,17 +70,12 @@ protected case class CodeMkBlock(val markdown:String) extends MkBlock {
         io.Source.fromString(markdown).getLines.foreach(line => sb.append(line.substring(4)))
         sb.toString
     }
-    
-    override def clone( markdown : String ) = CodeMkBlock( markdown )
 }
 
 /**
  * Should be just replaced with some kind of horizontal rule in HTML, or border, whatever.
  */
-protected case class MkHorizontalRule(val markdown:String) extends MkBlock {
- 
-    override def clone( markdown : String ) = MkHorizontalRule( markdown )
-}
+protected case class MkHorizontalRule(val markdown:String) extends MkBlock
 
 /**
  * Lists are just a sequence of the markdown blocks placed together. That is, we group all lines
@@ -110,18 +86,7 @@ protected trait MarkdownList extends MkBlock {
 
     def items : Seq[ String ]
     
-    def markdown : String = error( "You shouldn't fetch the markdown of a MarkdownList" )
-    
-    override def unindentedClone:MkBlock = {
-     
-        val itemList : List[ String ] = items.toList
-        
-        val tailList : List[ String ] = itemList.tail.map( item => item.replace( "\n    ", "\n" ) )
-        
-        clone( itemList.head :: tailList )
-    }
-    
-    def clone( items : Seq[ String ] ):MarkdownList = error( "oops, should be overridden" )
+    def markdown : String = items.mkString( "" )
 }
 
 /**
@@ -131,7 +96,6 @@ protected trait MarkdownList extends MkBlock {
 protected case class BulletListMkBlock( val items:Seq[ String ] )
 extends MarkdownList with MkBlock {
  
-    override def clone( items : Seq[ String ] ) = BulletListMkBlock( items )
 }
 
 /**
@@ -139,8 +103,6 @@ extends MarkdownList with MkBlock {
  */
 protected case class NumberedListMkBlock( val items : Seq[ String ] )
 extends MarkdownList with MkBlock {
-    
-    override def clone( items : Seq[ String ] ) = NumberedListMkBlock( items )
 }
 
 /**
@@ -149,48 +111,26 @@ extends MarkdownList with MkBlock {
  */
 protected trait ComplexMarkdownList extends MkBlock {
 
-    def items:Seq[ Seq[ MkBlock ] ]
+    def items:List[ List[ MkBlock ] ]
 
-    def markdown:String = {
-        error( "Should not fetch the markdown of a list item." )
-    }
-    
-    override def unindentedClone : MkBlock = {
-     
-        val unindented = items.map( blockSeq => {
-            
-            val blockList = blockSeq.toList
-            
-            blockList.head :: blockList.tail.map( item => item.unindentedClone )
-        } )
-        
-        clone( unindented )
-    }
-    
-    def clone( items : Seq[ Seq[ MkBlock ] ] ):ComplexMarkdownList = error( "Should be overridden" )
+    def markdown:String = error( "oops" )
 }
 
 /**
  * The complex bullet list is a sequence of sequences of other blocks.
  */
 protected case class ComplexBulletListMkBlock(
-    val items:Seq[ Seq[ MkBlock ] ]
+    val items:List[ List[ MkBlock ] ]
 )
-extends ComplexMarkdownList with MkBlock {
-    
-    override def clone( items : Seq[ Seq[ MkBlock ] ] ) = ComplexBulletListMkBlock( items )
-}
+extends ComplexMarkdownList with MkBlock
 
 /**
  * The complex bullet list is a sequence of sequences of other blocks.
  */
 protected case class ComplexNumberedListMkBlock(
-    val items:Seq[ Seq[ MkBlock ] ]
+    val items:List[ List[ MkBlock ] ]
 )
-extends ComplexMarkdownList with MkBlock {
- 
-    override def clone( items : Seq[ Seq[ MkBlock ] ] ) = ComplexNumberedListMkBlock( items )
-}
+extends ComplexMarkdownList with MkBlock
 
 
 /**

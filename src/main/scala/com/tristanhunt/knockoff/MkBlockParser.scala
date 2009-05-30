@@ -6,10 +6,40 @@ import util.parsing.combinator._
  * Parses a complete markdown source into intermediate 'MkBlock' elements. Basically, identifies
  * all of the "block" elements before we parse into spanning elements. 
  *
- * @author Tristan Juricek <juricek@emarsys.com>
+ * Why does this only convert a portion of the blocks? Because the mixture of HTML and "normal"
+ * non-HTML things made my brain sizzle.
+ *
+ * @author Tristan Juricek <mr.tristan@gmail.com>
  */
 class MkBlockParser
 extends RegexParsers {
+        
+    def parse( source : String ) : Option[ List[ MkBlock ] ] = {
+        
+        parseAll( markdownDocument, source ) match {
+
+            case Success( list, _) => {
+                
+                val trimmed = trim( condenseSpacedLists( list, Nil ) )
+
+                val complexified = convertComplexLists( trimmed, Nil )
+                
+                Some( trimmed )
+            }
+
+            // TODO: we should probably make this more useful.
+            case fail:Failure => {
+
+                println( fail.toString )
+                return None
+            }
+        
+            case _ => return None
+        }
+    }
+    
+    
+    // Parser Definition
     
     /**
      * Whitespace does make grouping significant in this system. This class should deal with all
@@ -220,4 +250,235 @@ extends RegexParsers {
 
         return MkHeader( content, leadingHashes.length )
     }
+    
+    
+    // Helper definition
+    
+    
+    
+    private class MkBlockList( list : List[ MkBlock ] ) {
+        
+        def startsWithMarkdownList : Boolean = {
+
+            if ( list.isEmpty )
+                return false
+
+            list.head match {
+                case list:MarkdownList => true
+                case _ => false
+            }
+        }
+        
+        // Don't cry to me if this throws an exception
+        def nextToLast : MkBlock = {
+            list( list.length - 2 )
+        }
+    }
+    
+    private implicit def MkBlockList( list : List[ MkBlock ] ) = new MkBlockList( list )
+    
+    
+    private class CodeMkBlockList( codeBlock : CodeMkBlock ) {
+        
+        def startsWithList : Boolean = {
+            ( """[ ]{4,}[*\-+]\s+""".r.findFirstIn( codeBlock.markdown ).isDefined ) ||
+            ( """[ ]{4,}\d+\.\s+""".r.findFirstIn( codeBlock.markdown ).isDefined )
+        }
+        
+        /**
+         * Start by trimming all lines of the leading 4 spaces, then parse it as a normal markdown
+         * document again. Rinse, repeat.
+         */
+        def toMkBlockList : List[ MkBlock ] = {
+            
+            val stripped = io.Source.fromString( codeBlock.markdown ).getLines.map(
+                line => line.substring( Math.min( 4, line.length ) )
+            ).mkString( "" )
+            
+            parse( stripped ).getOrElse(
+                error( "Unable to parse as a list: " + codeBlock.markdown )
+            )
+        }
+    }
+    
+    private implicit def CodeMkBlockList( codeBlock : CodeMkBlock ) = new CodeMkBlockList( codeBlock )
+    
+    /**
+     * Complex lists are not detected during the initial block parse. This method will locate all
+     * lists, and then try to convert the complex block lists into normal lists.
+     *
+     * There are two main conditions: tight, and sparse.
+     *
+     * 1. Tight complex lists have items embedded in the list items, as they are not separated by
+     *    whitespace lines.
+     * 2. Sparse complex lists are broken up by code blocks, where the code block leads with a
+     *    bullet or number marker.
+     */
+    def convertComplexLists( in : List[ MkBlock ], out : List[ MkBlock ] ) : List[ MkBlock ] = {
+        
+        convertSparseComplexLists( in, out )
+    }
+    
+    /**
+     * Detects the case where a list is trailed by a code block that's really a list. This is done
+     * by investigating the iteration when the current node is a code block.
+     */
+    def convertSparseComplexLists( in : List[ MkBlock ], out : List[ MkBlock ] ) : List[ MkBlock ] = {
+        
+        if ( in.isEmpty )
+            return out
+
+        var convert = false
+
+        if ( in.length > 1 ) {
+
+            in.last match {
+                case codeBlock : CodeMkBlock => {
+                    convert = (
+                        ( codeBlock.startsWithList ) &&
+                        (
+                            ( in.nextToLast.isInstanceOf[ BulletListMkBlock ] ) ||
+                            ( in.nextToLast.isInstanceOf[ NumberedListMkBlock ] )
+                        )
+                    )
+                }
+            
+                case _ => {}
+            }
+        }
+        
+        if ( ! convert )
+            return convertSparseComplexLists( in.dropRight( 1 ), in.last :: out )
+        
+        // From this point, we think the block should be converted. We might end up also adding
+        // the tail of the out list as well, if it matches the type of list we are collapsing.
+        
+        val codeBlock = in.last.asInstanceOf[ CodeMkBlock ]
+        
+        in.nextToLast match {
+         
+            case bulletList : BulletListMkBlock => {
+                
+                var complex = ComplexBulletListMkBlock(
+                    List( bulletList.items.map( string => List( MkParagraph( string ) ) ):_* ) :::
+                    List( codeBlock.toMkBlockList )
+                )
+                
+                var remaining = out
+                
+                if (
+                    ( ! out.isEmpty ) &&
+                    ( out.head.isInstanceOf[ BulletListMkBlock ] )
+                ) {
+                    val tailBulletList = out.head.asInstanceOf[ BulletListMkBlock ]
+
+                    complex = ComplexBulletListMkBlock(
+                        complex.items :::
+                        List( tailBulletList.items.map( string => List( MkParagraph( string ) ) ):_* )
+                    )
+
+                    remaining = out.tail
+                }
+                
+                return convertSparseComplexLists( in.dropRight( 2 ), complex :: remaining )
+            }
+            
+            case numberedList : NumberedListMkBlock => {
+                
+                var complex = ComplexNumberedListMkBlock(
+                    List( numberedList.items.map( string => List( MkParagraph( string ) ) ):_* ) :::
+                    List( codeBlock.toMkBlockList )
+                )
+                
+                var remaining = out
+                
+                if (
+                    ( ! out.isEmpty ) &&
+                    ( out.head.isInstanceOf[ NumberedListMkBlock ] )
+                ) {
+
+                    val tailNumberedList = out.head.asInstanceOf[ NumberedListMkBlock ]
+
+                    complex = ComplexNumberedListMkBlock(
+                        complex.items :::
+                        List( tailNumberedList.items.map( string => List( MkParagraph( string ) ) ):_* )
+                    )
+
+                    remaining = out.tail
+                }
+                
+                return convertSparseComplexLists( in.dropRight( 2 ), complex :: remaining )
+            }
+        }
+    }
+    
+
+    /**
+     * Special rule to group any lists that were separated by whitespace, because it is an option.
+     */
+    def condenseSpacedLists(
+             /** We consume this list and recurse until it's empty. */
+             in  : List[ MkBlock ],
+             /** Where we stick the output... which, by the way, will be pulled from when condensing. */
+             out : List[ MkBlock ]
+         ) : List[ MkBlock ] = {
+
+         if ( in.isEmpty )
+             return out
+
+         if ( ! out.isEmpty ) {
+
+             if (
+                 ( in.head.isInstanceOf[ NumberedListMkBlock ] ) &&
+                 ( out.last.isInstanceOf[ NumberedListMkBlock ] )
+             ) {
+
+                 val right = in.head.asInstanceOf[ NumberedListMkBlock ]
+
+                 val left = out.last.asInstanceOf[ NumberedListMkBlock ]
+
+                 val condensed = NumberedListMkBlock( left.items ++ right.items )
+
+                 return condenseSpacedLists( in.tail, out.dropRight(1) + condensed )
+
+             } else if (
+                 ( in.head.isInstanceOf[ BulletListMkBlock ] ) &&
+                 ( out.last.isInstanceOf[ BulletListMkBlock ] )
+             ) {
+
+                 val right = in.head.asInstanceOf[ BulletListMkBlock ]
+
+                 val left = out.last.asInstanceOf[ BulletListMkBlock ]
+
+                 val condensed = BulletListMkBlock( left.items ++ right.items )
+
+                 return condenseSpacedLists( in.tail, out.dropRight(1) + condensed )
+             }
+
+         }
+
+         // OK, we're not at a list, so just move the current item to the next list.
+
+         return condenseSpacedLists( in.tail, out + in.head )
+     }
+     
+    /**
+     * Remove empty MkParagraphs from the beginning and end.
+     */
+    def trim( list : List[ MkBlock ] ) : List[ MkBlock ] = {
+
+        def nonEmptyMkBlock( b : MkBlock ) : Boolean =
+            b.isInstanceOf[MkParagraph] == false || b.asInstanceOf[MkParagraph].markdown.length > 0
+
+        val start = list findIndexOf nonEmptyMkBlock
+
+        val end = list.length - (list.reverse findIndexOf nonEmptyMkBlock)
+
+        list.slice(start, end)
+    }
+}
+
+trait MkBlockParserFactory {
+ 
+    def mkBlockParser : MkBlockParser = new MkBlockParser
 }

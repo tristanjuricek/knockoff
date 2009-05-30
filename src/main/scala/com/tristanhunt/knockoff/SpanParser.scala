@@ -15,7 +15,7 @@ import collection.immutable.SortedMap
  *
  * @author Tristan Juricek <mr.tristan@gmail.com>
  */
-class SpanParser(val links:SortedMap[String, LinkDefinition]) {
+class SpanParser( val links : SortedMap[ String, LinkDefinition ] ) {
 
     /**
      * How we order the best split done by the parse function. It's fun! (erh...)
@@ -24,7 +24,7 @@ class SpanParser(val links:SortedMap[String, LinkDefinition]) {
      * 2. If the indexes are the same, then prefer the smaller size of the first element, because
      *    that first element is going to be a Text Nad, and that will be the more logical split.
      */
-    private implicit def _createOrderedForSplitters(list:List[Nad]) = new Ordered[List[Nad]] {
+    private implicit def _createOrderedForSplitters( list : List[ Nad ] ) = new Ordered[ List[ Nad ] ] {
 
         def nonTextIndexOf(nads:List[Nad]):Int = {
             val idx = nads.findIndexOf(n => n.isInstanceOf[Text] == false)

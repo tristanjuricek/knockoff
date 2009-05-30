@@ -7,12 +7,13 @@ import util.parsing.combinator._
  * translated into, well, some kind of markup document.
  * 
  * The overall process is a little twacked, because I switch from using parser combinators to 
- * identify the blocks to using basically Regexes to figure out all the spanning elements.
+ * identify the blocks to using basically Regexes to figure out all the spanning elements. Hey, this
+ * is an early-in-my-Scala-knowledge take on a project.
  * 
  * @author Tristan Juricek <mr.tristan@gmail.com>
  */
-object KnockOff {
-    
+object KnockOff extends MkBlockParserFactory {
+
     import collection.immutable._
     import other.FancyStrings.caseInsensitiveOrder
  
@@ -24,16 +25,15 @@ object KnockOff {
      *
      * TODO Describe output modification.
      */
-    def convert(src:String):Option[xml.NodeBuffer] = {
-        parse(src) match {
-            case Some(blocks)    => Some(BlockConverter.toXML(blocks))
+    def convert( src:String ):Option[ xml.NodeBuffer ] = {
+
+        parse( src ) match {
+            case Some( blocks )  => Some( BlockConverter.toXML( blocks ) )
             case None            => None
         }
     }
     
       
-    val mkBlockParser = new MkBlockParser
- 
     /**
      * Parse a full markdown document. Returns the content as a list of Blocks, and a map of the
      * different link references.
@@ -55,7 +55,7 @@ object KnockOff {
 
         
         val mkblks:List[MkBlock] = {
-            _parseMkBlocks( src4 ) match {
+            mkBlockParser.parse( src4 ) match {
                 case Some( blocks ) => blocks
                 case None => return None
             }
@@ -66,13 +66,13 @@ object KnockOff {
         
         implicit var definitions:SortedMap[String, LinkDefinition] = TreeMap.Empty(caseInsensitiveOrder)
 
-        for (defn <- mkblks.filter(_linkDefinitionCheck)) {
+        for ( defn <- mkblks.filter( _linkDefinitionCheck ) ) {
             definitions = definitions ++ {
                 defn match {
-                    case MkLinkDefinition(id, url, title) =>
-                        TreeMap((id, LinkDefinition(id, url, title)))(caseInsensitiveOrder)
+                    case MkLinkDefinition( id, url, title ) =>
+                        TreeMap( ( id, LinkDefinition( id, url, title ) ) )( caseInsensitiveOrder )
 
-                    case list:MkLinkDefinitionList => _convertMkLinkDefinitionList(list)
+                    case list:MkLinkDefinitionList => _convertMkLinkDefinitionList( list )
                 }
             }
         }
@@ -81,35 +81,14 @@ object KnockOff {
         // Perform MkBlock -> Block mapping
 
         implicit val parser = SpanParser(definitions)
-        val blocks:List[Block] = mkblks.filter(blk => !_linkDefinitionCheck(blk)).map(_convert).toList
+        val blocks:List[Block] = mkblks.filter(
+            blk => ! _linkDefinitionCheck( blk )
+        ).map( _convert ).toList
 
         Some(blocks)
     }
-    
-    
-    private def _parseMkBlocks( source : String ) : Option[ List[ MkBlock ] ] = {
-        
-        mkBlockParser.parseAll( mkBlockParser.markdownDocument, source ) match {
 
-            case mkBlockParser.Success( list, _) =>
-                return Some ( _trim(
-                    _createComplexLists(
-                        _condenseSpacedLists( list, Nil ),
-                        Nil
-                    )
-                ) )
-
-            case fail:mkBlockParser.Failure => {
-
-                println( fail.toString )
-                return None
-            }
-        
-            case _ => return None
-        }
-    }
-    
-    private def _convert(mkblk:MkBlock)(implicit parser:SpanParser):Block = {
+    private def _convert( mkblk : MkBlock )( implicit parser : SpanParser ) : Block = {
 
         if ( mkblk.isInstanceOf[ MarkdownList ] )
             _convertMarkdownList( mkblk.asInstanceOf[ MarkdownList ] )
@@ -194,185 +173,6 @@ object KnockOff {
             Paragraph(nads)
     }
     
-    /**
-     * Remove empty MkParagraphs from the beginning and end.
-     */
-    private def _trim( list : List[ MkBlock ] ) : List[ MkBlock ] = {
-        
-        def nonEmptyMkBlock( b : MkBlock ) : Boolean =
-            b.isInstanceOf[MkParagraph] == false || b.asInstanceOf[MkParagraph].markdown.length > 0
-    
-        val start = list findIndexOf nonEmptyMkBlock
-    
-        val end = list.length - (list.reverse findIndexOf nonEmptyMkBlock)
-        
-        list.slice(start, end)
-    }
-    
-    /**
-     * Convert each of the list types into complex lists where:
-     *
-     * 1. There is a perceieved "code block" right after a list
-     * 2. There is a \n[ ]4 sequence, which indicates that there was no empty line right after
-     *    a sequence.
-     *
-     * To keep the implementation simple, we pass through the unordered lists first, then ordered.
-     *
-     * Note that this expects the lists themselves to be completely grouped. If we have a "code
-     * block" in between two lists, however, we'll have to combine those things together.
-     */
-    private def _createComplexLists(
-            in : List[ MkBlock ],
-            out : List[ MkBlock ]
-        ) : List[ MkBlock ] = {
-       
-       // TODO I've got to figure out a better way to keep this stuff organized.
-        
-        _createComplexListsFromEmbeddedNumberedLists(
-            _createComplexListsFromEmbeddedBulletLists( in, out ),
-            Nil
-        )
-    }
-    
-    /**
-     * 
-     */
-    private def _createComplexListsFromEmbeddedBulletLists(
-            in : List[ MkBlock ],
-            out : List[ MkBlock ]
-        ) : List[ MkBlock ] = {
-    
-        if ( in.isEmpty )
-            return out
-        
-        if ( in.head.isInstanceOf[ BulletListMkBlock ] ) {
-         
-            val bulletList = in.head.asInstanceOf[ BulletListMkBlock ]
 
-            if ( bulletList.items.find( _.contains( "\n     " ) ).isDefined ) {
 
-                val complexList = ComplexBulletListMkBlock(
-                    bulletList.items.map( _convertItemToBlocks )
-                )
-                
-                return _createComplexListsFromEmbeddedBulletLists( in.tail, out + complexList )
-            }
-        }
-        
-        return _createComplexListsFromEmbeddedBulletLists( in.tail, out + in.head )
-    }
-
-    
-    /**
-     * Converts a simple list item to a MkBlock.
-     *
-     * 1. Remove a level of indentation.
-     */
-    private def _convertItemToBlocks( source:String ):List[ MkBlock ] = {
-        
-        var blocks = _createNextBlock( io.Source.fromString( source ).getLines.toList, Nil )
-        
-        blocks.flatMap( block => {
-            if ( block.startsWith( "    " ) )
-                _parseMkBlocks( block.substring( Math.min( 4, block.length ) ) ).get
-            else
-                _parseMkBlocks( block ).get
-        } )
-    }
-    
-    private def _createNextBlock( sources : List[ String ], blocks : List[ String ] ):List[ String ] = {
-        
-        if ( sources.isEmpty )
-            return blocks
-        
-        if ( sources.head.startsWith( "    " ) && blocks.last.startsWith( "    " ) )
-            return _createNextBlock( sources.tail, blocks.dropRight( 1 ) + ( blocks.last + sources.head ) )
-        
-        return _createNextBlock( sources.tail, blocks + sources.head )
-    }
-    
-    
-    /**
-     * 
-     */
-    private def _createComplexListsFromEmbeddedNumberedLists(
-            in : List[ MkBlock ],
-            out : List[ MkBlock ]
-        ) : List[ MkBlock ] = {
-    
-        if ( in.isEmpty )
-            return out
-        
-        if ( in.head.isInstanceOf[ NumberedListMkBlock ] ) {
-         
-            val bulletList = in.head.asInstanceOf[ NumberedListMkBlock ]
-
-            if ( bulletList.items.find( _.contains( "\n     " ) ).isDefined ) {
-
-                val complexList = ComplexNumberedListMkBlock(
-                    bulletList.items.map( _convertItemToBlocks )
-                )
-                
-                return _createComplexListsFromEmbeddedNumberedLists( in.tail, out + complexList )
-            }
-        }
-        
-        return _createComplexListsFromEmbeddedNumberedLists( in.tail, out + in.head )
-    }
-
-    
-    /**
-     * Special rule to group any lists that were separated by whitespace, because it is an option.
-     */
-    private def _condenseSpacedLists(
-            /** We consume this list and recurse until it's empty. */
-            in  : List[ MkBlock ],
-            /** Where we stick the output... which, by the way, will be pulled from when condensing. */
-            out : List[ MkBlock ]
-        ) : List[ MkBlock ] = {
-        
-        if (in.isEmpty) {
-            return out
-        }
-        
-        // First, look for the case where either are complex. If this is the case, when we condense
-        // we'll always convert both lists to the complex case.
-        //
-        // TODO This looks like its time for a better generic class... brain... melting... whatever...
-        
-        if ( ! out.isEmpty ) {
-
-            if (
-                ( in.head.isInstanceOf[ NumberedListMkBlock ] ) &&
-                ( out.last.isInstanceOf[ NumberedListMkBlock ] )
-            ) {
-                
-                val right = in.head.asInstanceOf[ NumberedListMkBlock ]
-                
-                val left = out.last.asInstanceOf[ NumberedListMkBlock ]
-                
-                val condensed = NumberedListMkBlock( left.items ++ right.items )
-                
-                return _condenseSpacedLists( in.tail, out.dropRight(1) + condensed )
-                
-            } else if (
-                ( in.head.isInstanceOf[ BulletListMkBlock ] ) &&
-                ( out.last.isInstanceOf[ BulletListMkBlock ] )
-            ) {
-                
-                val right = in.head.asInstanceOf[ BulletListMkBlock ]
-                
-                val left = out.last.asInstanceOf[ BulletListMkBlock ]
-                
-                val condensed = BulletListMkBlock( left.items ++ right.items )
-                
-                return _condenseSpacedLists( in.tail, out.dropRight(1) + condensed )
-            }
-            
-        }
-        
-        // OK, we're not at a list, so just move the current item to the next list.
-        
-        return _condenseSpacedLists( in.tail, out + in.head )
-    }
 }

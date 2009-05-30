@@ -1,44 +1,45 @@
 package com.tristanhunt.knockoff
 
+
 /**
  * A block, when complete, is just a list of spanning Nads. (God, I _love_ that name.)
  */
 trait Block {
-    def nads:List[Nad] 
+    def nads : List[ Nad ] 
 }
 
 /**
  * Generally was not identified as a major block element of any other type, so this is likely the
  * most common element in your markdown document.
  */
-case class Paragraph(val nads:List[Nad])
+case class Paragraph( val nads : List[ Nad ] )
 extends Block
 
 /**
  * Marks a heading element of some kind, which should be at a level between 1 and 6
  */
-case class Header(val nads:List[Nad], val level:Int)
+case class Header( val nads : List[ Nad ], val level : Int )
 extends Block {
- 
-    assume(level >= 1 && level <= 6)
+
+    assume( ( 1 <= level ) && ( level <= 6 ) )
 }
 
 /**
  * A blockquote contains other blocks, but we consider the other elements to be stored within 
  * `<blockquote>` tags.
  */
-case class Blockquote(val blocks:List[Block]) extends Block {
- 
-    val nads:List[Nad] = blocks.flatMap(_.nads).toList
+case class Blockquote( val blocks : List[ Block ] ) extends Block {
+
+    val nads:List[ Nad ] = blocks.flatMap( _.nads ).toList
 }
 
 /**
  * We expect this really to be just a single HTML nad. Does implement the `Block` interface for 
  * completeness, however.
  */
-case class HTMLBlock(val html:HTML)
+case class HTMLBlock( val html : HTML )
 extends Block {
-    
+
     val nads = List(html)
 }
 
@@ -47,7 +48,7 @@ extends Block {
  */
 case class CodeBlock(val preformatted:Text)
 extends Block {
- 
+
     val nads = List(preformatted)
 }
 
@@ -58,7 +59,7 @@ extends Block {
 }
 
 object HorizontalRules {
- 
+
     /**
      * Mostly, this is just a simple, consistent string representation for what is a placeholder
      * for the HTML representation.
