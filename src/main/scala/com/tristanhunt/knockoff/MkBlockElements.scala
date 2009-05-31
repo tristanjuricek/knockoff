@@ -113,7 +113,7 @@ protected trait ComplexMarkdownList extends MkBlock {
 
     def items:List[ List[ MkBlock ] ]
 
-    def markdown:String = error( "oops" )
+    def markdown:String = error( "No markdown supported by the ComplexMarkdownList" )
 }
 
 /**

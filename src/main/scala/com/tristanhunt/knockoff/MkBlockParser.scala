@@ -359,10 +359,88 @@ extends RegexParsers {
         val tightened = convertSparseComplexLists( in, out )
         val stretched = convertTightComplexLists( tightened, out )
         
-        // TODO I should probably do a complex combination step here..
-        
-        return stretched
+        return foldLists( stretched, Nil )
     }
+    
+    def foldLists( in : List[ MkBlock ], out : List[ MkBlock ] ) : List[ MkBlock ] = {
+    
+        if ( in.isEmpty ) return out
+        
+        if ( ! out.isEmpty ) {
+            
+            in.last match {
+            
+                case bullet : BulletListMkBlock => {
+                
+                    out.head match {
+                        case complexBullet : ComplexBulletListMkBlock => {
+                            return foldLists(
+                                in.dropRight( 1 ),
+                                ComplexBulletListMkBlock(
+                                    bullet.items.asMkBlockLists ::: complexBullet.items
+                                )
+                                :: out.tail
+                            )
+                        }
+                        case _ => {}
+                    }
+                }
+            
+                case complexBullet : ComplexBulletListMkBlock => {
+                
+                    out.head match {
+                        case bullet : BulletListMkBlock => {
+                            return foldLists(
+                                in.dropRight( 1 ),
+                                ComplexBulletListMkBlock(
+                                    complexBullet.items ::: bullet.items.asMkBlockLists
+                                )
+                                :: out.tail
+                            )
+                        }
+                        case _ => {}
+                    }
+                }
+            
+                case numbered : NumberedListMkBlock => {
+                
+                    out.head match {
+                        case complexNumbered : ComplexNumberedListMkBlock => {
+                            return foldLists(
+                                in.dropRight( 1 ),
+                                ComplexNumberedListMkBlock(
+                                    numbered.items.asMkBlockLists ::: complexNumbered.items
+                                )
+                                :: out.tail
+                            )
+                        }
+                        case _ => {}
+                    }
+                }
+            
+                case complexNumbered : ComplexNumberedListMkBlock => {
+                
+                    out.head match {
+                        case numbered : NumberedListMkBlock => {
+                            return foldLists(
+                                in.dropRight( 1 ),
+                                ComplexNumberedListMkBlock(
+                                    complexNumbered.items ::: numbered.items.asMkBlockLists
+                                )
+                                :: out.tail
+                            )
+                        }
+                        case _ => {}
+                    }
+                }
+                
+                case _ => {}
+            }
+        }
+        
+        foldLists( in.dropRight( 1 ), in.last :: out )
+    }
+    
     
     /**
      * Detects the case where a list is trailed by a code block that's really a list. This is done
@@ -380,11 +458,8 @@ extends RegexParsers {
             in.last match {
                 case codeBlock : CodeMkBlock => {
                     convert = (
-                        ( codeBlock.markdown.hasEmbeddedList ) &&
-                        (
-                            ( in.nextToLast.isInstanceOf[ BulletListMkBlock ] ) ||
-                            ( in.nextToLast.isInstanceOf[ NumberedListMkBlock ] )
-                        )
+                        ( in.nextToLast.isInstanceOf[ BulletListMkBlock ] ) ||
+                        ( in.nextToLast.isInstanceOf[ NumberedListMkBlock ] )
                     )
                 }
             

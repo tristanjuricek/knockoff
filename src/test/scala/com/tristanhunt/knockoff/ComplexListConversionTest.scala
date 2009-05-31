@@ -113,5 +113,4 @@ class ComplexListConversionTest extends MkBlockParserFactory {
         
         assertEquals( actual, expected )
     }
-
 }
