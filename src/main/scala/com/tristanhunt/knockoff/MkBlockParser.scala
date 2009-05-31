@@ -24,7 +24,7 @@ extends RegexParsers {
 
                 val complexified = convertComplexLists( trimmed, Nil )
                 
-                Some( trimmed )
+                Some( complexified )
             }
 
             // TODO: we should probably make this more useful.
@@ -252,8 +252,81 @@ extends RegexParsers {
     }
     
     
-    // Helper definition
+    // Typed helper methods used in later methods
     
+    private class RichString( string : String ) {
+        
+        def source = io.Source.fromString( string )
+        
+        def hasEmbeddedList : Boolean = hasEmbeddedList( 0 )
+        
+        def hasEmbeddedList( startingLine : Int ) : Boolean =
+            source.getLines.toList.slice( startingLine ).exists( hasEmbeddedItem )
+
+        private def hasEmbeddedItem( string : String ):Boolean =
+            hasEmbeddedBullet( string ) || hasEmbeddedNumberList( string )
+
+        def hasEmbeddedItem : Boolean = hasEmbeddedItem( string )
+
+        private def hasEmbeddedBullet( str : String ) : Boolean =
+            """[ ]{4,}[*\-+]\s+""".r.findFirstIn( str ).isDefined
+    
+        private def hasEmbeddedNumberList( str : String ) : Boolean =
+            """[ ]{4,}\d+\.\s+""".r.findFirstIn( str ).isDefined
+            
+        def stripLeadingAndParse : List[ MkBlock ] = {
+         
+            val stripped = io.Source.fromString( string ).getLines.map(
+                line => line.substring( Math.min( 4, line.length ) )
+            ).mkString( "" )
+            
+            val parsed = parse( stripped ).getOrElse(
+                error( "Unable to parse as a list: " + string )
+            )
+            
+            parsed
+        }
+    }
+    
+    private implicit def RichString( string : String ) : RichString = new RichString( string )
+    
+    
+    private class RichStringList( list : Seq[ String ] ) {
+        
+        def asMkBlockLists : List[ List[ MkBlock ] ] =
+            list.map( string => List( MkParagraph( string ) ) ).toList
+            
+        def hasEmbeddedList : Boolean = list.toList.exists( item => RichString(item).hasEmbeddedList )
+        
+        def splitToMkBlockLists : List[ List[ MkBlock ] ] = splitNextMkBlockList( list.toList.reverse, Nil )
+        
+        /** Recursive method to do the embedded parsing on individual items. */
+        private def splitNextMkBlockList(
+                in  : List[ String ],
+                out : List[ List[ MkBlock ] ]
+            ) : List[ List[ MkBlock ] ] = {
+            
+            if ( in.isEmpty ) return out
+            
+            if ( in.head.hasEmbeddedList ) {
+                
+                val lines = in.head.source.getLines.toList
+                
+                val splitPosition = lines.findIndexOf( line => line.hasEmbeddedItem )
+
+                val ( normalLeading, embedded ) = lines.splitAt( splitPosition )
+                
+                splitNextMkBlockList(
+                    in.tail,
+                    normalLeading.asMkBlockLists ::: RichString( embedded.mkString( "" ) ).stripLeadingAndParse :: out
+                )
+                
+            } else
+                splitNextMkBlockList( in.tail, List( MkParagraph( in.last ) ) :: out )
+        }
+    }
+
+    private implicit def RichStringList( list : Seq[ String ] ) : RichStringList = new RichStringList( list )
     
     
     private class MkBlockList( list : List[ MkBlock ] ) {
@@ -275,33 +348,17 @@ extends RegexParsers {
         }
     }
     
-    private implicit def MkBlockList( list : List[ MkBlock ] ) = new MkBlockList( list )
+    private implicit def MkBlockList( list : List[ MkBlock ] ) : MkBlockList = new MkBlockList( list )
     
     
     private class CodeMkBlockList( codeBlock : CodeMkBlock ) {
         
-        def startsWithList : Boolean = {
-            ( """[ ]{4,}[*\-+]\s+""".r.findFirstIn( codeBlock.markdown ).isDefined ) ||
-            ( """[ ]{4,}\d+\.\s+""".r.findFirstIn( codeBlock.markdown ).isDefined )
-        }
-        
-        /**
-         * Start by trimming all lines of the leading 4 spaces, then parse it as a normal markdown
-         * document again. Rinse, repeat.
-         */
-        def toMkBlockList : List[ MkBlock ] = {
-            
-            val stripped = io.Source.fromString( codeBlock.markdown ).getLines.map(
-                line => line.substring( Math.min( 4, line.length ) )
-            ).mkString( "" )
-            
-            parse( stripped ).getOrElse(
-                error( "Unable to parse as a list: " + codeBlock.markdown )
-            )
-        }
+        def toMkBlockLists : List[ List[ MkBlock ] ] =
+            List( codeBlock.markdown.stripLeadingAndParse )
     }
     
-    private implicit def CodeMkBlockList( codeBlock : CodeMkBlock ) = new CodeMkBlockList( codeBlock )
+    private implicit def CodeMkBlockList( codeBlock : CodeMkBlock ) : CodeMkBlockList =
+        new CodeMkBlockList( codeBlock )
     
     /**
      * Complex lists are not detected during the initial block parse. This method will locate all
@@ -316,7 +373,12 @@ extends RegexParsers {
      */
     def convertComplexLists( in : List[ MkBlock ], out : List[ MkBlock ] ) : List[ MkBlock ] = {
         
-        convertSparseComplexLists( in, out )
+        val tightened = convertSparseComplexLists( in, out )
+        val stretched = convertTightComplexLists( tightened, out )
+        
+        // TODO I should probably do a complex combination step here..
+        
+        return stretched
     }
     
     /**
@@ -335,7 +397,7 @@ extends RegexParsers {
             in.last match {
                 case codeBlock : CodeMkBlock => {
                     convert = (
-                        ( codeBlock.startsWithList ) &&
+                        ( codeBlock.markdown.hasEmbeddedList ) &&
                         (
                             ( in.nextToLast.isInstanceOf[ BulletListMkBlock ] ) ||
                             ( in.nextToLast.isInstanceOf[ NumberedListMkBlock ] )
@@ -357,59 +419,98 @@ extends RegexParsers {
         
         in.nextToLast match {
          
-            case bulletList : BulletListMkBlock => {
+            case bulletList   : BulletListMkBlock => {
                 
                 var complex = ComplexBulletListMkBlock(
-                    List( bulletList.items.map( string => List( MkParagraph( string ) ) ):_* ) :::
-                    List( codeBlock.toMkBlockList )
+                    bulletList.items.asMkBlockLists ++ codeBlock.toMkBlockLists
                 )
                 
-                var remaining = out
+                val includeTail = ( ! out.isEmpty ) && out.head.isInstanceOf[ BulletListMkBlock ]
                 
-                if (
-                    ( ! out.isEmpty ) &&
-                    ( out.head.isInstanceOf[ BulletListMkBlock ] )
-                ) {
-                    val tailBulletList = out.head.asInstanceOf[ BulletListMkBlock ]
-
+                if ( includeTail ) {
                     complex = ComplexBulletListMkBlock(
-                        complex.items :::
-                        List( tailBulletList.items.map( string => List( MkParagraph( string ) ) ):_* )
+                        complex.items ++ out.head.asInstanceOf[ BulletListMkBlock ].items.asMkBlockLists
                     )
+                    
+                    return convertSparseComplexLists( in.dropRight( 2 ), complex :: out.tail )
 
-                    remaining = out.tail
+                } else {
+                 
+                    return convertSparseComplexLists( in.dropRight( 2 ), complex :: out )
                 }
-                
-                return convertSparseComplexLists( in.dropRight( 2 ), complex :: remaining )
             }
-            
+
             case numberedList : NumberedListMkBlock => {
                 
                 var complex = ComplexNumberedListMkBlock(
-                    List( numberedList.items.map( string => List( MkParagraph( string ) ) ):_* ) :::
-                    List( codeBlock.toMkBlockList )
+                    numberedList.items.asMkBlockLists ++ codeBlock.toMkBlockLists
                 )
                 
-                var remaining = out
+                val includeTail = ( ! out.isEmpty ) && out.head.isInstanceOf[ NumberedListMkBlock ]
                 
-                if (
-                    ( ! out.isEmpty ) &&
-                    ( out.head.isInstanceOf[ NumberedListMkBlock ] )
-                ) {
-
-                    val tailNumberedList = out.head.asInstanceOf[ NumberedListMkBlock ]
-
+                if ( includeTail ) {
                     complex = ComplexNumberedListMkBlock(
-                        complex.items :::
-                        List( tailNumberedList.items.map( string => List( MkParagraph( string ) ) ):_* )
+                        complex.items ++ out.head.asInstanceOf[ NumberedListMkBlock ].items.asMkBlockLists
                     )
+                    
+                    return convertSparseComplexLists( in.dropRight( 2 ), complex :: out.tail )
 
-                    remaining = out.tail
+                } else {
+                 
+                    return convertSparseComplexLists( in.dropRight( 2 ), complex :: out )
                 }
-                
-                return convertSparseComplexLists( in.dropRight( 2 ), complex :: remaining )
             }
         }
+    }
+    
+    
+    /**
+     * Converts any lists it finds where items have embedded sequences. An embedded sequence might
+     * look like this:
+     *
+     *     1. First item
+     *         * A bullet
+     *         * A bullet
+     * 
+     * Basically, there's no whitespace, so my parser doesn't really know what to do with that.
+     *
+     * This algorithm goes from the end of the in, and concatenates to the out list. Could be
+     * really inefficient, but I don't really care.
+     */
+    def convertTightComplexLists( in : List[ MkBlock ], out : List[ MkBlock ] ) : List[ MkBlock ] = {
+        
+        if ( in.isEmpty )
+            return out
+        
+        in.last match {
+            
+            case numberedList : NumberedListMkBlock => {
+                
+                if ( numberedList.items.hasEmbeddedList ) {
+                    
+                    return convertTightComplexLists(
+                        in.dropRight( 1 ),
+                        ComplexNumberedListMkBlock( numberedList.items.splitToMkBlockLists ) :: out
+                    )
+                }
+            }
+            
+            case bulletList : BulletListMkBlock => {
+                
+                if ( bulletList.items.hasEmbeddedList ) {
+
+                    return convertTightComplexLists(
+                        in.dropRight( 1 ),
+                        ComplexBulletListMkBlock( bulletList.items.splitToMkBlockLists ) :: out
+                    )
+                }
+            }
+            
+            case _ => {}
+        }
+        
+        
+        convertTightComplexLists( in.dropRight( 1 ), in.last :: out )
     }
     
 

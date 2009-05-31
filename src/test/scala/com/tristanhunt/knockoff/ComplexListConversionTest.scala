@@ -6,7 +6,6 @@ import org.testng.Assert._
 @Test
 class ComplexListConversionTest extends MkBlockParserFactory {
  
- 
     def complexListConversionDoNothingTest {
      
         val list = List(
@@ -19,6 +18,45 @@ class ComplexListConversionTest extends MkBlockParserFactory {
          
         assertEquals( actual, list )
     }
+    
+    
+    def splitTightComplexBulletList {
+        
+        val preliminary = List(
+            BulletListMkBlock( List("boo\n    * sub-item 1\n      more stuff\n    * sub-item 2\n" ) )
+        )
+        
+        val expected = List(
+            ComplexBulletListMkBlock( List(
+                List( MkParagraph("boo\n") ),
+                List( BulletListMkBlock( List( "sub-item 1\n  more stuff\n", "sub-item 2\n" ) ) )
+            ) )
+        )
+        
+        val actual = mkBlockParser.convertTightComplexLists( preliminary, Nil )
+        
+        assertEquals( actual, expected )
+    }
+    
+    
+    def splitTightComplexNumberedList {
+        
+        val preliminary = List(
+            NumberedListMkBlock( List("boo\n    1. sub-item 1\n      more stuff\n    2. sub-item 2\n" ) )
+        )
+        
+        val expected = List(
+            ComplexNumberedListMkBlock( List(
+                List( MkParagraph("boo\n") ),
+                List( NumberedListMkBlock( List( "sub-item 1\n  more stuff\n", "sub-item 2\n" ) ) )
+            ) )
+        )
+        
+        val actual = mkBlockParser.convertTightComplexLists( preliminary, Nil )
+        
+        assertEquals( actual, expected )
+    }
+    
  
     def combineSparseComplexBulletList {
         

@@ -187,9 +187,9 @@ class MarkdownSuiteListTests {
         val expected = {
             "<div>" +
                 "<ul>" +
-                    "<li>Tab\n" +
+                    "<li><p>Tab\n</p>" +
                         "<ul>" +
-                            "<li>Tab\n" +
+                            "<li><p>Tab\n</p>" +
                                 "<ul>" +
                                     "<li>Tab\n</li>" +
                                 "</ul>" +
@@ -218,16 +218,18 @@ class MarkdownSuiteListTests {
         }
         
         val expected = {
-            <ol>
-            <li>First</li>
-            <li>Second:
-            <ul>
-            <li>Fee</li>
-            <li>Fie</li>
-            <li>Foe</li>
-            </ul></li>
-            <li>Third</li>
-            </ol>
+            "<ol>" +
+                "<li><p>First\n</p></li>" +
+                "<li>" +
+                    "<p>Second:\n</p>" +
+                    "<ul>" +
+                    "<li>Fee\n</li>" +
+                    "<li>Fie\n</li>" +
+                    "<li>Foe\n</li>" +
+                    "</ul>"
+                "</li>" +
+                "<li><p>Third\n</li>" +
+            "</ol>"
         }.toString
         
         val actual = <div>{ KnockOff.convert( source ).get }</div>.toString
@@ -248,16 +250,18 @@ class MarkdownSuiteListTests {
         }
         
         val expected = {
-            <ol>
-            <li>First</li>
-            <li>Second:
-            <ul>
-            <li>Fee</li>
-            <li>Fie</li>
-            <li>Foe</li>
-            </ul></li>
-            <li>Third</li>
-            </ol>
+            "<ol>" +
+                "<li><p>First\n</p></li>" +
+                "<li>" +
+                    "<p>Second:\n</p>" +
+                    "<ul>" +
+                        "<li>Fee\n</li>" +
+                        "<li>Fie\n</li>" +
+                        "<li>Foe\n</li>" +
+                    "</ul>" +
+                "</li>" +
+                "<li>Third</li>"
+            "</ol>"
         }.toString
         
         val actual = <div>{ KnockOff.convert( source ).get }</div>.toString
