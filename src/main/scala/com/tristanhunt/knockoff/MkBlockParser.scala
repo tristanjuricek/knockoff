@@ -252,9 +252,11 @@ extends RegexParsers {
     }
     
     
-    // Typed helper methods used in later methods
+    // List Munging
+    //
+    // This complexity here is why I messed up in my basic approach.
     
-    private class RichString( string : String ) {
+    private class IntermediateParserString( string : String ) {
         
         def source = io.Source.fromString( string )
         
@@ -286,47 +288,37 @@ extends RegexParsers {
             
             parsed
         }
-    }
-    
-    private implicit def RichString( string : String ) : RichString = new RichString( string )
-    
-    
-    private class RichStringList( list : Seq[ String ] ) {
         
-        def asMkBlockLists : List[ List[ MkBlock ] ] =
-            list.map( string => List( MkParagraph( string ) ) ).toList
+        def splitToMkBlockList : List[ MkBlock ] = {
             
-        def hasEmbeddedList : Boolean = list.toList.exists( item => RichString(item).hasEmbeddedList )
-        
-        def splitToMkBlockLists : List[ List[ MkBlock ] ] = splitNextMkBlockList( list.toList.reverse, Nil )
-        
-        /** Recursive method to do the embedded parsing on individual items. */
-        private def splitNextMkBlockList(
-                in  : List[ String ],
-                out : List[ List[ MkBlock ] ]
-            ) : List[ List[ MkBlock ] ] = {
+            val lines = string.source.getLines.toList
             
-            if ( in.isEmpty ) return out
+            val splitPosition = lines.findIndexOf( line => line.hasEmbeddedItem )
             
-            if ( in.head.hasEmbeddedList ) {
-                
-                val lines = in.head.source.getLines.toList
-                
-                val splitPosition = lines.findIndexOf( line => line.hasEmbeddedItem )
+            val ( normalLeading, embedded ) = lines.splitAt( splitPosition )
 
-                val ( normalLeading, embedded ) = lines.splitAt( splitPosition )
-                
-                splitNextMkBlockList(
-                    in.tail,
-                    normalLeading.asMkBlockLists ::: RichString( embedded.mkString( "" ) ).stripLeadingAndParse :: out
-                )
-                
-            } else
-                splitNextMkBlockList( in.tail, List( MkParagraph( in.last ) ) :: out )
+            MkParagraph( normalLeading.mkString( "" ) ) :: (
+                embedded.mkString( "" ).stripLeadingAndParse
+            )
         }
     }
+    
+    private implicit def IntermediateParserString( string : String ) : IntermediateParserString =
+        new IntermediateParserString( string )
+    
+    
+    private class IntermediateParserStringList( list : Seq[ String ] ) {
 
-    private implicit def RichStringList( list : Seq[ String ] ) : RichStringList = new RichStringList( list )
+        def asMkBlockLists : List[ List[ MkBlock ] ] =
+            list.map( string => List( MkParagraph( string ) ) ).toList
+        
+        def asMkBlockList : List[ MkBlock ] =
+            list.map( string => MkParagraph( string ) ).toList
+        
+        def hasEmbeddedList : Boolean = list.toList.exists( item => IntermediateParserString(item).hasEmbeddedList )
+    }
+
+    private implicit def IntermediateParserStringList( list : Seq[ String ] ) : IntermediateParserStringList = new IntermediateParserStringList( list )
     
     
     private class MkBlockList( list : List[ MkBlock ] ) {
@@ -350,16 +342,7 @@ extends RegexParsers {
     
     private implicit def MkBlockList( list : List[ MkBlock ] ) : MkBlockList = new MkBlockList( list )
     
-    
-    private class CodeMkBlockList( codeBlock : CodeMkBlock ) {
         
-        def toMkBlockLists : List[ List[ MkBlock ] ] =
-            List( codeBlock.markdown.stripLeadingAndParse )
-    }
-    
-    private implicit def CodeMkBlockList( codeBlock : CodeMkBlock ) : CodeMkBlockList =
-        new CodeMkBlockList( codeBlock )
-    
     /**
      * Complex lists are not detected during the initial block parse. This method will locate all
      * lists, and then try to convert the complex block lists into normal lists.
@@ -412,8 +395,7 @@ extends RegexParsers {
         if ( ! convert )
             return convertSparseComplexLists( in.dropRight( 1 ), in.last :: out )
         
-        // From this point, we think the block should be converted. We might end up also adding
-        // the tail of the out list as well, if it matches the type of list we are collapsing.
+        // Add the block to the tail of the preceding list of items.
         
         val codeBlock = in.last.asInstanceOf[ CodeMkBlock ]
         
@@ -421,44 +403,26 @@ extends RegexParsers {
          
             case bulletList   : BulletListMkBlock => {
                 
+                // The last item is combined with the
+                
+                val lastItem = MkParagraph( bulletList.items.last ) :: codeBlock.markdown.stripLeadingAndParse
+                
                 var complex = ComplexBulletListMkBlock(
-                    bulletList.items.asMkBlockLists ++ codeBlock.toMkBlockLists
+                    bulletList.items.dropRight( 1 ).asMkBlockLists ::: List( lastItem )
                 )
                 
-                val includeTail = ( ! out.isEmpty ) && out.head.isInstanceOf[ BulletListMkBlock ]
-                
-                if ( includeTail ) {
-                    complex = ComplexBulletListMkBlock(
-                        complex.items ++ out.head.asInstanceOf[ BulletListMkBlock ].items.asMkBlockLists
-                    )
-                    
-                    return convertSparseComplexLists( in.dropRight( 2 ), complex :: out.tail )
-
-                } else {
-                 
-                    return convertSparseComplexLists( in.dropRight( 2 ), complex :: out )
-                }
+                return convertSparseComplexLists( in.dropRight( 2 ), complex :: out )
             }
 
             case numberedList : NumberedListMkBlock => {
                 
+                val lastItem = MkParagraph( numberedList.items.last ) :: codeBlock.markdown.stripLeadingAndParse
+                
                 var complex = ComplexNumberedListMkBlock(
-                    numberedList.items.asMkBlockLists ++ codeBlock.toMkBlockLists
+                    numberedList.items.dropRight( 1 ).asMkBlockLists ::: List( lastItem )
                 )
                 
-                val includeTail = ( ! out.isEmpty ) && out.head.isInstanceOf[ NumberedListMkBlock ]
-                
-                if ( includeTail ) {
-                    complex = ComplexNumberedListMkBlock(
-                        complex.items ++ out.head.asInstanceOf[ NumberedListMkBlock ].items.asMkBlockLists
-                    )
-                    
-                    return convertSparseComplexLists( in.dropRight( 2 ), complex :: out.tail )
-
-                } else {
-                 
-                    return convertSparseComplexLists( in.dropRight( 2 ), complex :: out )
-                }
+                return convertSparseComplexLists( in.dropRight( 2 ), complex :: out )
             }
         }
     }
@@ -488,9 +452,11 @@ extends RegexParsers {
                 
                 if ( numberedList.items.hasEmbeddedList ) {
                     
+                    val complexItems = convertNextEmbeddedItem( numberedList.items.reverse, Nil )
+                    
                     return convertTightComplexLists(
                         in.dropRight( 1 ),
-                        ComplexNumberedListMkBlock( numberedList.items.splitToMkBlockLists ) :: out
+                        ComplexNumberedListMkBlock( complexItems ) :: out
                     )
                 }
             }
@@ -498,10 +464,12 @@ extends RegexParsers {
             case bulletList : BulletListMkBlock => {
                 
                 if ( bulletList.items.hasEmbeddedList ) {
+                    
+                    val complexItems = convertNextEmbeddedItem( bulletList.items.reverse, Nil )
 
                     return convertTightComplexLists(
                         in.dropRight( 1 ),
-                        ComplexBulletListMkBlock( bulletList.items.splitToMkBlockLists ) :: out
+                        ComplexBulletListMkBlock( complexItems ) :: out
                     )
                 }
             }
@@ -509,8 +477,17 @@ extends RegexParsers {
             case _ => {}
         }
         
-        
         convertTightComplexLists( in.dropRight( 1 ), in.last :: out )
+    }
+    
+    private def convertNextEmbeddedItem( in : List[ String ], out : List[ List[ MkBlock ] ] ) : List[ List[ MkBlock ] ] = {
+        
+        if ( in.isEmpty ) return out
+        
+        if ( in.head.hasEmbeddedList )
+            return convertNextEmbeddedItem( in.tail, in.head.splitToMkBlockList :: out )
+        else
+            return convertNextEmbeddedItem( in.tail, List( MkParagraph( in.head ) ) :: out )
     }
     
 

@@ -218,6 +218,7 @@ class MarkdownSuiteListTests {
         }
         
         val expected = {
+            "<div>" +
             "<ol>" +
                 "<li><p>First\n</p></li>" +
                 "<li>" +
@@ -226,10 +227,11 @@ class MarkdownSuiteListTests {
                     "<li>Fee\n</li>" +
                     "<li>Fie\n</li>" +
                     "<li>Foe\n</li>" +
-                    "</ul>"
+                    "</ul>" +
                 "</li>" +
-                "<li><p>Third\n</li>" +
-            "</ol>"
+                "<li><p>Third\n</p></li>" +
+            "</ol>" +
+            "</div>"
         }.toString
         
         val actual = <div>{ KnockOff.convert( source ).get }</div>.toString
@@ -250,6 +252,7 @@ class MarkdownSuiteListTests {
         }
         
         val expected = {
+            "<div>" +
             "<ol>" +
                 "<li><p>First\n</p></li>" +
                 "<li>" +
@@ -260,8 +263,9 @@ class MarkdownSuiteListTests {
                         "<li>Foe\n</li>" +
                     "</ul>" +
                 "</li>" +
-                "<li>Third</li>"
-            "</ol>"
+                "<li><p>Third\n</p></li>" +
+            "</ol>" +
+            "</div>"
         }.toString
         
         val actual = <div>{ KnockOff.convert( source ).get }</div>.toString

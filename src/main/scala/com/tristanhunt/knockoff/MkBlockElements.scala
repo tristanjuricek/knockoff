@@ -84,7 +84,7 @@ protected case class MkHorizontalRule(val markdown:String) extends MkBlock
  */
 protected trait MarkdownList extends MkBlock {
 
-    def items : Seq[ String ]
+    def items : List[ String ]
     
     def markdown : String = items.mkString( "" )
 }
@@ -93,7 +93,7 @@ protected trait MarkdownList extends MkBlock {
  * This captures the "simple bulleted list", which is a list where each group of items can be
  * treated as a single paragraph.
  */
-protected case class BulletListMkBlock( val items:Seq[ String ] )
+protected case class BulletListMkBlock( val items : List[ String ] )
 extends MarkdownList with MkBlock {
  
 }
@@ -101,7 +101,7 @@ extends MarkdownList with MkBlock {
 /**
  * The simpler numbered list, where each item will become it's own paragraph.
  */
-protected case class NumberedListMkBlock( val items : Seq[ String ] )
+protected case class NumberedListMkBlock( val items : List[ String ] )
 extends MarkdownList with MkBlock {
 }
 
@@ -148,10 +148,10 @@ extends ComplexMarkdownList with MkBlock
  */
 case class MkLinkDefinition(id:String, url:String, title:String) extends MkBlock {
     
-    val markdown:String = String.format("""[%s]: %s '%s'""", id, url, title)    
+    val markdown:String = String.format("""[%s]: %s '%s'""", id, url, title)
 }
 
-case class MkLinkDefinitionList(definitions:List[MkLinkDefinition]) extends MkBlock {
+case class MkLinkDefinitionList( definitions : List[ MkLinkDefinition ] ) extends MkBlock {
  
     val markdown:String = {
         val sb = new StringBuilder
