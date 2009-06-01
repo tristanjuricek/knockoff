@@ -5,7 +5,7 @@ package com.tristanhunt.knockoff
  * A block, when complete, is just a list of spanning Nads. (God, I _love_ that name.)
  */
 trait Block {
-    def nads : List[ Nad ] 
+    def nads : List[ Nad ]
 }
 
 /**

@@ -1,5 +1,6 @@
 package com.tristanhunt.knockoff
 
+import org.scalatest.testng._
 import org.testng.Assert._
 import org.testng.annotations._
 
@@ -8,11 +9,11 @@ import org.testng.annotations._
  *
  * @author Tristan Juricek <juricek@emarsys.com>
  */
-@Test
-class BlockTests {
+class BlockTests extends TestNGSuite {
     
     import collection.immutable._
  
+    @Test
     def setextHeader1 {
         
         val src = "heading 1\n=======\n \nBody text."
@@ -32,6 +33,7 @@ class BlockTests {
         assertTrue(expected sameElements actual)
     }
     
+    @Test
     def setextHeader2 {
         
         val src = "heading 2\n--------\n \nBody text."
@@ -55,6 +57,7 @@ class BlockTests {
     /**
      * Use an immediately trailing paragraph text.
      */
+     @Test
     def setextHeader3 {
        
         val src = "heading 1\n===========\nBody Text"

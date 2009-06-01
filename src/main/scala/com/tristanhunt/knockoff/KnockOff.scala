@@ -14,8 +14,8 @@ import util.parsing.combinator._
  */
 object KnockOff extends MkBlockParserFactory {
 
-    import collection.immutable._
-    import other.FancyStrings.caseInsensitiveOrder
+    import com.tristanhunt.knockoff.other.FancyStrings.caseInsensitiveOrder
+    import scala.collection.immutable._
  
     /**
      * Convert a full markdown document to a NodeBuffer that can be injected into another XML
@@ -173,6 +173,26 @@ object KnockOff extends MkBlockParserFactory {
             Paragraph(nads)
     }
     
+    
+    // Pimped toXML methods
+    //
+    // These methods use the default converters stored on the objects to add a toXML method
+    // on most of the major elements.
 
+    import scala.xml.{ Node, NodeBuffer }
 
+    class XMLBlock ( block : Block ) {
+        
+        def toXML : Node = BlockConverter.toXML( block )
+    }
+    
+    implicit def XMLBlock( block : Block ) : XMLBlock = new XMLBlock( block )
+
+    class XMLNadList ( nads : List[ Nad ] ) {
+        
+        def toXML : NodeBuffer = SpanConverter.span( nads )
+    }
+    
+    implicit def XMLNadList( nads : List[ Nad ] ) : XMLNadList = new XMLNadList( nads )
+    
 }
