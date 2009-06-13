@@ -1,6 +1,6 @@
 package com.tristanhunt.knockoff
 
-import util.parsing.combinator._
+import scala.util.parsing.combinator._
 
 /**
  * Parses a complete markdown source into intermediate 'MkBlock' elements. Basically, identifies
@@ -11,30 +11,24 @@ import util.parsing.combinator._
  *
  * @author Tristan Juricek <mr.tristan@gmail.com>
  */
-class MkBlockParser
-extends RegexParsers {
+object MkBlockParser extends RegexParsers {
+    
+    import scala.collection.mutable.{ Buffer, ListBuffer }
         
-    def parse( source : String ) : Option[ List[ MkBlock ] ] = {
+    def parse( source : String ) : ParseResult[ List[ MkBlock ] ] = {
         
         parseAll( markdownDocument, source ) match {
 
-            case Success( list, _) => {
+            case Success( list, _ ) => {
                 
-                val trimmed = trim( condenseSpacedLists( list, Nil ) )
+                val trimmed = trim( condenseSpacedLists( list, new ListBuffer ) )
 
                 val complexified = convertComplexLists( trimmed, Nil )
                 
-                Some( complexified )
+                Success( complexified, null )
             }
 
-            // TODO: we should probably make this more useful.
-            case fail:Failure => {
-
-                println( fail.toString )
-                return None
-            }
-        
-            case _ => return None
+            case nope : NoSuccess => return nope
         }
     }
     
@@ -263,7 +257,7 @@ extends RegexParsers {
         def hasEmbeddedList : Boolean = hasEmbeddedList( 0 )
         
         def hasEmbeddedList( startingLine : Int ) : Boolean =
-            source.getLines.toList.slice( startingLine ).exists( hasEmbeddedItem )
+            source.getLines.toList.drop( startingLine ).exists( hasEmbeddedItem )
 
         private def hasEmbeddedItem( string : String ):Boolean =
             hasEmbeddedBullet( string ) || hasEmbeddedNumberList( string )
@@ -573,46 +567,41 @@ extends RegexParsers {
              /** We consume this list and recurse until it's empty. */
              in  : List[ MkBlock ],
              /** Where we stick the output... which, by the way, will be pulled from when condensing. */
-             out : List[ MkBlock ]
-         ) : List[ MkBlock ] = {
+             out : Buffer[ MkBlock ]
+        ) : List[ MkBlock ] = {
 
-         if ( in.isEmpty )
-             return out
+        if ( in.isEmpty )
+            return out.toList
+            
+        var nextBlock = in.head
+             
+        if ( ! out.isEmpty ) {
 
-         if ( ! out.isEmpty ) {
+            if (
+                ( in.head.isInstanceOf[ NumberedListMkBlock ] ) &&
+                ( out.last.isInstanceOf[ NumberedListMkBlock ] )
+            ) {
+                val right = in.head.asInstanceOf[ NumberedListMkBlock ]
+                val left  = out.last.asInstanceOf[ NumberedListMkBlock ]
 
-             if (
-                 ( in.head.isInstanceOf[ NumberedListMkBlock ] ) &&
-                 ( out.last.isInstanceOf[ NumberedListMkBlock ] )
-             ) {
+                nextBlock = NumberedListMkBlock( left.items ++ right.items )
 
-                 val right = in.head.asInstanceOf[ NumberedListMkBlock ]
+                out.trimEnd( 1 )
 
-                 val left = out.last.asInstanceOf[ NumberedListMkBlock ]
+            } else if (
+                ( in.head.isInstanceOf[ BulletListMkBlock ] ) &&
+                ( out.last.isInstanceOf[ BulletListMkBlock ] )
+            ) {
+                val right = in.head.asInstanceOf[ BulletListMkBlock ]
+                val left  = out.last.asInstanceOf[ BulletListMkBlock ]
+                
+                nextBlock = BulletListMkBlock( left.items ++ right.items )
 
-                 val condensed = NumberedListMkBlock( left.items ++ right.items )
-
-                 return condenseSpacedLists( in.tail, out.dropRight(1) + condensed )
-
-             } else if (
-                 ( in.head.isInstanceOf[ BulletListMkBlock ] ) &&
-                 ( out.last.isInstanceOf[ BulletListMkBlock ] )
-             ) {
-
-                 val right = in.head.asInstanceOf[ BulletListMkBlock ]
-
-                 val left = out.last.asInstanceOf[ BulletListMkBlock ]
-
-                 val condensed = BulletListMkBlock( left.items ++ right.items )
-
-                 return condenseSpacedLists( in.tail, out.dropRight(1) + condensed )
-             }
-
+                out.trimEnd( 1 )
+            }
          }
 
-         // OK, we're not at a list, so just move the current item to the next list.
-
-         return condenseSpacedLists( in.tail, out + in.head )
+         return condenseSpacedLists( in.tail, out + nextBlock )
      }
      
     /**
@@ -629,9 +618,4 @@ extends RegexParsers {
 
         list.slice(start, end)
     }
-}
-
-trait MkBlockParserFactory {
- 
-    def mkBlockParser : MkBlockParser = new MkBlockParser
 }

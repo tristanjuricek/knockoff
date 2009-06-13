@@ -1,11 +1,12 @@
 package com.tristanhunt.knockoff
 
+import org.scalatest.testng._
 import org.testng.annotations._
 import org.testng.Assert._
 
-@Test
-class ComplexListConversionTest extends MkBlockParserFactory {
+class ComplexListConversionTest extends TestNGSuite {
  
+    @Test
     def complexListConversionDoNothingTest {
      
         val list = List(
@@ -14,12 +15,13 @@ class ComplexListConversionTest extends MkBlockParserFactory {
             MkParagraph( "p3" )
         )
         
-        val actual = mkBlockParser.convertSparseComplexLists( list, Nil )
+        val actual = MkBlockParser.convertSparseComplexLists( list, Nil )
          
         assertEquals( actual, list )
     }
     
     
+    @Test
     def splitTightComplexBulletList {
         
         val preliminary = List(
@@ -37,12 +39,13 @@ class ComplexListConversionTest extends MkBlockParserFactory {
             ) )
         )
         
-        val actual = mkBlockParser.convertTightComplexLists( preliminary, Nil )
+        val actual = MkBlockParser.convertTightComplexLists( preliminary, Nil )
         
         assertEquals( actual, expected )
     }
     
     
+    @Test
     def splitTightComplexNumberedList {
         
         val preliminary = List(
@@ -64,12 +67,13 @@ class ComplexListConversionTest extends MkBlockParserFactory {
             ) )
         )
         
-        val actual = mkBlockParser.convertTightComplexLists( preliminary, Nil )
+        val actual = MkBlockParser.convertTightComplexLists( preliminary, Nil )
         
         assertEquals( actual, expected )
     }
     
  
+    @Test
     def combineSparseComplexBulletList {
         
         val preliminary = List(
@@ -89,12 +93,13 @@ class ComplexListConversionTest extends MkBlockParserFactory {
             BulletListMkBlock( List( "goo" ) )
         )
         
-        val actual = mkBlockParser.convertSparseComplexLists( preliminary, Nil )
+        val actual = MkBlockParser.convertSparseComplexLists( preliminary, Nil )
         
         assertEquals( actual, expected )
     }
     
     
+    @Test
     def combineSparseComplexNumberedList {
         
         val preliminary = List(
@@ -105,11 +110,11 @@ class ComplexListConversionTest extends MkBlockParserFactory {
         val expected = List(
             ComplexNumberedListMkBlock( List( List(
                     MkParagraph( "boo" ),
-                    BulletListMkBlock( List( "item\nwith lines\n", "foo\n" ) ),
+                    BulletListMkBlock( List( "item\nwith lines\n", "foo\n" ) )
             ) ) )
         )
         
-        val actual = mkBlockParser.convertSparseComplexLists( preliminary, Nil )
+        val actual = MkBlockParser.convertSparseComplexLists( preliminary, Nil )
         
         assertEquals( actual, expected )
     }

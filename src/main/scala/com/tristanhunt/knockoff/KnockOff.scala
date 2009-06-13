@@ -1,44 +1,86 @@
 package com.tristanhunt.knockoff
 
-import util.parsing.combinator._
+import scala.util.parsing.combinator._
 
 /**
  * A Markdown-like parser implementation that returns an object model capable of being easily 
  * translated into, well, some kind of markup document.
  * 
+ * ## How to use this ##
+ *
+ * 1. `import` the Imports object, not this.
+ * 2. Call `KnockOff.parse` on your `String` content.
+ * 3. Use the `toXML` to convert to XHTML.
+ *
+ * A brief example:
+ *
+ *     import com.tristanhunt.knockoff.Imports._
+ *
+ *     val xhtml = KnockOff.parse( markdownString ).toXML
+ *
+ * ## Manipulating the object model ##
+ *
+ * With the above import, you can call `toXML` on the entire block list, the block, or the span,
+ * which is a list of nads (really).
+ *
+ * So, for example, to take your first header, and grab the title:
+ *
+ *     val title = KnockOff.parse( markdownString ).find match {
+ *         case Some( header : Header ) => header.nads.toXML.text
+ *         case None =>
+ *
+ * ## The Unclean Design Approach of KnockOff ##
+ *
  * The overall process is a little twacked, because I switch from using parser combinators to 
  * identify the blocks to using basically Regexes to figure out all the spanning elements. Hey, this
  * is an early-in-my-Scala-knowledge take on a project.
+ *
+ * So, the parsing stages can be seen as:
+ *
+ * 1. Interpret into MkBlock elements, which are an intermediate stage. This is done by the
+ *    `MkBlockParser`, which is why this object is an `MkBlockParserFactory`.
+ * 2. Convert the content of each MkBlock element into it's spanning nads.
+ * 3.
  * 
  * @author Tristan Juricek <mr.tristan@gmail.com>
  */
-object KnockOff extends MkBlockParserFactory {
+object KnockOff {
 
     import com.tristanhunt.knockoff.other.FancyStrings.caseInsensitiveOrder
     import scala.collection.immutable._
- 
+    
     /**
-     * Convert a full markdown document to a NodeBuffer that can be injected into another XML
-     * document. Like a full page:
-     *
-     *     <html><head></head><body>{KnockOff.convert(markdown)}</body></html>
-     *
-     * TODO Describe output modification.
+     * A variation on the Option class that indicates an error message when there is a problem.
      */
-    def convert( src:String ):Option[ xml.NodeBuffer ] = {
-
-        parse( src ) match {
-            case Some( blocks )  => Some( BlockConverter.toXML( blocks ) )
-            case None            => None
-        }
+    sealed abstract class KnockOffResult {
+        def get : List[ Block ]
+        def getOrElse[ B >: List[ Block ] ]( default: => B ) : B
+        def isEmpty = true
     }
     
+    case class Parsed( blocks : List[ Block ] ) extends KnockOffResult {
+        def get = blocks
+        def getOrElse[ B >: List[ Block ] ]( default : => B ) : B = blocks
+        override def isEmpty = blocks.isEmpty
+    }
+    
+    case class Failed( message : String ) extends KnockOffResult {
+        def get = throw new Predef.NoSuchElementException
+        def getOrElse[ B >: List[ Block ] ]( default : => B ) : B = default
+    }
       
     /**
      * Parse a full markdown document. Returns the content as a list of Blocks, and a map of the
      * different link references.
+     *
+     * ## Internal Notes ##
+     *
+     * A bunch of extra hacks were placed in here to keep the MkBlock parsing step simple, but
+     * fix some whitespace handling.
      */
-    def parse( src:String ):Option[ List[ Block ] ] = {
+    def parse( src : String ) : KnockOffResult = {
+        
+        import MkBlockParser._
         
         // Replace tabs with 4 spaces.
         val src2 = src.replace("\t", "    ")
@@ -52,21 +94,20 @@ object KnockOff extends MkBlockParserFactory {
         val src4 = src3.replaceAll( """(?m)^([-=]{3,})\s*$""", "$1\n" )
         
         // Do combinator parsing run, which will break down the markdown into "blocks".
-
         
-        val mkblks:List[MkBlock] = {
-            mkBlockParser.parse( src4 ) match {
-                case Some( blocks ) => blocks
-                case None => return None
-            }
+        val mkblks : List[ MkBlock ] = MkBlockParser.parse( src4 ) match {
+            case Success( blocks, _ ) => blocks
+            case nope : NoSuccess => return Failed( nope.msg )
         }
         
         // Prepare a separate map of each link definition, which will be the second return value,
         // but also used during parsing to indicate if the link reference is valid or not.
         
-        implicit var definitions:SortedMap[String, LinkDefinition] = TreeMap.Empty(caseInsensitiveOrder)
+        implicit var definitions : SortedMap[ String, LinkDefinition ] =
+            TreeMap.empty( caseInsensitiveOrder )
 
         for ( defn <- mkblks.filter( _linkDefinitionCheck ) ) {
+            
             definitions = definitions ++ {
                 defn match {
                     case MkLinkDefinition( id, url, title ) =>
@@ -79,13 +120,16 @@ object KnockOff extends MkBlockParserFactory {
 
             
         // Perform MkBlock -> Block mapping
+        //
+        // TODO Get rid of the use of implicits for the SpanParser.
 
-        implicit val parser = SpanParser(definitions)
+        implicit val parser = SpanParser( definitions )
+
         val blocks:List[Block] = mkblks.filter(
             blk => ! _linkDefinitionCheck( blk )
         ).map( _convert ).toList
 
-        Some(blocks)
+        Parsed( blocks )
     }
 
     private def _convert( mkblk : MkBlock )( implicit parser : SpanParser ) : Block = {
@@ -104,7 +148,7 @@ object KnockOff extends MkBlockParserFactory {
     private def _convertMkLinkDefinitionList(list:MkLinkDefinitionList):
         SortedMap[String, LinkDefinition] = {
     
-        var defs:SortedMap[String, LinkDefinition] = TreeMap.Empty(caseInsensitiveOrder)
+        var defs:SortedMap[String, LinkDefinition] = TreeMap.empty(caseInsensitiveOrder)
     
         list.definitions.foreach(defn => {
             defs = defs ++
@@ -127,7 +171,7 @@ object KnockOff extends MkBlockParserFactory {
         // sequence, but doing a different mapping at this stage.
         //
         // This should always parse to something. Do I want to change the exception when it doesn't?
-        case blockquote:MkBlockquote => Blockquote(parse(blockquote.markdown).get)
+        case blockquote:MkBlockquote => Blockquote( parse( blockquote.markdown ).get )
     
         case HTMLMkBlock(html) => HTMLBlock(HTML(html))
     
@@ -172,27 +216,4 @@ object KnockOff extends MkBlockParserFactory {
         else
             Paragraph(nads)
     }
-    
-    
-    // Pimped toXML methods
-    //
-    // These methods use the default converters stored on the objects to add a toXML method
-    // on most of the major elements.
-
-    import scala.xml.{ Node, NodeBuffer }
-
-    class XMLBlock ( block : Block ) {
-        
-        def toXML : Node = BlockConverter.toXML( block )
-    }
-    
-    implicit def XMLBlock( block : Block ) : XMLBlock = new XMLBlock( block )
-
-    class XMLNadList ( nads : List[ Nad ] ) {
-        
-        def toXML : NodeBuffer = SpanConverter.span( nads )
-    }
-    
-    implicit def XMLNadList( nads : List[ Nad ] ) : XMLNadList = new XMLNadList( nads )
-    
 }

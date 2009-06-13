@@ -11,7 +11,8 @@ import org.testng.annotations._
  */
 class BlockTests extends TestNGSuite {
     
-    import collection.immutable._
+    import Imports._
+    import scala.collection.immutable._
  
     @Test
     def setextHeader1 {
@@ -22,12 +23,9 @@ class BlockTests extends TestNGSuite {
             Header(List(Text("heading 1")), 1),
             Paragraph(List(Text("Body text."))))
         
-        val actual:List[Block] = KnockOff.parse(src) match {
-            case Some(list) => list
-            case None => {
-                fail("src not parsed: " + src)
-                null
-            }
+        val actual:List[Block] = knockoff( src ) match {
+            case KnockOff.Parsed(list) => list
+            case f : KnockOff.Failed  => { fail(f.message); null }
         }
         
         assertTrue(expected sameElements actual)
@@ -43,12 +41,9 @@ class BlockTests extends TestNGSuite {
             Paragraph( List( Text( "Body text." ) ) )
         )
         
-        val actual:List[Block] = KnockOff.parse(src) match {
-            case Some(list) => list
-            case None => {
-                fail("src not parsed: " + src)
-                null
-            }
+        val actual:List[Block] = knockoff(src) match {
+            case KnockOff.Parsed(list) => list
+            case f : KnockOff.Failed => { fail(f.message); null }
         }
         
         assertTrue(expected sameElements actual)
@@ -67,7 +62,7 @@ class BlockTests extends TestNGSuite {
             Paragraph( List( Text( "Body Text" ) ) )
         )
         
-        val actual:List[ Block ] = KnockOff.parse( src ).get
+        val actual:List[ Block ] = knockoff( src ).get
         
         assertTrue(
             expected sameElements actual,
@@ -91,14 +86,14 @@ class BlockTests extends TestNGSuite {
             val expected = List(
                 Header(List(Text("Heading # Value")), level))
             
-            val actual1 = KnockOff.parse(src1) match {
-                case Some(list) => list
-                case None  => {fail("ATX Header Parse Failed: " + src1); null}
+            val actual1 = knockoff(src1) match {
+                case KnockOff.Parsed( list ) => list
+                case f : KnockOff.Failed  => { fail("ATX Header Parse Failed: " + f.message ); null}
             }
             
-            val actual2 = KnockOff.parse(src2) match {
-                case Some(list) => list
-                case None  => {fail("ATX Header Parse Failed: " + src2); null}
+            val actual2 = knockoff(src2) match {
+                case KnockOff.Parsed(list) => list
+                case f : KnockOff.Failed  => {fail("ATX Header Parse Failed: " + f.message ); null}
             }
             
             assertTrue(expected sameElements actual1)
@@ -114,7 +109,7 @@ class BlockTests extends TestNGSuite {
      <span>To HTML</span>
 </div>"""
 
-        val actual:List[Block] = KnockOff.parse(src).get
+        val actual:List[Block] = knockoff(src).get
         
         val expected = List(
             Paragraph(List(Text("  a text block\n"))),
@@ -147,12 +142,9 @@ get formatted
    totally formatted
 +  Psht, whatever"""
 
-        val actual:List[Block] = KnockOff.parse(src) match {
-            case Some(list) => list
-            case None => {
-                fail("src not parsed: " + src)
-                null
-            }
+        val actual:List[Block] = knockoff(src) match {
+            case KnockOff.Parsed( list ) => list
+            case f : KnockOff.Failed => { fail(f.message); null }
         }
 
         val expected = List(
@@ -191,12 +183,9 @@ Second list
 
 2.  Ass munch
 """
-        val actual:List[Block] = KnockOff.parse(src) match {
-            case Some(list) => list
-            case None => {
-                fail("src not parsed: " + src)
-                null
-            }
+        val actual:List[Block] = knockoff(src) match {
+            case KnockOff.Parsed(list) => list
+            case f : KnockOff.Failed => { fail(f.message); null }
         }
         
         val expected = List(
@@ -226,12 +215,9 @@ Second list
 > quote.
 > with one line"""
 
-        val actual:List[Block] = KnockOff.parse(src) match {
-            case Some(list) => list
-            case None => {
-                fail("src not parsed: " + src)
-                null
-            }
+        val actual:List[Block] = knockoff(src) match {
+            case KnockOff.Parsed(list) => list
+            case f : KnockOff.Failed => { fail(f.message); null }
         }
         
         val expected = List(
@@ -262,12 +248,9 @@ Perhaps some commands:
     
      ./ a line!
 """
-        val actual:List[Block] = KnockOff.parse(src) match {
-            case Some(list) => list
-            case None => {
-                fail("src not parsed: " + src)
-                null
-            }
+        val actual:List[Block] = knockoff(src) match {
+            case KnockOff.Parsed(list) => list
+            case f : KnockOff.Failed => { fail(f.message); null }
         }
 
         val expected = List(
@@ -298,12 +281,9 @@ Something else
 __________
 """
 
-        val actual:List[Block] = KnockOff.parse(src) match {
-            case Some(list) => list
-            case None => {
-                fail("src not parsed: " + src)
-                null
-            }
+        val actual:List[Block] = knockoff(src) match {
+            case KnockOff.Parsed(list) => list
+            case f : KnockOff.Failed => { fail(f.message); null }
         }
 
         val expected = List(
@@ -340,7 +320,7 @@ This is a [used link definition][an id]
 
 //
 
-        val actual:List[Block] = KnockOff.parse(src).get
+        val actual:List[Block] = knockoff(src).get
         
         val expected = List(
             Paragraph(List(

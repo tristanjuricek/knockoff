@@ -52,7 +52,7 @@ extends Block {
     val nads = List(preformatted)
 }
 
-case class HorizontalRule
+case class HorizontalRule()
 extends Block {
 
     val nads = List(HorizontalRules.hr)

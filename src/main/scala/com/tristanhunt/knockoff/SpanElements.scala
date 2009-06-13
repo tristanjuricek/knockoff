@@ -1,5 +1,9 @@
 package com.tristanhunt.knockoff
 
+/**
+ * The "root" element of the KnockOff hierarchy. It's "value" is typically
+ * freetext. There are a few basic Nads -> Text, HTML, or Code, which are output differently.
+ */
 trait Nad {
     def value:String
 }

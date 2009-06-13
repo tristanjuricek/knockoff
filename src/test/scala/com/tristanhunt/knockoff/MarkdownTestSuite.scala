@@ -1,5 +1,6 @@
 package com.tristanhunt.knockoff
 
+import org.scalatest.testng._
 import org.testng.Assert._
 import org.testng.annotations._
 
@@ -7,63 +8,72 @@ import org.testng.annotations._
  * The markdown test suite, used so I can break down what's supported, what isn't, and be pretty
  * confident everything is how I want it.
  */
-@Test
-class MarkdownTestSuite {
+class MarkdownTestSuite extends TestNGSuite {
     
+    import Imports._
     import xml.Utility.trim
     
+    @Test
     def ampsAndAngleEncoding1 = _compare(
         "AT&T has an ampersand in their name.",
         <p>AT&amp;T has an ampersand in their name.</p>
     )
     
-    // TODO Currently failing, because I probably need to capture all variations of entities as
-    // HTML Nads.
+    @Test
     def ampsAndAngleEncoding2 = _compare(
         "AT&amp;T is another way to write it.",
         <p>AT&amp;T is another way to write it.</p>
     )
     
+    @Test
     def ampsAndAngleEncoding3 = _compare(
         "This & that.",
         <p>This &amp; that.</p>
     )
     
+    @Test
     def ampsAndAngleEncoding4 = _compare(
         "4 < 5.",
         <p>4 &lt; 5.</p>
     )
     
+    @Test
     def ampsAndAngleEncoding5 = _compare(
         "Here's a [link] [1] with an ampersand in the URL.\n\n[1]: http://example.com/?foo=1&bar=2\n",
         "<p>Here's a <a href=\"http://example.com/?foo=1&amp;bar=2\" >link</a> with an ampersand in the URL.\n</p>"
     )
     
+    @Test
     def ampsAndAngleEncoding6 = _compare(
         "Here's a link with an amersand in the link text: [AT&T] [2].\n\n[2]: http://att.com/  \"AT&T\"",
         "<p>Here's a link with an amersand in the link text: <a href=\"http://att.com/\" title=\"AT&amp;T\">AT&amp;T</a>.\n</p>"
     )
     
+    @Test
     def ampsAndAngleEncoding7 = _compare(
         "Here's an inline [link](/script?foo=1&bar=2).",
         "<p>Here's an inline <a href=\"/script?foo=1&amp;bar=2\" >link</a>.</p>"
     )
     
+    @Test
     def ampsAndAngleEncoding8 = _compare(
         "Here's an inline [link](</script?foo=1&bar=2>).",
         "<p>Here's an inline <a href=\"/script?foo=1&amp;bar=2\" >link</a>.</p>"
     )
     
+    @Test
     def autoLinks1 = _compare(
         "Link: <http://example.com/>.",
         "<p>Link: <a href=\"http://example.com/\" >http://example.com/</a>.</p>"
     )
     
+    @Test
     def autoLinks2 = _compare(
         "With an ampersand: <http://example.com/?foo=1&bar=2>",
         "<p>With an ampersand: <a href=\"http://example.com/?foo=1&amp;bar=2\" >http://example.com/?foo=1&amp;bar=2</a></p>"
     )
     
+    @Test
     def autoLinks3 = _compare(
         "* In a list?\n* <http://example.com/>\n* It should.",
         "<ul>" +
@@ -73,6 +83,7 @@ class MarkdownTestSuite {
         "</ul>"
     )
     
+    @Test
     def autoLinks4 = _compare(
         "> Blockquoted: <http://example.com/>",
         "<blockquote>" +
@@ -80,61 +91,73 @@ class MarkdownTestSuite {
         "</blockquote>"
     )
     
+    @Test
     def autoLinks5 = _compare(
         "Auto-links should not occur here: `<http://example.com/>`",
         <p>Auto-links should not occur here: <code>&lt;http://example.com/&gt;</code></p>
     )
 
+    @Test
     def autoLinks6 = _compare(
         "	or here: <http://example.com/>",
         "<pre><code>or here: &lt;http://example.com/&gt;</code></pre>"
     )
     
+    @Test
     def backslashEscapes1Backslash = _compare(
         """Backslash: \\""",
         """<p>Backslash: \</p>"""
     )
         
+    @Test
     def backslashEscapes2Backtick = _compare(
         """Backtick: \`""",
         """<p>Backtick: `</p>"""
     )
 
+    @Test
     def backslashEscapesAsterisk = _compare(
 		"""Asterisk: \*""",
 		"""<p>Asterisk: *</p>"""
 	)
 
+    @Test
     def backslashEscapesUnderscore = _compare(
 		"""Underscore: \_""",
 		"""<p>Underscore: _</p>"""
 	)
 
+    @Test
     def backslashEscapesLeftbrace = _compare(
 		"""Left brace: \{""",
 		"""<p>Left brace: {</p>"""
 	)
 
+    @Test
     def backslashEscapesRightbrace = _compare(
 		"""Right brace: \}""",
 		"""<p>Right brace: }</p>"""
 	)
 
+    @Test
     def backslashEscapesLeftbracket = _compare(
 		"""Left bracket: \[""",
 		"""<p>Left bracket: [</p>"""
 	)
 
+    @Test
     def backslashEscapesRightbracket = _compare(
 		"""Right bracket: \]""",
 		"""<p>Right bracket: ]</p>"""
 	)
 
+    @Test
     def backslashEscapesLeftparen = _compare(
 		"""Left paren: \(""",
 		"""<p>Left paren: (</p>"""
 	)
 
+    @Test
     def backslashEscapesRightparen = _compare(
 		"""Right paren: \)""",
 		"""<p>Right paren: )</p>"""
@@ -147,41 +170,49 @@ class MarkdownTestSuite {
      *
      * Of course, I could be wrong. We'll see.
      */
+    @Test
     def backslashEscapesGreaterThan = _compare(
 		"""Greater-than: \>""",
 		"""<p>Greater-than: &gt;</p>"""
 	)
 
+    @Test
     def backslashEscapesHash = _compare(
 		"""Hash: \#""",
 		"""<p>Hash: #</p>"""
 	)
 
+    @Test
     def backslashEscapesPeriod = _compare(
 		"""Period: \.""",
 		"""<p>Period: .</p>"""
 	)
 
+    @Test
     def backslashEscapesBang = _compare(
 		"""Bang: \!""",
 		"""<p>Bang: !</p>"""
 	)
 
+    @Test
     def backslashEscapesPlus = _compare(
 		"""Plus: \+""",
 		"""<p>Plus: +</p>"""
 	)
 
+    @Test
     def backslashEscapesMinus = _compare(
 		"""Minus: \-""",
 		"""<p>Minus: -</p>"""
 	)
     
+    @Test
     def backslashEscapesCodeBlock = _compare(
         MarkdownExamples.backslashEscapesCodeBlock,
         ConversionExamples.backslashEscapesCodeBlock
     )
     
+    @Test
     def backslashEscapesCodeSpans = _compare(
         MarkdownExamples.backslashEscapesCodeSpans,
         ConversionExamples.backslashEscapesCodeSpans
@@ -190,6 +221,7 @@ class MarkdownTestSuite {
     /**
      * I'm not sure why the official test suite did not entitize the quotes.
      */
+    @Test
     def blockquotesWithCodeBlocks = _compare(
         
         "> Example:\n" +
@@ -218,6 +250,7 @@ class MarkdownTestSuite {
         "</blockquote>"
     )
     
+    @Test
     def hardWrappedParagraphsWithListLikeLines = _compare(
         "In Markdown 1.0.0 and earlier. Version\n" +
         "8. This line turns into a list item.\n" +
@@ -234,6 +267,7 @@ class MarkdownTestSuite {
         "<p>Here's one with a bullet.\n* criminey.\n</p>"
     )
     
+    @Test
     def horizontalRules = {
      
         _compare(
@@ -252,11 +286,12 @@ class MarkdownTestSuite {
         )
     }
     
+    @Test
     def inlineHTML = {
      
         _compare(
             MarkdownExamples.inlineHTMLAdvanced,
-            ConversionExamples.inlineHTMLAdvanced,
+            ConversionExamples.inlineHTMLAdvanced
         )
         
         _compare(
@@ -285,6 +320,7 @@ class MarkdownTestSuite {
         )
     }
     
+    @Test
     def linksInlineStyle = {
      
         _compare(
@@ -313,12 +349,14 @@ class MarkdownTestSuite {
         )
     }
     
+    @Test
     def linksReferenceStyle = _compare(
         MarkdownExamples.linksReferenceStyle,
         ConversionExamples.linksReferenceStyle
     )
     
     
+    @Test
     def literalQuotesInTitles = {
         
         val quotesInTitles =
@@ -334,6 +372,7 @@ class MarkdownTestSuite {
     }
     
     
+    @Test
     def strongAndEmTogether = {
         
         _compare(
@@ -357,11 +396,15 @@ class MarkdownTestSuite {
         )
     }
     
+
+    @Test
     def tabs = _compare(
         MarkdownExamples.tabs,
         ConversionExamples.tabs
     )
     
+
+    @Test
     def tidyness = _compare(
         "> A list within a blockquote:\n" +
         "> \n" +
@@ -381,14 +424,18 @@ class MarkdownTestSuite {
      */
     private def _compare(markdown:String, node:xml.Node) {
      
-        assertEquals({<div>{KnockOff.convert(markdown).get}</div>}.toString,
-            {<div>{node}</div>}.toString)
+        assertEquals(
+            { <div>{ knockoff( markdown ).get.toXML }</div> }.toString,
+            { <div>{ node }</div> }.toString
+        )
     }
     
     private def _compare(markdown:String, expected:String) {
         
-        assertEquals({<div>{KnockOff.convert(markdown).get}</div>}.toString,
-            "<div>" + expected + "</div>")
+        assertEquals(
+            { <div>{ knockoff( markdown ).get.toXML }</div> }.toString,
+            "<div>" + expected + "</div>"
+        )
     }
 }
 

@@ -1,15 +1,16 @@
 package com.tristanhunt.knockoff
 
+import org.scalatest.testng._
 import org.testng.Assert._
 import org.testng.annotations._
-import collection.immutable.TreeMap.Empty
+import collection.immutable.TreeMap.empty
 
-@Test
-class SpanTests {
+class SpanTests extends TestNGSuite {
  
+    @Test
     def inlineHTML = {
      
-        val actual = SpanParser(Empty).parse("""A block with <span class="strong">Some <br><br> HTML</span> in it.""")
+        val actual = SpanParser(empty).parse("""A block with <span class="strong">Some <br><br> HTML</span> in it.""")
         
         val expected = List(
             Text("A block with "),
@@ -19,6 +20,7 @@ class SpanTests {
         assertTrue(actual sameElements expected)
     }
     
+    @Test
     def emphasisTest = {
         assertTrue(Emphasis(Nil) == Emphasis(Nil))
         assertTrue(Emphasis(List(Text("a"))) == Emphasis(List(Text("a"))))
@@ -26,9 +28,10 @@ class SpanTests {
     }
     
     
+    @Test
     def emphasisUnderscore = {
      
-        val actual = SpanParser(Empty).parse("""_emphasis_ possibly with _two words_""")
+        val actual = SpanParser(empty).parse("""_emphasis_ possibly with _two words_""")
         
         val expected = List(
             Emphasis(List(Text("emphasis"))),
@@ -38,9 +41,10 @@ class SpanTests {
         assertTrue(actual sameElements expected)
     }
     
+    @Test
     def emphasisAsterix = {
      
-        val actual = SpanParser(Empty).parse("""*shocking _but_ true*""")
+        val actual = SpanParser(empty).parse("""*shocking _but_ true*""")
         
         val expected = List(
             Emphasis(List(
@@ -51,9 +55,10 @@ class SpanTests {
         assertTrue(actual sameElements expected)
     }
     
+    @Test
     def strongUnderscore = {
         
-        val actual = SpanParser(Empty).parse("""This __is a *fucking* test__""")
+        val actual = SpanParser(empty).parse("""This __is a *fucking* test__""")
         
         val expected = List(
             Text("This "),
@@ -65,9 +70,10 @@ class SpanTests {
         assertTrue(actual sameElements expected)
     }
     
+    @Test
     def strongAsterix { // != obelix
         
-        val actual = SpanParser(Empty).parse("""**hi** you **guy__**what__?""")
+        val actual = SpanParser(empty).parse("""**hi** you **guy__**what__?""")
         
         val expected = List(
             Strong(List(Text("hi"))),
@@ -78,9 +84,10 @@ class SpanTests {
         assertTrue(actual sameElements expected)
     }
     
+    @Test
     def inlineLink {
      
-        val actual = SpanParser(Empty).parse("[First](http://example.com) link has no title." +
+        val actual = SpanParser(empty).parse("[First](http://example.com) link has no title." +
             "[The *second* link](http://example.com/foo?bar=bat \"Crappy \"Think\" Link\") has a title. And then, " +
             "of course, there's the [Empty]() empty link.")
         
@@ -98,15 +105,17 @@ class SpanTests {
         assertTrue(actual sameElements expected)
     }
     
+    @Test
     def imageLink {
         
-        val actual = SpanParser(Empty).parse("![Alternative Text](http://path/to/image.jpg \"Title\")")
+        val actual = SpanParser(empty).parse("![Alternative Text](http://path/to/image.jpg \"Title\")")
         
         val expected = List(ImageLink(List(Text("Alternative Text")), "http://path/to/image.jpg", "Title"))
         
         assertTrue(actual sameElements expected)
     }
     
+    @Test
     def referenceLink {
         
         import collection.immutable.TreeMap

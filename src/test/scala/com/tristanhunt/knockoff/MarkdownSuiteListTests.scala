@@ -1,5 +1,6 @@
 package com.tristanhunt.knockoff
 
+import org.scalatest.testng._
 import org.testng.annotations._
 import org.testng.Assert._
 import scala.xml._
@@ -8,10 +9,11 @@ import scala.xml._
  * OK, so I split out the "ordered and unordered lists" stuff from the normal markdown test suite
  * because I needed to figure out how to do this nested parsing thing.
  */
-@Test
-class MarkdownSuiteListTests {
+class MarkdownSuiteListTests extends TestNGSuite {
 
+    import Imports._
     
+    @Test
     def bulletsTight {
      
         val bullets = List( "*", "-", "+" )
@@ -23,7 +25,7 @@ class MarkdownSuiteListTests {
                 bullet + " asterisk 2\n" +
                 bullet + " asterisk 3\n"
 
-            val actual = <div>{ KnockOff.convert( source ).get }</div>.toString
+            val actual = <div>{ knockoff( source ).get.toXML }</div>.toString
         
             val expected = {
                 "<div>" +
@@ -48,6 +50,7 @@ class MarkdownSuiteListTests {
     output is identical to the "asterisksTight" mechanism.
     
     */    
+    @Test
     def bulletsLoose {
      
         val bullets = List( "*", "-", "+" )
@@ -62,7 +65,7 @@ class MarkdownSuiteListTests {
                 bullet + " asterisk 3\n"
             }
 
-            val actual = <div>{ KnockOff.convert( source ).get }</div>.toString
+            val actual = <div>{ knockoff( source ).get.toXML }</div>.toString
         
             val expected = {
                 "<div>" +
@@ -79,6 +82,7 @@ class MarkdownSuiteListTests {
     }
     
     
+    @Test
     def orderedTight {
         
         val singleSpaced =
@@ -101,8 +105,8 @@ class MarkdownSuiteListTests {
             "</div>"
         }
         
-        val actualSingleSpaced = <div>{ KnockOff.convert( singleSpaced ).get }</div>.toString
-        val actualDoubleSpaced = <div>{ KnockOff.convert( doubleSpaced ).get }</div>.toString
+        val actualSingleSpaced = <div>{ knockoff( singleSpaced ).get.toXML }</div>.toString
+        val actualDoubleSpaced = <div>{ knockoff( doubleSpaced ).get.toXML }</div>.toString
         
         assertEquals( actualSingleSpaced, expected )
         
@@ -110,6 +114,7 @@ class MarkdownSuiteListTests {
     }
     
     
+    @Test
     def orderedLoose {
         
         val looseWithSpaces =
@@ -136,8 +141,8 @@ class MarkdownSuiteListTests {
             "</div>"
         }
         
-        val actualWithSpaces    = <div>{ KnockOff.convert( looseWithSpaces ).get }</div>.toString
-        val acutalWithTabs      = <div>{ KnockOff.convert( looseWithTabs ).get }</div>.toString
+        val actualWithSpaces    = <div>{ knockoff( looseWithSpaces ).get.toXML }</div>.toString
+        val acutalWithTabs      = <div>{ knockoff( looseWithTabs ).get.toXML }</div>.toString
         
         assertEquals( actualWithSpaces, expected )
         
@@ -145,6 +150,7 @@ class MarkdownSuiteListTests {
     }
     
     
+    @Test
     def multipleParagraphs {
         
         val source = {
@@ -170,12 +176,13 @@ class MarkdownSuiteListTests {
             "</div>"
         }
         
-        val actual = <div>{ KnockOff.convert( source ).get }</div>.toString
+        val actual = <div>{ knockoff( source ).get.toXML }</div>.toString
         
         assertEquals( actual, expected )
     }
     
     
+    @Test
     def nested {
         
         val source = {
@@ -200,12 +207,13 @@ class MarkdownSuiteListTests {
             "</div>"
         }
         
-        val actual = <div>{ KnockOff.convert( source ).get }</div>.toString
+        val actual = <div>{ knockoff( source ).get.toXML }</div>.toString
         
         assertEquals( actual, expected )
     }
     
     
+    @Test
     def nestedAnother {
         
         val source = {
@@ -234,12 +242,13 @@ class MarkdownSuiteListTests {
             "</div>"
         }.toString
         
-        val actual = <div>{ KnockOff.convert( source ).get }</div>.toString
+        val actual = <div>{ knockoff( source ).get.toXML }</div>.toString
 
         assertEquals( actual, expected )
     }
     
     
+    @Test
     def nestedParas {
      
         val source = {
@@ -268,7 +277,7 @@ class MarkdownSuiteListTests {
             "</div>"
         }.toString
         
-        val actual = <div>{ KnockOff.convert( source ).get }</div>.toString
+        val actual = <div>{ knockoff( source ).get.toXML }</div>.toString
 
         assertEquals( actual, expected )
     }
