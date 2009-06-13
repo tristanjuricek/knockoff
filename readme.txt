@@ -16,10 +16,12 @@ ways. It does this by:
 I found this handy: keep the title of your website at h1 by taking any
 header in your markdown source, and detune it.
 
+This is an example of tweaking the object model.
+
     import com.tristanhunt.knockoff.Imports._
     import java.lang.Math.min
 
-    val blocks = knockoff( markdownString )
+    val blocks = knockoff( markdownString ).get
     
     val detuned = blocks.foreach{ block => block match {
      
@@ -28,8 +30,51 @@ header in your markdown source, and detune it.
         case _ => block
     }
     
-### Another Example: Tweak the last element of any paragraph.
+    val html = detuned.toXML
 
+
+### Another Example: Make the first header element have the "title" class.
+
+Here, we'll take the first header element that is rendered, and override the
+`class` attribute to be `title` in the final HTML.
+
+This is an example of adjusting the rendering. Note that I might change this
+around a bunch soon-ish.
+
+    import com.tristanhunt.knockoff.Imports._
+    import com.tristanhunt.knockoff._
+    
+    BlockConverter.current = new DefaultBlockConverter {
+
+        var isAdded = false
+
+        override def toHeaderXML( header : Header ) : Node = {
+            
+            isAdded match {
+                
+                false => super.toHeaderXML( header ) match {
+                    case e : Elem => Elem(
+                        e.prefix,
+                        e.label,
+                        new UnprefixedAttribute( "class", "title", e.attributes ),
+                        e.scope,
+                        e.child
+                    )
+                }
+                
+                true => super.toHeaderXML( header )
+            }
+        }
+    }
+    
+    val xhtml = knockoff( markdownString ).get
+
+A few thoughts:
+
+* I'm not 100% sold on the use of the object member or constructor method,
+  even. I know there's a better way.
+* We'll have to see how much HTML adjustment people want to do, I find the
+  object model adjustments much more useful in practice.
 
 
 ## The Object Model ##
