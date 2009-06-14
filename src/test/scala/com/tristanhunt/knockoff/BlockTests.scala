@@ -52,7 +52,7 @@ class BlockTests extends TestNGSuite {
     /**
      * Use an immediately trailing paragraph text.
      */
-     @Test
+    @Test
     def setextHeader3 {
        
         val src = "heading 1\n===========\nBody Text"
@@ -72,6 +72,7 @@ class BlockTests extends TestNGSuite {
     }
 
 
+    @Test
     def atxHeader = {
      
         Iterator.range(1,7).foreach(level => {
@@ -101,6 +102,7 @@ class BlockTests extends TestNGSuite {
         })
     }
     
+    @Test
     def htmlMkBlock = {
      
         val src = """  a text block
@@ -118,6 +120,7 @@ class BlockTests extends TestNGSuite {
         assertTrue(expected sameElements actual)
     }
     
+    @Test
     def bulletLists = {
      
         val src = """A list
@@ -167,6 +170,7 @@ get formatted
             "[actual sameElements expected == false] actual:" + actual + ", expected:" + expected)
     }
 
+    @Test
     def numberedLists = {
      
         val src = """### A numbered list ###
@@ -203,6 +207,7 @@ Second list
             "[actual sameElements expected == false] actual:" + actual + ", expected:" + expected)
     }
     
+    @Test
     def blockquoted = {
      
         val src = """MkBlock quote
@@ -268,7 +273,9 @@ Perhaps some commands:
 
         assertTrue(actual sameElements expected)
     }
+
     
+    @Test
     def horizontalRule = {
      
         val src = """A Thingy
@@ -295,6 +302,8 @@ __________
         assertTrue(actual sameElements expected)
     }
 
+
+    @Test
     def linkDefinition = {
      
         val src = """
@@ -345,4 +354,33 @@ This is a [used link definition][an id]
             "[actual sameElements expected == false]\n\tactual  :" + actual + "\n\texpected:" + expected)
     }
 
+
+    /**
+     * Trying to identify a problem where whitespace leading into a separate
+     * element is causing the block parser to blow chunks.
+     */
+    @Test
+    def codeBlockSpacing {
+
+        val codeBlockToHeader =
+            "    code block\n" +
+            "    \n" +    // empty line sometimes left by editors with space
+            "## Header\n"
+    
+        val actual = knockoff( codeBlockToHeader ) match {
+            case KnockOff.Parsed( blocks ) => blocks
+            case KnockOff.Failed( message ) => { fail( message ); null }
+        }
+        
+        val expected = List(
+            CodeBlock( Text( "code block\n" ) ),
+            Header( List( Text( "Header" ) ), 2 )
+        )
+        
+        assertTrue(
+            actual sameElements expected,
+            "\nactual   : " + actual +
+            "\nexpected : " + expected
+        )
+    }
 }

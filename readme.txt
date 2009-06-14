@@ -18,15 +18,17 @@ header in your markdown source, and detune it.
 
 This is an example of tweaking the object model.
 
+    import com.tristanhunt.knockoff._
     import com.tristanhunt.knockoff.Imports._
     import java.lang.Math.min
 
-    val blocks = knockoff( markdownString ).get
+    val blocks = knockoff( markdownString ) match {
+        case KnockOff.Parsed( blocks ) => blocks
+        case KnockOff.Failed( message ) => message
+    }
     
     val detuned = blocks.foreach{ block => block match {
-     
         case header : Header => Header( header.nads, min( header.level + 1, 6 ) )
-     
         case _ => block
     }
     
@@ -41,8 +43,8 @@ Here, we'll take the first header element that is rendered, and override the
 This is an example of adjusting the rendering. Note that I might change this
 around a bunch soon-ish.
 
-    import com.tristanhunt.knockoff.Imports._
     import com.tristanhunt.knockoff._
+    import com.tristanhunt.knockoff.Imports._
     
     BlockConverter.current = new DefaultBlockConverter {
 

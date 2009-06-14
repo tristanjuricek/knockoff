@@ -78,24 +78,29 @@ object KnockOff {
      * A bunch of extra hacks were placed in here to keep the MkBlock parsing step simple, but
      * fix some whitespace handling.
      */
-    def parse( src : String ) : KnockOffResult = {
+    def parse( inputSource : String ) : KnockOffResult = {
         
         import MkBlockParser._
         
         // Replace tabs with 4 spaces.
-        val src2 = src.replace("\t", "    ")
+        var normalized = inputSource.replace("\t", "    ")
         
         // Add extra lines after things that look a lot like headers.
         
         // ATX headers
-        val src3 = src2.replaceAll( """(?m)^(#{1,6}[^\n]*#{1,6})$""", "$1\n" )
+        normalized = """(?m)^(#{1,6}[^\n]*#{1,6})$""".r.replaceAllIn( normalized, "$1\n" )
         
         // Setext headers
-        val src4 = src3.replaceAll( """(?m)^([-=]{3,})\s*$""", "$1\n" )
+        normalized = """(?m)^([-=]{3,})\s*$""".r.replaceAllIn( normalized, "$1\n" )
+        
+        // When people have a line that *looks* like an empty code line, but is before a non-code
+        // block line, well, they really don't mean it is.
+        
+        normalized = """[ ]{4}[ \t]*\n(\S)""".r.replaceAllIn( normalized, "\n$1" )
         
         // Do combinator parsing run, which will break down the markdown into "blocks".
         
-        val mkblks : List[ MkBlock ] = MkBlockParser.parse( src4 ) match {
+        val mkblks : List[ MkBlock ] = MkBlockParser.parse( normalized ) match {
             case Success( blocks, _ ) => blocks
             case nope : NoSuccess => return Failed( nope.msg )
         }
