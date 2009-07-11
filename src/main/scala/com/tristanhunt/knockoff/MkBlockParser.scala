@@ -25,7 +25,9 @@ object MkBlockParser extends RegexParsers {
 
                 val complexified = convertComplexLists( trimmed, Nil )
                 
-                Success( complexified, null )
+                val concatenatedCode = concatenateCodeBlocks( complexified )
+                
+                Success( concatenatedCode, null )
             }
 
             case nope : NoSuccess => return nope
@@ -617,5 +619,36 @@ object MkBlockParser extends RegexParsers {
         val end = list.length - (list.reverse findIndexOf nonEmptyMkBlock)
 
         list.slice(start, end)
+    }
+    
+    
+    /**
+     * Two code blocks, right after the other, should really be one code block. The reason is fairly
+     * simple: a lot of editors will tweak your whitespace, and that stuff is impossible to see
+     * easily.
+     */
+    def concatenateCodeBlocks( in : List[ MkBlock ] ) : List[ MkBlock ] = {
+       
+        import scala.collection.mutable.ListBuffer
+       
+        def next( in : List[ MkBlock ], out : ListBuffer[ MkBlock ] ) : List[ MkBlock ] = {
+            
+            if ( in.isEmpty ) return out.toList
+            
+            if (
+                ( ! out.isEmpty ) &&
+                ( in.first.isInstanceOf[ CodeMkBlock ] && out.last.isInstanceOf[ CodeMkBlock ] )
+            ) {
+                val concatenated = CodeMkBlock( out.last.markdown + "    \n" + in.first.markdown )
+                out.trimEnd(1)
+                out += concatenated
+                return next( in.tail, out )
+            }
+            
+            out += in.first
+            next( in.tail, out )
+        }
+        
+        next( in, new ListBuffer[ MkBlock ] )
     }
 }

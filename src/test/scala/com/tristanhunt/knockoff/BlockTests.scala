@@ -2,6 +2,7 @@ package com.tristanhunt.knockoff
 
 import org.scalatest.testng._
 import org.testng.Assert._
+import org.testng.Assert.{ fail => failTest }
 import org.testng.annotations._
 
 /**
@@ -382,5 +383,65 @@ This is a [used link definition][an id]
             "\nactual   : " + actual +
             "\nexpected : " + expected
         )
+    }
+    
+    /**
+        Two code blocks separated by an empty line should really be treated like one code block.
+    */
+    @Test
+    def multiCodeBlocks {
+        
+        val multiLines =
+            "    code line 1\n" +
+            "\n" +
+            "    code line 2\n"
+    
+        val actual = knockoff( multiLines ).get
+        
+        val expected = List(
+            CodeBlock( Text( "code line 1\n\ncode line 2\n" ) )
+        )
+        
+        assertTrue(
+            actual sameElements expected,
+            "\nactual   : " + actual +
+            "\nexpected : " + expected
+        )
+    }
+    
+    
+    /**
+     * A coworker just loved to have lots of nested blocks right before a normal line, which looks
+     * like crap, and, explodes the parser. If people want things to look like crap, fine, but I
+     * really want to be as forgiving as possible.
+     */
+    @Test
+    def uglyAssSpacing {
+        
+        val spaceBeforeNothing =
+            "1. A list item\n" +
+            "\n" +
+            "        A code in a list\n" +
+            "2. Another list item"
+        
+        val expected = List( OrderedComplexBlockList( List(
+            List(
+                Paragraph( List( Text( "A list item\n" ) ) ),
+                CodeBlock( Text( "A code in a list\n" ) )
+            ),
+            List(
+                Paragraph( List( Text( "Another list item" ) ) )
+            )
+        ) ) )
+        
+        knockoff( spaceBeforeNothing ) match {
+            case KnockOff.Parsed( actual ) => {
+                assertTrue( actual sameElements expected,
+                    "\nactual   : " + actual +
+                    "\nexpected : " + expected
+                )
+            }
+            case KnockOff.Failed( msg ) => failTest( msg )
+        }
     }
 }

@@ -98,11 +98,20 @@ object KnockOff {
         
         normalized = """[ ]{4}[ \t]*\n(\S)""".r.replaceAllIn( normalized, "\n$1" )
         
+        // Now, when people have a non-code line that is after a line that is a code line, we want
+        // an extra line, even though this looks like absolute crap anyway.
+        
+        normalized = """\n([ ]{4}.*\n)([\S&&[^<-]])""".r.replaceAllIn( normalized, "\n$1\n$2" )
+        
         // Do combinator parsing run, which will break down the markdown into "blocks".
         
         val mkblks : List[ MkBlock ] = MkBlockParser.parse( normalized ) match {
             case Success( blocks, _ ) => blocks
-            case nope : NoSuccess => return Failed( nope.msg )
+            case nope : NoSuccess => {
+                return Failed(
+                    "line " + nope.next.pos.line + ": " + nope.msg + "\n" + nope.next.pos.longString
+                )
+            }
         }
         
         // Prepare a separate map of each link definition, which will be the second return value,
