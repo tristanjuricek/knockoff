@@ -47,7 +47,7 @@ object MkBlockParser extends RegexParsers {
      * A markdown document is a sequence of things separated by empty whitespace. Note that this
      * parser combinator expects that the input will not "ram" things together.
      */
-    def markdownDocument : Parser[ List[ MkBlock ] ]  = repsep( thing, emptyLine )
+    def markdownDocument : Parser[ List[ MkBlock ] ]  = repsep( thing, rep1( emptyLine ) )
 
     
     def thing : Parser[ MkBlock ] = (
@@ -139,7 +139,7 @@ object MkBlockParser extends RegexParsers {
      * more lines as a single empty space element.
      */
     def emptyLine : Parser[ EmptySpace ] =
-        """\s*\n""".r ^^ (s => EmptySpace(s))
+        """[ ]*\n""".r ^^ ( s => EmptySpace(s) )
     
     
     def header : Parser[ MkHeader ] =
@@ -173,12 +173,10 @@ object MkBlockParser extends RegexParsers {
 
         
     def codeMkBlock : Parser[ CodeMkBlock ] =
-        rep1( indentedLine ) ^^ (list => CodeMkBlock(_concatMkParagraphs(list)))
-
+        rep1( indentedLine ) ^^ ( list => CodeMkBlock( _concatMkParagraphs( list ) ) )
         
     def indentedLine : Parser[ MkParagraph ] =
         "    "~(textLine | emptyLine) ^^ (v => MkParagraph(v._1 + v._2.markdown))
-
         
     def horizontalRule : Parser[ MkHorizontalRule ] =
         """[ ]{0,3}[*\-_][ ]?[*\-_][ ]?[*\-_][ *\-_]*\n""".r ^^ (rule => MkHorizontalRule(rule))

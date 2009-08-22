@@ -1,9 +1,11 @@
 package com.tristanhunt.knockoff
 
+import Imports._
 import org.scalatest.testng._
 import org.testng.Assert._
 import org.testng.Assert.{ fail => failTest }
 import org.testng.annotations._
+import scala.collection.immutable._
 
 /**
  * Mostly, some tests I've used as building up the library. Here to keep me sane.
@@ -11,10 +13,7 @@ import org.testng.annotations._
  * @author Tristan Juricek <juricek@emarsys.com>
  */
 class BlockTests extends TestNGSuite {
-    
-    import Imports._
-    import scala.collection.immutable._
- 
+
     @Test
     def setextHeader1 {
         
@@ -443,5 +442,63 @@ This is a [used link definition][an id]
             }
             case KnockOff.Failed( msg ) => failTest( msg )
         }
+    }
+    
+    /**
+     * Trailing whitespace lines in code blocks should work fine.
+     */
+    @Test
+    def extraCodeSpace {
+        val example = {
+            "Normal line.\n" +
+            "\n" +
+            "    code block\n" +
+            "    \n" +
+            "\n" +
+            "Normal line."
+        }
+        
+        val expected = List(
+            Paragraph( List( Text( "Normal line.\n" ) ) ),
+            CodeBlock( Text( "code block\n\n" ) ),
+            Paragraph( List( Text( "Normal line." ) ) )
+        )
+        
+        knockoff( example ) match {
+            case KnockOff.Parsed( actual ) => {
+                assertTrue( actual sameElements expected,
+                    "\nactual   : " + actual +
+                    "\nexpected : " + expected
+                )
+            }
+            case KnockOff.Failed( message ) => failTest( message )
+        }
+    }
+}
+
+class TempTests extends TestNGSuite {
+    @Test
+    def linksReferenceStyleTest = _compare(
+        MarkdownExamples.linksReferenceStyle,
+        ConversionExamples.linksReferenceStyle
+    )
+    
+    /**
+     * Doing a couple of tricks so that each of the tests are just a bit easier to read.
+     */
+    protected def _compare(markdown:String, node:xml.Node) {
+     
+        assertEquals(
+            { <div>{ knockoff( markdown ).get.toXML }</div> }.toString,
+            { <div>{ node }</div> }.toString
+        )
+    }
+    
+    protected def _compare(markdown:String, expected:String) {
+        
+        assertEquals(
+            { <div>{ knockoff( markdown ).get.toXML }</div> }.toString,
+            "<div>" + expected + "</div>"
+        )
     }
 }

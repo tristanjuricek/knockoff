@@ -422,7 +422,7 @@ class MarkdownTestSuite extends TestNGSuite {
     /**
      * Doing a couple of tricks so that each of the tests are just a bit easier to read.
      */
-    private def _compare(markdown:String, node:xml.Node) {
+    protected def _compare(markdown:String, node:xml.Node) {
      
         assertEquals(
             { <div>{ knockoff( markdown ).get.toXML }</div> }.toString,
@@ -430,7 +430,7 @@ class MarkdownTestSuite extends TestNGSuite {
         )
     }
     
-    private def _compare(markdown:String, expected:String) {
+    protected def _compare(markdown:String, expected:String) {
         
         assertEquals(
             { <div>{ knockoff( markdown ).get.toXML }</div> }.toString,
