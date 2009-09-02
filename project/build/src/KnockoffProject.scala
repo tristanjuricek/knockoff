@@ -1,6 +1,17 @@
 import sbt._
+import com.tristanhunt._
 
-class KnockoffProject( info : ProjectInfo ) extends DefaultProject( info ) {
+
+class KnockoffProject( info : ProjectInfo )
+extends DefaultProject( info )
+with    Literable {
+    
+    override def compileOptions = {
+        List( MaxCompileErrors( 10 ), CompileOption("-unchecked") ) :::
+        super.compileOptions.toList
+    }
+    
+    override def literableCodePrefix = List( "com", "tristanhunt" )
 
     Credentials(Path.userHome / ".ivy2" / ".credentials", log)
 
