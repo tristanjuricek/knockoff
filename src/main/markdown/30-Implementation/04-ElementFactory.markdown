@@ -1,13 +1,13 @@
-`KOFactory`
-===========
+`ElementFactory`
+================
 
 Generates the various Knockoff elements based primarily on the `SpanSeq`,
 though other information learned from parsing is usually passed on as well.
 
-    // In knockoff2/KOFactory.scala
-    package com.tristanhunt.knockoff2
+    // In knockoff2/ElementFactory.scala
+    package knockoff2
     
-    trait KOFactory {
+    trait ElementFactory {
         
         def Paragraph( spans : SpanSeq, position : Position ) : Paragraph = {
             new Paragraph(
@@ -33,4 +33,7 @@ though other information learned from parsing is usually passed on as well.
         
         def Header( level : Int, content : String, position : Position ) : Header =
             Header( level, Text( content ), position )
+        
+        
+        def Text( content : String ) : Text = new Text( content )
     }

@@ -11,8 +11,6 @@ with    Literable {
         super.compileOptions.toList
     }
     
-    override def literableCodePrefix = List( "com", "tristanhunt" )
-
     Credentials(Path.userHome / ".ivy2" / ".credentials", log)
 
     val nexus = "tristanhunt" at "http://tristanhunt.com:8081/content/groups/public/"

@@ -43,7 +43,7 @@ first element of the sequence is itself.
 In many cases, the Block can not contain other blocks.
 
     // In knockoff2/SimpleBlock.scala
-    package com.tristanhunt.knockoff2
+    package knockoff2
     
     trait SimpleBlock extends Block {
         override def theSeq : Seq[ Block ] = List( this )
@@ -58,7 +58,7 @@ main return type of the `KnockOff.parse` method.
 One of the shorthand filter expressions allows for you to indicate the "BlockType".
 
     // In knockoff2/BlockType.scala
-    package com.tristanhunt.knockoff2
+    package knockoff2
     
     /**
      * Used to indicate the type of blocks you are interested in when filtering via
@@ -160,12 +160,12 @@ headers - `# Header #`.
 ## Basic Verification ##
 
     // In test knockoff2/BlockSuite.scala
-    package com.tristanhunt.knockoff2
+    package knockoff2
 
     import org.scalatest._
     import matchers._
 
-    class BlockSuite extends Spec with ShouldMatchers with KOFactory {
+    class BlockSuite extends Spec with ShouldMatchers with ElementFactory {
         describe("BlockSeq") {
             it( "should filter Paragraphs and Headers properly" ) {
 
@@ -189,27 +189,27 @@ headers - `# Header #`.
 #### Block - Package And Imports
 
     // The Block package and imports
-    package com.tristanhunt.knockoff2
+    package knockoff2
     
     import scala.xml.Elem
 
 #### BlockSeq - Package And Imports
 
     // The BlockSeq package and imports
-    package com.tristanhunt.knockoff2
+    package knockoff2
 
     import scala.xml.Elem
 
 #### Paragraph - Package And Imports
 
     // The Paragraph package and imports
-    package com.tristanhunt.knockoff2
+    package knockoff2
 
     import scala.xml.Elem
 
 #### Header - Package And Imports
 
     // The Header package and imports
-    package com.tristanhunt.knockoff2
+    package knockoff2
 
     import scala.xml.Elem
