@@ -17,6 +17,10 @@ can have part of it's description be code.
         def markdown : String
         def xml : Node
     }
+    
+    object Span extends ElementFactory {
+        val empty : Span = t("")
+    }
 
 ## `SpanSeq` ##
 
@@ -47,11 +51,32 @@ The other, complex case is where a span contains a straight list of children.
     // In knockoff2/ComplexSpan.scala
     package knockoff2
     
-    abstract class ComplexSpan( val children : List[ Span ] ) extends Span {
+    trait ComplexSpan extends Span {
+        val children : SpanSeq
         def theSeq = children
         def childrenMarkdown = children.map( _.markdown ).mkString("")
         def childrenXML = children.map( _.xml )
     }
+
+And a workaround to cases where we need just a container of spans.
+
+    // In knockoff2/GroupSpan.scala
+    package knockoff2
+    
+    import scala.xml.Group
+    
+    class GroupSpan( val children : SpanSeq ) extends ComplexSpan {
+     
+        def this( seq : Seq[ Span ] ) {
+            this( new SpanSeq { def theSeq = seq } )
+        }
+        
+        def xml = Group( children.map( _.xml ) )
+        
+        def markdown = children.map( _.markdown ).mkString("")
+    }
+
+
 
 ## `Text` ##
 
@@ -117,7 +142,7 @@ These emphasize other spans, usually with `<strong>` tags.
     
     import scala.xml.Node
 
-    class Strong( children : List[ Span ] ) extends ComplexSpan( children ) {
+    class Strong( children : SpanSeq ) extends ComplexSpan( children ) {
         
         def markdown = "**" + childrenMarkdown + "**"
         
@@ -135,7 +160,7 @@ Wraps other spans with `<em>` tags.
 
     import scala.xml.Node
 
-    class Emphasis( children : List[ Span ] ) extends ComplexSpan( children ) {
+    class Emphasis( val children : SpanSeq ) extends ComplexSpan {
 
         def markdown = "_" + childrenMarkdown + "_"
 
@@ -162,11 +187,11 @@ The direct link is is simply called a `Link`.
     import scala.xml.Node
 
     class Link(
-        children    : List[ Span ],
-        val url     : String,
-        val title   : Option[ String ]
+        val children    : SpanSeq,
+        val url         : String,
+        val title       : Option[ String ]
     )
-    extends ComplexSpan( children ) {
+    extends ComplexSpan {
         
         def markdown = {
             "[" + childrenMarkdown + "](" +
@@ -189,7 +214,75 @@ The direct link is is simply called a `Link`.
 Indirect links are tied to `LinkDefinition` elements, which are a special `Block`
 type. (The link definitions can't be found in the middle of a paragraph.)
 
+    // In knockoff2/IndirectLink.scala
+    package knockoff2
+    
+    class IndirectLink(
+        children        : SpanSeq,
+        val definition  : LinkDefinition
+    )
+    extends Link( children, definition.url, definition.title )
+    with    ComplexSpan {
+        
+        override def markdown = "[" + childrenMarkdown + "][" + definition.id + "]"
+        
+        // See the IndirectLink toString, hashCode, equals implementations        
+    }
 
+### `ImageLink` and `IndirectImageLink`
+
+Image links are standard link references prefixed with an exclamation mark `!`. The
+image aspect is done via this trait:
+
+    // In knockoff2/ImageSpan.scala
+    package knockoff2
+    
+    import scala.xml.Node
+    
+    trait ImageSpan extends Link {
+        override def markdown = "!" + super.markdown
+        
+        override def xml : Node = <img
+            src={ url }
+            title={ title.getOrElse(null) }
+            alt={ childrenXML.text }
+        ></img>
+    }
+
+We then the actual classes using a mixin.
+
+#### `ImageLink`
+
+    // In knockoff2/ImageLink.scala
+    package knockoff2
+    
+    import scala.xml.Node
+    
+    class ImageLink(
+        children    : SpanSeq,
+        url         : String,
+        title       : Option[ String ]
+    )
+    extends Link( children, url, title )
+    with    ImageSpan {
+        // See the ImageLink toString, hashCode, equals implementations
+    }
+
+#### `IndirectImageLink`
+
+    // In knockoff2/IndirectImageLink.scala
+    package knockoff2
+
+    import scala.xml.Node
+    
+    class IndirectImageLink(
+        children    : SpanSeq,
+        definition  : LinkDefinition
+    )
+    extends IndirectLink( children, definition )
+    with    ImageSpan {
+        // See the IndirectImageLink toString, hashCode, equals implementations
+    }
 
 
 ## Why No Case Classes? ##
@@ -249,7 +342,7 @@ this location... (yay?)
     override def toString = "Strong(" + markdown + ")"
 
     override def hashCode : Int =
-        41 + ( (3 /: children)( (sum, child) => sum * child.hashCode ) )
+        41 + ( (3 /: children)( (sum, child) => 41 + sum + 3 * child.hashCode ) )
 
     override def equals( rhs : Any ) : Boolean = rhs match {
         case t : Strong => t.canEqual( this ) && ( t.children sameElements children )
@@ -264,7 +357,7 @@ this location... (yay?)
     override def toString = "Emphasis(" + markdown + ")"
 
     override def hashCode : Int =
-        41 + ( (3 /: children)( (sum, child) => sum * child.hashCode ) )
+        43 + ( (3 /: children)( (sum, child) => 43 + sum + 3 * child.hashCode ) )
 
     override def equals( rhs : Any ) : Boolean = rhs match {
         case t : Emphasis => t.canEqual( this ) && ( t.children sameElements children )
@@ -278,15 +371,74 @@ this location... (yay?)
     // The Link toString, hashCode, equals implementations
     override def toString = "Link(" + markdown + ")"
 
-    override def hashCode : Int =
-        41 + ( (3 /: children)( (sum, child) => sum * child.hashCode ) )
+    override def hashCode : Int = {
+        ( 43 + ( (3 /: children)( (sum, child) => 43 + sum + 3 * child.hashCode ) ) ) +
+        ( 43 + url.hashCode ) +
+        ( 43 + title.hashCode )
+    }
 
     override def equals( rhs : Any ) : Boolean = rhs match {
-        case t : Link => t.canEqual( this ) && ( t.children sameElements children )
+        case t : Link => ( t.canEqual( this ) ) && ( this sameElements t )
         case _ => false
     }
 
     def canEqual( s : Link ) : Boolean = s.getClass == getClass
+    
+    def sameElements( l : Link ) : Boolean = {
+        ( l.children sameElements children ) &&
+        ( url == l.url ) &&
+        ( title == l.title )
+    }
+
+
+#### `IndirectLink.hashCode/equals`
+
+    // The IndirectLink toString, hashCode, equals implementations
+    override def toString = "IndirectLink(" + markdown + ")"
+
+    override def hashCode : Int =
+        41 + ( (7 /: children)( (sum, child) => 41 + sum + 7 * child.hashCode ) )
+
+    override def equals( rhs : Any ) : Boolean = rhs match {
+        case t : IndirectLink => ( t.canEqual( this ) ) && ( this sameElements t )
+        case _ => false
+    }
+
+    def canEqual( s : IndirectLink ) : Boolean = s.getClass == getClass
+
+#### `ImageLink toString/hashCode/equals`
+
+    // The ImageLink toString, hashCode, equals implementations
+    override def toString = "ImageLink(" + markdown + ")"
+
+    override def hashCode : Int =
+        37 + ( (13 /: children)( (sum, child) => 37 + sum + 13 * child.hashCode ) )
+
+    override def equals( rhs : Any ) : Boolean = rhs match {
+        case t : ImageLink => t.canEqual( this ) && ( this sameElements t )
+        case _ => false
+    }
+
+    def canEqual( s : ImageLink ) : Boolean = s.getClass == getClass
+
+#### `IndirectImageLink.hashCode/equals`
+
+    // The IndirectImageLink toString, hashCode, equals implementations
+    override def toString = "IndirectImageLink(" + markdown + ")"
+
+    override def hashCode : Int = {
+        41 + ( (11 /: children)( (sum, child) => {
+            41 + sum + 11 * child.hashCode
+        } ) )
+    }
+
+    override def equals( rhs : Any ) : Boolean = rhs match {
+        case t : IndirectImageLink =>
+            ( t.canEqual( this ) ) && ( this sameElements t )
+        case _ => false
+    }
+
+    def canEqual( s : IndirectImageLink ) : Boolean = s.getClass == getClass
 
 
 [1]: 04-ElementFactory.html

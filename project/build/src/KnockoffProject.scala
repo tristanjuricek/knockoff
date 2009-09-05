@@ -1,10 +1,8 @@
 import sbt._
-import com.tristanhunt._
-
 
 class KnockoffProject( info : ProjectInfo )
 extends DefaultProject( info )
-with    Literable {
+with    knockoff.Literable {
     
     override def compileOptions = {
         List( MaxCompileErrors( 10 ), CompileOption("-unchecked") ) :::

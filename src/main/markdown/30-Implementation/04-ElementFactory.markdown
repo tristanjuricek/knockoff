@@ -1,39 +1,62 @@
 `ElementFactory`
 ================
 
-Generates the various Knockoff elements based primarily on the `SpanSeq`,
-though other information learned from parsing is usually passed on as well.
+Defines constructor methods used to build each of the elements in knockoff. This
+can then be easily overriden by specialized versions of the block or span elements,
+so that the output `BlockSeq` might render things a bit differently, for example.
 
     // In knockoff2/ElementFactory.scala
-    package knockoff2
+    // See the ElementFactory package and imports
     
     trait ElementFactory {
+
+        // Block Elements
         
-        def Paragraph( spans : SpanSeq, position : Position ) : Paragraph = {
-            new Paragraph(
-                spans,
-                spans.mkString(""),
-                <p>{ spans.mkString("") }</p>,
-                position
-            )
-        }
+        def para( s : Span, p : Position ) =
+            new Paragraph( s, p )
         
-        def Paragraph( textContent : String, position : Position ) : Paragraph =
-            Paragraph( Text( textContent ), position )
-                
-        def Header( level : Int, spans : SpanSeq, position : Position ) : Header = {
-            new Header(
-                level,
-                spans,
-                "# " + spans.mkString("") + " #",
-                <h1>{ spans.mkString("") }</h1>,
-                position
-            )
-        }
+        def head( l : Int, s : Span, p : Position ) =
+            new Header( l, s, p )
         
-        def Header( level : Int, content : String, position : Position ) : Header =
-            Header( level, Text( content ), position )
+        def linkdef( i : String, u : String, t : Option[ String ], p : Position ) =
+            new LinkDefinition( i, u, t, p )
         
+        // Span Elements
         
-        def Text( content : String ) : Text = new Text( content )
+        def text( c : String ) = new Text( c )
+        
+        /** A shorthand for text (popular with my tests) */
+        def t( c : String ) = text( c )
+        
+        def link( c : SpanSeq, u : String, t : Option[ String ] ) : Link =
+            new Link( c, u, t )
+        
+        def link( c : SpanSeq, u : String ) : Link = link( c, u, None )
+        
+        def link( c : SpanSeq, ld : LinkDefinition ) : IndirectLink =
+            new IndirectLink( c, ld )
+        
+        def ilink( c : SpanSeq, u : String, t : Option[ String ] ) : ImageLink =
+            new ImageLink( c, u, t )
+        
+        def ilink( c : SpanSeq, u : String ) : ImageLink = ilink( c, u )
+        
+        def ilink( c : SpanSeq, ld : LinkDefinition ) : IndirectImageLink =
+            new IndirectImageLink( c, ld )
+        
+        // Special
+        
+        def pos( s : Int, e : Int, o : Source ) = Position( s, e, o )
+        
+        /** The "empty position" - only useful for ignoring this for tests. */
+        def emptyPos = pos( 0, 0, Source.fromString("") )
     }
+
+I used heavy abbreviation in this class in order to draw focus to the types.
+
+#### `ElementFactory` - Package and Imports
+
+    // The ElementFactory package and imports
+    package knockoff2
+    
+    import scala.io.Source

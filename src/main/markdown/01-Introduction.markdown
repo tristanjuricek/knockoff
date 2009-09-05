@@ -3,59 +3,19 @@ Introduction to Knockoff
 
 Knockoff is a Markdown parser with a twist. Most Markdown systems just convert
 Markdown source to HTML. Knockoff converts from Markdown source to an
-in-memory model to HTML.
+in-memory model ... with a handy (X)HTML version. It's written in [Scala][1],
+whose power affords us simple and fast extension and generation.
+
+Simply put, it was rather easy for me to build a [literate programming][2]
+environment on top of an object model. This is more than just "generating" web
+documents. It's the backbone of a great "only what you need" approach to doing
+things built for web distribution.
+
+[1]: http://scala-lang.org
+[2]: http://tristanhunt.com/projects/literable
 
 
-## New Ideas ##
-
-### Make Iterating The Tree Easier
-
-The XML library has expressions like:
-
-    head \ "child"
-
-To grab all child elements. Could we create a virtual sequence similar to
-`NodeSeq` that does the same sort of thing? This would then be "BlockSeq"
-which also contains "SpanSeq". You could then grab specific types:
-
-    ( seq \ Header ).firstOption match {
-        
-    }
-    
-    ( seq \ CodeBlock ).foreach { codeBlock =>
-        // TODO: lines...
-    }
-
-Other idea would be to include some kind of search method
-
-    // ACH -> this is not quite correct
-    ( seq \ Paragraph ?
-        _.markdown.getLines( line => line.startsWith( "Title: " ) )
-    )
-
-
-### Converting the XML
-
-The final coup de grace would be a XML convenience method to convert one Elem
-to another Elem. I'm not sure how to implement this however.
-
-
-### Solidify The Markdown Versus HTML Representations Simpler
-
-One advantage of HTML is that the object model could just contain the XML
-representation rather than requiring a second conversion step.
-
-    scala> header.markdown
-    java.lang.String = # My Header #
-    
-    scala> header.xml
-    scala.xml.Elem = <h1>My Header</h1>
-
-The advantage here: the user no longer has to override any "global objects" in
-the system.
-
-
-### Allow The Position Of The Model To Come Through
+### New feature: Allow The Position Of The Model To Come Through
 
 Say we have the document with line numbers:
 
@@ -77,4 +37,5 @@ patch into the original markdown document.
     scala> blockSeq(0).position.endLine
     Int = 2
 
-Note that this is only significant for `Block` elements.
+Note that this is only significant for `Block` elements. And in reality I'll
+probably start with 0.
