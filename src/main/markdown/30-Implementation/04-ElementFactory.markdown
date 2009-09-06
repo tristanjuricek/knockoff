@@ -27,6 +27,31 @@ so that the output `BlockSeq` might render things a bit differently, for example
         def htmlBlock( h : String, p : Position ) : HTMLBlock =
             new HTMLBlock( h, p )
         
+        def simpleOL( osis : OrderedSimpleItem * ) : MarkdownList =
+            new MarkdownList( true, new GroupBlock( osis ) )
+        
+        def complexOL( ocis : OrderedComplexItem * ) : MarkdownList =
+            new MarkdownList( true, new GroupBlock( ocis ) )
+        
+        def simpleUL( usis : UnorderedSimpleItem * ) : MarkdownList =
+            new MarkdownList( false, new GroupBlock( usis ) )
+
+        def complexUL( ucis : UnorderedComplexItem * ) : MarkdownList =
+            new MarkdownList( false, new GroupBlock( ucis ) )
+        
+        def osi( s : Span, p : Position ) : OrderedSimpleItem =
+            new OrderedSimpleItem( s, p )
+        
+        def oci( b : BlockSeq, p : Position ) : OrderedComplexItem =
+            new OrderedComplexItem( b, p )
+
+        def usi( s : Span, p : Position ) : UnorderedSimpleItem =
+            new UnorderedSimpleItem( s, p )
+
+        def uci( b : BlockSeq, p : Position ) : UnorderedComplexItem =
+            new UnorderedComplexItem( b, p )
+        
+        
         // Span Elements
         
         def text( c : String ) = new Text( c )
@@ -59,9 +84,7 @@ so that the output `BlockSeq` might render things a bit differently, for example
         // Special
         
         def pos( s : Int, e : Int, o : Source ) = Position( s, e, o )
-        
-        /** The "empty position" - only useful for ignoring this for tests. */
-        def emptyPos = pos( 0, 0, Source.fromString("") )
+
     }
 
 I used heavy abbreviation in this class in order to draw focus to the types.

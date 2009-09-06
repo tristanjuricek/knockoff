@@ -49,10 +49,32 @@ In some other cases, the block is a pretty complex thing:
     package knockoff2
     
     trait ComplexBlock extends Block {
-        val children : BlockSeq
+        val children : Seq[ Block ]
+        val span = new GroupSpan( children.map( _.span ) )
         def theSeq = children
         def childrenMarkdown = children.map( _.markdown ).mkString("\n")
         def childrenXML = children.map( _.xml )
+    }
+
+There are moments when we need to capture a series of blocks as a `ComplexBlock`
+without any other real information.
+
+    // In knockoff2/GroupBlock.scala
+    package knockoff2
+    
+    import scala.xml.{ Node, Group }
+    
+    class   GroupBlock( val children : Seq[ Block ] )
+    extends ComplexBlock {
+     
+        val position : Position =
+            Positions.fromSeq( children.map( _.position ) )
+     
+        def xml : Node = Group( children.map( _.xml ) )
+        
+        def markdown = childrenMarkdown
+    
+        override def toString = "GroupBlock(" + markdown + ")"
     }
 
 
@@ -128,6 +150,24 @@ A somewhat special utility that allows each `Block` to know where it comes from.
         val linesEnd    : Int,
         val origin      : Source
     )
+    
+    object Positions {
+        /** A placefolder position for things that don't have real position. */
+        val nowhere = new Position( 0, 0, Source.fromString("") )
+        
+        /** Note that the first item dictates the source for everything. */
+        def fromSeq( seq : Seq[ Position ] ) : Position = {
+            if ( seq.isEmpty ) return nowhere
+
+            val minStart = ( Math.MAX_INT /: seq ){ (min, child) =>
+                Math.min( min, child.linesStart )
+            }
+            val maxEnd = ( 0 /: seq ){ (max, child) =>
+                Math.max( max, child.linesEnd )
+            }
+            return new Position( minStart, maxEnd, seq.first.origin )
+        }
+    }
 
 ## `Paragraph` ##
 
@@ -244,9 +284,7 @@ A block quote is really another markdown document, quoted.
         val position : Position
     )
     extends ComplexBlock {
-        
-        val span = new GroupSpan( children.map( _.span ) )
-        
+                
         def markdown : String = {
             Source.fromString( childrenMarkdown ).getLines.map { line =>
                 "> " + line
@@ -338,9 +376,142 @@ anything but replace a line of asterixes, underscores, or hyphens.
         // See the HorizontalRule toString, equals, hashCode implementations
     }
 
+## Lists - Unordered, Ordered, Simple, and Complex ##
 
-## TODO :  List
+Lists in markdown can be simple or complex. It becomes complex when any one of the
+list items have more than one `Block`. They are either tagged as ordered or
+unordered, though the `ElementFactory` has helper methods to make this decision.
 
+How this might look in code:
+
+    val olist = olist(
+        li( para("some text") ),
+        li( para("uno"), para("dos") ),
+    )
+    
+    val ulist = ulist(
+        li("list item 1"),
+        li("list item 2")
+    )
+    
+Thesre codes would be represented as:
+
+    <ol>
+        <li><p>some text</p></li>
+        <li><p>uno</p><p>dos</p><li>
+    </ol>
+    
+    <ul>
+        <li>list item 1</li>
+        <li>list item 2</li>
+    </ul>
+
+Only in the simple list case do we let the `<li>` operate as a simple implicit block
+container.
+
+In implementation terms, we don't have a single list.
+
+#### `SimpleItem`
+
+    // In knockoff2/SimpleItem.scala
+    package knockoff2
+    
+    trait PrefixedItem {
+        def itemPrefix : String
+    }
+    
+    trait OrderedItem extends PrefixedItem {
+        def itemPrefix = "* "
+    }
+    
+    trait UnorderedItem extends PrefixedItem {
+        def itemPrefix = "1. "
+    }
+
+    abstract class SimpleItem (
+        val span     : Span,
+        val position : Position   
+    )
+    extends SimpleBlock
+    with    PrefixedItem {
+        
+        def xml = <li>{ span.xml }</li>
+        
+        def markdown = itemPrefix + span.markdown
+        
+        // See the SimpleItem toString, equals, hashCode implementations
+    }
+    
+    class   OrderedSimpleItem( span : Span, position : Position )
+    extends SimpleItem( span, position )
+    with    OrderedItem
+    
+    class   UnorderedSimpleItem( span : Span, position : Position )
+    extends SimpleItem( span, position )
+    with    UnorderedItem
+
+#### `ComplexItem`
+
+    // In knockoff2/ComplexItem.scala
+    package knockoff2
+    
+    abstract class ComplexItem(
+        val children : BlockSeq,
+        val position : Position
+    )
+    extends ComplexBlock
+    with    PrefixedItem {
+        
+        def xml = <li>{ childrenXML }</li>
+        
+        def markdown : String = {
+            if ( children.isEmpty ) return ""
+
+            return (
+                ( itemPrefix + children.first.markdown + "  \n" ) +
+                children.drop(1).map( "    " + _.markdown + "  \n" ).mkString( "" )
+            )
+        }
+        
+        // See the ComplexItem toString, equals, hashCode implementations
+    }
+    
+    class   OrderedComplexItem( children : BlockSeq, position : Position )
+    extends ComplexItem( children, position )
+    with    OrderedItem
+
+    class   UnorderedComplexItem( children : BlockSeq, position : Position )
+    extends ComplexItem( children, position )
+    with    UnorderedItem
+    
+#### `MarkdownList`
+
+    // In knockoff2/MarkdownList.scala
+    package knockoff2
+    
+    import scala.io.Source
+    
+    /**
+     * @param ordered Alters the output, mostly.
+     */
+    class MarkdownList(
+        val ordered  : Boolean,
+        val children : BlockSeq
+    ) extends ComplexBlock {
+        
+        val position =
+            Positions.fromSeq( children.map( _.position ) )
+        
+        def xml = ordered match {
+            case true  => <ol>{ childrenXML }</ol>
+            case false => <ul>{ childrenXML }</ul>
+        }
+        
+        def markdown = childrenMarkdown
+        
+        // See the MarkdownList toString, equals, hashCode implementations
+    }
+    
 
 ## Block Specification ##
 
@@ -351,12 +522,13 @@ anything but replace a line of asterixes, underscores, or hyphens.
     import matchers._
 
     class BlockSuite extends Spec with ShouldMatchers with ElementFactory {
+
         describe("BlockSeq") {
 
             it( "should filter Paragraphs and Headers properly with ?" ) {
 
-                val p1 = para( t("p1"), emptyPos )
-                val h1 = head( 1, t("h1"), emptyPos )
+                val p1 = para( t("p1"), Positions.nowhere )
+                val h1 = head( 1, t("h1"), Positions.nowhere )
 
                 val blocks = BlockSeq.fromSeq( List( p1, h1 ) )
                 
@@ -365,6 +537,17 @@ anything but replace a line of asterixes, underscores, or hyphens.
                 
                 ( blocks ? Headers ) should have length (1)
                 assert( ( blocks ? Headers ) contains h1 )
+            }
+        }
+        
+        describe("MarkdownList") {
+            
+            it("should implement simple lists") {
+                
+            }
+            
+            it("should implement complex lists") {
+                
             }
         }
     }
@@ -566,7 +749,6 @@ anything but replace a line of asterixes, underscores, or hyphens.
 
     def canEqual( t : CodeBlock ) : Boolean = t.getClass == getClass
 
-#
 ### `HorizontalRule`
 
 #### `HorizontalRule` - Package and Imports
@@ -590,3 +772,90 @@ anything but replace a line of asterixes, underscores, or hyphens.
     }
 
     def canEqual( t : HorizontalRule ) : Boolean = t.getClass == getClass
+
+### `SimpleItem`
+
+#### `SimpleItem` - Package and Imports
+
+    // The SimpleItem package and imports
+    package knockoff2
+
+    import scala.xml.{ Node, Unparsed }
+    import scala.io.Source
+
+#### `SimpleItem` - `toString`, `equals`, `hashCode`
+
+    // The SimpleItem toString, equals, hashCode implementations
+    override def toString = "SimpleItem(" + markdown + ")"
+
+    override def hashCode : Int = position.hashCode + 47
+
+    override def equals( rhs : Any ) : Boolean = rhs match {
+        case t : SimpleItem => t.canEqual( this ) && ( this sameElements t )
+        case _ => false
+    }
+    
+    def sameElements( si : SimpleItem ) : Boolean = {
+        ( span == si.span ) &&
+        ( position == si.position )
+    }
+
+    def canEqual( t : SimpleItem ) : Boolean = t.getClass == getClass
+
+### `ComplexItem`
+
+#### `ComplexItem` - Package and Imports
+
+    // The ComplexItem package and imports
+    package knockoff2
+
+    import scala.xml.{ Node, Unparsed }
+    import scala.io.Source
+
+#### `ComplexItem` - `toString`, `equals`, `hashCode`
+
+    // The ComplexItem toString, equals, hashCode implementations
+    override def toString = "ComplexItem(" + markdown + ")"
+
+    override def hashCode : Int = position.hashCode + 47
+
+    override def equals( rhs : Any ) : Boolean = rhs match {
+        case t : ComplexItem => t.canEqual( this ) && ( this sameElements t )
+        case _ => false
+    }
+    
+    def sameElements( ci : ComplexItem ) : Boolean = {
+        ( children == ci.children ) &&
+        ( position == ci.position )
+    }
+
+    def canEqual( t : ComplexItem ) : Boolean = t.getClass == getClass
+
+### `MarkdownList`
+
+#### `MarkdownList` - Package and Imports
+
+    // The MarkdownList package and imports
+    package knockoff2
+
+    import scala.xml.{ Node, Unparsed }
+    import scala.io.Source
+
+#### `MarkdownList` - `toString`, `equals`, `hashCode`
+
+    // The MarkdownList toString, equals, hashCode implementations
+    override def toString = "MarkdownList(" + markdown + ")"
+
+    override def hashCode : Int = position.hashCode + 47
+
+    override def equals( rhs : Any ) : Boolean = rhs match {
+        case t : MarkdownList => t.canEqual( this ) && ( t sameElements this )
+        case _ => false
+    }
+    
+    def sameElements( ml : MarkdownList ) : Boolean = {
+        ( ordered == ml.ordered ) &&
+        ( children sameElements ml.children )
+    }
+
+    def canEqual( t : MarkdownList ) : Boolean = t.getClass == getClass

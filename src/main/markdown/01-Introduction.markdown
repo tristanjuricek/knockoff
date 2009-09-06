@@ -39,3 +39,8 @@ patch into the original markdown document.
 
 Note that this is only significant for `Block` elements. And in reality I'll
 probably start with 0.
+
+
+Currently it is too easy to mess up the definition by mixing up the types of list
+items. This is a case where I think it will be easier to create a mutable model, or,
+have different types of model elements... (hm)
