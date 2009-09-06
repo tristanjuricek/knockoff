@@ -18,8 +18,8 @@ are usually seen as separated by whitespace lines.
         val span     : Span
 
         /**
-         * A markdown representation of this block. Not necessarilly the
-         * original source.
+         * A markdown representation of this block - it may not equal the original
+         * source.
          */
         def markdown : String
 
@@ -28,7 +28,9 @@ are usually seen as separated by whitespace lines.
          */
         def xml      : Node
         
-        /** The original source position used to make up this block. */
+        /**
+         * The original source position used to make up this block.
+         */
         val position : Position
     }
 
@@ -257,6 +259,89 @@ A block quote is really another markdown document, quoted.
     }
 
 
+## `HTMLBlock` ##
+
+We consider this to be already formatted HTML. The content here is specificed as a
+string - everything else is just basically passed directly back.
+
+    // In knockoff2/HTMLBlock.scala
+    // See the HTMLBlock package and imports
+    
+    class   HTMLBlock( val html : String, val position : Position )
+    extends SimpleBlock {
+        
+        val span = new HTMLSpan( html )
+        
+        def xml : Node = Unparsed( html )
+        
+        def markdown = html
+        
+        // See the HTMLBlock toString, equals, hashCode implementations
+    }
+
+## `CodeBlock` ##
+
+The code block is a chunk of preformatted text to this system. Note that this means
+we completely ignore all formatting, and do escaping. This means that sequences like
+
+    <later>
+
+become this in the output:
+
+    <pre><code>&le;later&gt;</pre></code>
+
+This means that in order to inject actual HTML inside the final code, you'll have to
+write up an HTML code element. This could be seen as a later transformation, say,
+if you want to inject a series of line numbers via `<span>` elements.
+
+    // In knockoff2/CodeBlock.scala
+    // See the CodeBlock package and imports
+    
+    class   CodeBlock( val text : Text, val position : Position )
+    extends SimpleBlock {
+
+        def this( preformatted : String, position : Position ) =
+            this( new Text( preformatted ), position )
+
+        val span = text
+     
+        val preformatted = text.markdown
+        
+        lazy val preformattedLines =
+            Source.fromString( preformatted ).getLines
+        
+        def markdown =
+            preformattedLines.map{ line =>  "    " + line }.mkString("")
+            
+        def xml : Node = <pre><code>{ Unparsed( preformatted ) }</code></pre>
+        
+        // See the CodeBlock toString, equals, hashCode implementations
+    }
+
+
+## `HorizontalRule` ##
+
+Represents a `<hr/>` injected into content. Note that this does not happen to do
+anything but replace a line of asterixes, underscores, or hyphens.
+
+    // In knockoff2/HorizontalRule.scala
+    package knockoff2
+    
+    class HorizontalRule( val position : Position ) extends SimpleBlock {
+        
+        def markdown = "* * *"
+        
+        val span = new Text( markdown )
+        
+        def xml = <hr/>
+
+        // See the HorizontalRule toString, equals, hashCode implementations
+    }
+
+
+## TODO :  List
+
+
 ## Block Specification ##
 
     // In test knockoff2/BlockSuite.scala
@@ -391,9 +476,9 @@ A block quote is really another markdown document, quoted.
     override def hashCode : Int =
         43 + id.hashCode + url.hashCode + span.hashCode + position.hashCode
 
-### `BlockQuote`
+### `Blockquote`
 
-#### `BlockQuote` - Package And Imports
+#### `Blockquote` - Package And Imports
 
     // The Blockquote package and imports
     package knockoff2
@@ -423,3 +508,85 @@ A block quote is really another markdown document, quoted.
             sum + 43 + 3 * child.hashCode
         } ) )
     }
+
+### `HTMLBlock`
+
+#### `HTMLBlock` - Package and Imports
+
+    // The HTMLBlock package and imports
+    package knockoff2
+
+    import scala.xml.{ Node, Unparsed }
+
+#### `HTMLBlock` - `toString`, `equals`, `hashCode`
+
+    // The HTMLBlock toString, equals, hashCode implementations
+    override def toString = "HTMLBlock(" + html + ")"
+    
+    override def hashCode : Int = html.hashCode
+        
+    override def equals( rhs : Any ) : Boolean = rhs match {
+        case t : HTMLBlock => t.canEqual( this ) && ( this sameElements t )
+        case _ => false
+    }
+    
+    def sameElements( h : HTMLBlock ) : Boolean = {
+        ( h.html == html ) &&
+        ( h.position == position )
+    }
+    
+    def canEqual( t : HTMLBlock ) : Boolean = t.getClass == getClass
+
+### `CodeBlock`
+
+#### `CodeBlock` - Package and Imports
+
+    // The CodeBlock package and imports
+    package knockoff2
+
+    import scala.xml.{ Node, Unparsed }
+    import scala.io.Source
+
+#### `CodeBlock` - `toString`, `equals`, `hashCode`
+
+    // The CodeBlock toString, equals, hashCode implementations
+    override def toString = "CodeBlock(" + preformatted + ")"
+
+    override def hashCode : Int = preformatted.hashCode
+
+    override def equals( rhs : Any ) : Boolean = rhs match {
+        case t : CodeBlock => t.canEqual( this ) && ( this sameElements t )
+        case _ => false
+    }
+    
+    def sameElements( cb : CodeBlock ) : Boolean = {
+        ( cb.preformatted == preformatted ) &&
+        ( cb.position == position )
+    }
+
+    def canEqual( t : CodeBlock ) : Boolean = t.getClass == getClass
+
+#
+### `HorizontalRule`
+
+#### `HorizontalRule` - Package and Imports
+
+    // The HorizontalRule package and imports
+    package knockoff2
+
+    import scala.xml.{ Node, Unparsed }
+    import scala.io.Source
+
+#### `HorizontalRule` - `toString`, `equals`, `hashCode`
+
+    // The HorizontalRule toString, equals, hashCode implementations
+    override def toString = "HorizontalRule"
+
+    override def hashCode : Int = position.hashCode + 47
+
+    override def equals( rhs : Any ) : Boolean = rhs match {
+        case t : HorizontalRule => t.canEqual( this ) && ( t.position == position )
+        case _ => false
+    }
+
+    def canEqual( t : HorizontalRule ) : Boolean = t.getClass == getClass

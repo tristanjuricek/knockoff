@@ -21,6 +21,12 @@ so that the output `BlockSeq` might render things a bit differently, for example
         def linkdef( i : String, u : String, t : Option[ String ], p : Position ) =
             new LinkDefinition( i, u, t, p )
         
+        def blockquote( c : BlockSeq, p : Position ) : Blockquote =
+            new Blockquote( c, p )
+        
+        def htmlBlock( h : String, p : Position ) : HTMLBlock =
+            new HTMLBlock( h, p )
+        
         // Span Elements
         
         def text( c : String ) = new Text( c )
@@ -43,6 +49,12 @@ so that the output `BlockSeq` might render things a bit differently, for example
         
         def ilink( c : SpanSeq, ld : LinkDefinition ) : IndirectImageLink =
             new IndirectImageLink( c, ld )
+        
+        def codeSpan( c : String ) : CodeSpan =
+            new CodeSpan( c )
+        
+        def htmlSpan( h : String ) : HTMLSpan =
+            new HTMLSpan( h )
         
         // Special
         
