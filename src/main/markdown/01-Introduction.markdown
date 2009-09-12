@@ -15,7 +15,7 @@ things built for web distribution.
 [2]: http://tristanhunt.com/projects/literable
 
 
-### New feature: Allow The Position Of The Model To Come Through
+### New feature: Allow The Location Of The Model To Come Through
 
 Say we have the document with line numbers:
 
@@ -31,10 +31,10 @@ Say we have the document with line numbers:
 It would be _very_ handy to have the line numbers. This allows us to backwards
 patch into the original markdown document.
 
-    scala> blockSeq(2).position.startLine
+    scala> blockSeq(2).location.startLine
     Int = 6
     
-    scala> blockSeq(0).position.endLine
+    scala> blockSeq(0).location.endLine
     Int = 2
 
 Note that this is only significant for `Block` elements. And in reality I'll

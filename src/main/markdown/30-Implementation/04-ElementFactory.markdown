@@ -12,19 +12,19 @@ so that the output `BlockSeq` might render things a bit differently, for example
 
         // Block Elements
         
-        def para( s : Span, p : Position ) =
+        def para( s : Span, p : Location ) =
             new Paragraph( s, p )
         
-        def head( l : Int, s : Span, p : Position ) =
+        def head( l : Int, s : Span, p : Location ) =
             new Header( l, s, p )
         
-        def linkdef( i : String, u : String, t : Option[ String ], p : Position ) =
+        def linkdef( i : String, u : String, t : Option[ String ], p : Location ) =
             new LinkDefinition( i, u, t, p )
         
-        def blockquote( c : BlockSeq, p : Position ) : Blockquote =
+        def blockquote( c : BlockSeq, p : Location ) : Blockquote =
             new Blockquote( c, p )
         
-        def htmlBlock( h : String, p : Position ) : HTMLBlock =
+        def htmlBlock( h : String, p : Location ) : HTMLBlock =
             new HTMLBlock( h, p )
         
         def simpleOL( osis : OrderedSimpleItem * ) : MarkdownList =
@@ -39,16 +39,16 @@ so that the output `BlockSeq` might render things a bit differently, for example
         def complexUL( ucis : UnorderedComplexItem * ) : MarkdownList =
             new MarkdownList( false, new GroupBlock( ucis ) )
         
-        def osi( s : Span, p : Position ) : OrderedSimpleItem =
+        def osi( s : Span, p : Location ) : OrderedSimpleItem =
             new OrderedSimpleItem( s, p )
         
-        def oci( b : BlockSeq, p : Position ) : OrderedComplexItem =
+        def oci( b : BlockSeq, p : Location ) : OrderedComplexItem =
             new OrderedComplexItem( b, p )
 
-        def usi( s : Span, p : Position ) : UnorderedSimpleItem =
+        def usi( s : Span, p : Location ) : UnorderedSimpleItem =
             new UnorderedSimpleItem( s, p )
 
-        def uci( b : BlockSeq, p : Position ) : UnorderedComplexItem =
+        def uci( b : BlockSeq, p : Location ) : UnorderedComplexItem =
             new UnorderedComplexItem( b, p )
         
         
@@ -83,7 +83,11 @@ so that the output `BlockSeq` might render things a bit differently, for example
         
         // Special
         
-        def pos( s : Int, e : Int, o : Source ) = Position( s, e, o )
+        def loc( s : Int, e : Int, o : Source ) : Location =
+            loc( s, e, 0, o )
+        
+        def loc( s : Int, e : Int, c : Int, o : Source ) : Location =
+            Location( s, e, c, o )
 
     }
 
