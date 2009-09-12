@@ -15,7 +15,7 @@ things built for web distribution.
 [2]: http://tristanhunt.com/projects/literable
 
 
-### New feature: Allow The Location Of The Model To Come Through
+### New feature: Allow The Position Of The Model To Come Through
 
 Say we have the document with line numbers:
 

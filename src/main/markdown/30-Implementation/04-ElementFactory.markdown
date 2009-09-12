@@ -12,19 +12,19 @@ so that the output `BlockSeq` might render things a bit differently, for example
 
         // Block Elements
         
-        def para( s : Span, p : Location ) =
+        def para( s : Span, p : Position ) =
             new Paragraph( s, p )
         
-        def head( l : Int, s : Span, p : Location ) =
+        def head( l : Int, s : Span, p : Position ) =
             new Header( l, s, p )
         
-        def linkdef( i : String, u : String, t : Option[ String ], p : Location ) =
+        def linkdef( i : String, u : String, t : Option[ String ], p : Position ) =
             new LinkDefinition( i, u, t, p )
         
-        def blockquote( c : BlockSeq, p : Location ) : Blockquote =
+        def blockquote( c : BlockSeq, p : Position ) : Blockquote =
             new Blockquote( c, p )
         
-        def htmlBlock( h : String, p : Location ) : HTMLBlock =
+        def htmlBlock( h : String, p : Position ) : HTMLBlock =
             new HTMLBlock( h, p )
         
         def simpleOL( osis : OrderedSimpleItem * ) : MarkdownList =
@@ -39,16 +39,16 @@ so that the output `BlockSeq` might render things a bit differently, for example
         def complexUL( ucis : UnorderedComplexItem * ) : MarkdownList =
             new MarkdownList( false, new GroupBlock( ucis ) )
         
-        def osi( s : Span, p : Location ) : OrderedSimpleItem =
+        def osi( s : Span, p : Position ) : OrderedSimpleItem =
             new OrderedSimpleItem( s, p )
         
-        def oci( b : BlockSeq, p : Location ) : OrderedComplexItem =
+        def oci( b : BlockSeq, p : Position ) : OrderedComplexItem =
             new OrderedComplexItem( b, p )
 
-        def usi( s : Span, p : Location ) : UnorderedSimpleItem =
+        def usi( s : Span, p : Position ) : UnorderedSimpleItem =
             new UnorderedSimpleItem( s, p )
 
-        def uci( b : BlockSeq, p : Location ) : UnorderedComplexItem =
+        def uci( b : BlockSeq, p : Position ) : UnorderedComplexItem =
             new UnorderedComplexItem( b, p )
         
         
@@ -81,14 +81,6 @@ so that the output `BlockSeq` might render things a bit differently, for example
         def htmlSpan( h : String ) : HTMLSpan =
             new HTMLSpan( h )
         
-        // Special
-        
-        def loc( s : Int, e : Int, o : Source ) : Location =
-            loc( s, e, 0, o )
-        
-        def loc( s : Int, e : Int, c : Int, o : Source ) : Location =
-            Location( s, e, c, o )
-
     }
 
 I used heavy abbreviation in this class in order to draw focus to the types.
@@ -99,3 +91,4 @@ I used heavy abbreviation in this class in order to draw focus to the types.
     package knockoff2
     
     import scala.io.Source
+    import scala.util.parsing.input.Position

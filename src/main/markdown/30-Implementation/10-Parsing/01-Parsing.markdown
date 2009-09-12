@@ -3,8 +3,11 @@ Parsing Overview
 
 Parsing is done in three steps:
 
-1. Chunk Parsing - The document is shown as a Stream of block-like items.
+1. Chunk Parsing - The document is converted to a series of Chunk objects, each
+eventually mapping to a block. This is kicked off by the `ChunkStreamFactory`.
+
 2. Span Parsing - The spans of each chunk are identified.
+
 3. Object model creation.
 
 Note that things like block quotes and more complex lists turn into "documents

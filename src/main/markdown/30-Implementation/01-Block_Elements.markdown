@@ -29,9 +29,9 @@ are usually seen as separated by whitespace lines.
         def xml      : Node
         
         /**
-         * The original source location used to make up this block.
+         * The original source position used to make up this block.
          */
-        val location : Location
+        val position : Position
     }
 
 In many cases, the Block can not contain other blocks.
@@ -63,12 +63,15 @@ without any other real information.
     package knockoff2
     
     import scala.xml.{ Node, Group }
+    import scala.util.parsing.input.{ NoPosition, Position }
     
     class   GroupBlock( val children : Seq[ Block ] )
     extends ComplexBlock {
      
-        val location : Location =
-            Locations.fromSeq( children.map( _.location ) )
+        val position : Position = children.firstOption match {
+            case None => NoPosition
+            case Some( child ) => child.position
+        }
      
         def xml : Node = Group( children.map( _.xml ) )
         
@@ -136,48 +139,6 @@ This is used only as a short hand for query expressions.
     }
 
 
-## `Location` ##
-
-A somewhat special utility that allows each `Block` to know where it comes from.
-There is a column start, as with many blocks in markdown, the actual line it starts
-on might be shifted a bit. For example:
-
-1. Lines of a code block are always preceded by a tab or 4 spaces.
-2. Blocks recognized within a blockquote should not checkout the blockquote header.
-
-Otherwise, you'll typically just need to group lines together. The line index starts
-at 0.
-
-    // In knockoff2/Location.scala
-    package knockoff2
-
-    import scala.io.Source
-
-    case class Location (
-        val linesStart  : Int,
-        val linesEnd    : Int,
-        val columnStart : Int,
-        val origin      : Source
-    )
-    
-    object Locations {
-        /** A placefolder location for things that don't have real location. */
-        val nowhere = Location( 0, 0, 0, Source.fromString("") )
-        
-        /** Note that the first item dictates the source for everything. */
-        def fromSeq( seq : Seq[ Location ] ) : Location = {
-            if ( seq.isEmpty ) return nowhere
-
-            val minStart = ( Math.MAX_INT /: seq ){ (min, child) =>
-                Math.min( min, child.linesStart )
-            }
-            val maxEnd = ( 0 /: seq ){ (max, child) =>
-                Math.max( max, child.linesEnd )
-            }
-            return Location( minStart, maxEnd, 0, seq.first.origin )
-        }
-    }
-
 ## `Paragraph` ##
 
 The text block element that is represented inside a `<p>` tag. Does not
@@ -191,7 +152,7 @@ Otherwise the paragraph is a simple `Block` type (does not contain other
 
     class Paragraph(
         val span        : Span,
-        val location    : Location
+        val position    : Position
     )
     extends SimpleBlock {
 
@@ -219,7 +180,7 @@ headers - `# Header #`.
     class Header(
         val level       : Int,
         val span        : Span,
-        val location    : Location
+        val position    : Position
     )
     extends SimpleBlock {
 
@@ -257,7 +218,7 @@ be defined later on a string like `[id]: url "optional title"`.
         val id          : String,
         val url         : String,
         val title       : Option[ String ],
-        val location    : Location
+        val position    : Position
     )
     extends SimpleBlock {
 
@@ -290,7 +251,7 @@ A block quote is really another markdown document, quoted.
 
     class Blockquote(
         val children : BlockSeq,
-        val location : Location
+        val position : Position
     )
     extends ComplexBlock {
                 
@@ -314,7 +275,7 @@ string - everything else is just basically passed directly back.
     // In knockoff2/HTMLBlock.scala
     // See the HTMLBlock package and imports
     
-    class   HTMLBlock( val html : String, val location : Location )
+    class   HTMLBlock( val html : String, val position : Position )
     extends SimpleBlock {
         
         val span = new HTMLSpan( html )
@@ -344,11 +305,11 @@ if you want to inject a series of line numbers via `<span>` elements.
     // In knockoff2/CodeBlock.scala
     // See the CodeBlock package and imports
     
-    class   CodeBlock( val text : Text, val location : Location )
+    class   CodeBlock( val text : Text, val position : Position )
     extends SimpleBlock {
 
-        def this( preformatted : String, location : Location ) =
-            this( new Text( preformatted ), location )
+        def this( preformatted : String, position : Position ) =
+            this( new Text( preformatted ), position )
 
         val span = text
      
@@ -372,9 +333,9 @@ Represents a `<hr/>` injected into content. Note that this does not happen to do
 anything but replace a line of asterixes, underscores, or hyphens.
 
     // In knockoff2/HorizontalRule.scala
-    package knockoff2
+    // See the HorizontalRule package and imports
     
-    class HorizontalRule( val location : Location ) extends SimpleBlock {
+    class HorizontalRule( val position : Position ) extends SimpleBlock {
         
         def markdown = "* * *"
         
@@ -425,6 +386,8 @@ In implementation terms, we don't have a single list.
     // In knockoff2/SimpleItem.scala
     package knockoff2
     
+    import scala.util.parsing.input.Position
+    
     trait PrefixedItem {
         def itemPrefix : String
     }
@@ -439,7 +402,7 @@ In implementation terms, we don't have a single list.
 
     abstract class SimpleItem (
         val span     : Span,
-        val location : Location   
+        val position : Position   
     )
     extends SimpleBlock
     with    PrefixedItem {
@@ -451,12 +414,12 @@ In implementation terms, we don't have a single list.
         // See the SimpleItem toString, equals, hashCode implementations
     }
     
-    class   OrderedSimpleItem( span : Span, location : Location )
-    extends SimpleItem( span, location )
+    class   OrderedSimpleItem( span : Span, position : Position )
+    extends SimpleItem( span, position )
     with    OrderedItem
     
-    class   UnorderedSimpleItem( span : Span, location : Location )
-    extends SimpleItem( span, location )
+    class   UnorderedSimpleItem( span : Span, position : Position )
+    extends SimpleItem( span, position )
     with    UnorderedItem
 
 #### `ComplexItem`
@@ -464,9 +427,11 @@ In implementation terms, we don't have a single list.
     // In knockoff2/ComplexItem.scala
     package knockoff2
     
+    import scala.util.parsing.input.Position
+    
     abstract class ComplexItem(
         val children : BlockSeq,
-        val location : Location
+        val position : Position
     )
     extends ComplexBlock
     with    PrefixedItem {
@@ -485,12 +450,12 @@ In implementation terms, we don't have a single list.
         // See the ComplexItem toString, equals, hashCode implementations
     }
     
-    class   OrderedComplexItem( children : BlockSeq, location : Location )
-    extends ComplexItem( children, location )
+    class   OrderedComplexItem( children : BlockSeq, position : Position )
+    extends ComplexItem( children, position )
     with    OrderedItem
 
-    class   UnorderedComplexItem( children : BlockSeq, location : Location )
-    extends ComplexItem( children, location )
+    class   UnorderedComplexItem( children : BlockSeq, position : Position )
+    extends ComplexItem( children, position )
     with    UnorderedItem
     
 #### `MarkdownList`
@@ -499,6 +464,7 @@ In implementation terms, we don't have a single list.
     package knockoff2
     
     import scala.io.Source
+    import scala.util.parsing.input.{ NoPosition, Position }
     
     /**
      * @param ordered Alters the output, mostly.
@@ -508,8 +474,10 @@ In implementation terms, we don't have a single list.
         val children : BlockSeq
     ) extends ComplexBlock {
         
-        val location =
-            Locations.fromSeq( children.map( _.location ) )
+        val position = children.firstOption match {
+            case None => NoPosition
+            case Some( child ) => child.position
+        }
         
         def xml = ordered match {
             case true  => <ol>{ childrenXML }</ol>
@@ -527,6 +495,7 @@ In implementation terms, we don't have a single list.
     // In test knockoff2/BlockSuite.scala
     package knockoff2
 
+    import scala.util.parsing.input.NoPosition
     import org.scalatest._
     import matchers._
 
@@ -536,8 +505,8 @@ In implementation terms, we don't have a single list.
 
             it( "should filter Paragraphs and Headers properly with ?" ) {
 
-                val p1 = para( t("p1"), Locations.nowhere )
-                val h1 = head( 1, t("h1"), Locations.nowhere )
+                val p1 = para( t("p1"), NoPosition )
+                val h1 = head( 1, t("h1"), NoPosition )
 
                 val blocks = BlockSeq.fromSeq( List( p1, h1 ) )
                 
@@ -570,6 +539,7 @@ In implementation terms, we don't have a single list.
     package knockoff2
     
     import scala.xml.Node
+    import scala.util.parsing.input.Position
 
 #### BlockSeq - Package And Imports
 
@@ -586,6 +556,7 @@ In implementation terms, we don't have a single list.
     package knockoff2
 
     import scala.xml.Elem
+    import scala.util.parsing.input.Position
 
 #### `Paragraph` - `toString`, `equals`, `hashCode`
 
@@ -601,10 +572,10 @@ In implementation terms, we don't have a single list.
     
     def sameElements( p : Paragraph ) : Boolean = {
         ( span == p.span ) &&
-        ( location == p.location )
+        ( position == p.position )
     }
     
-    override def hashCode : Int = span.hashCode + location.hashCode
+    override def hashCode : Int = span.hashCode + position.hashCode
 
 ### `Header`
 
@@ -614,6 +585,7 @@ In implementation terms, we don't have a single list.
     package knockoff2
 
     import scala.xml.Elem
+    import scala.util.parsing.input.Position
 
 #### `Header` - `toString`, `equals`, `hashCode`
 
@@ -630,11 +602,11 @@ In implementation terms, we don't have a single list.
     def sameElements( p : Header ) : Boolean = {
         ( level == p.level ) &&
         ( span == p.span ) &&
-        ( location == p.location )
+        ( position == p.position )
     }
 
     override def hashCode : Int =
-        43 + level + span.hashCode + location.hashCode
+        43 + level + span.hashCode + position.hashCode
 
 
 ### `LinkDefinition`
@@ -645,6 +617,7 @@ In implementation terms, we don't have a single list.
     package knockoff2
 
     import scala.xml.{ Node, Group }
+    import scala.util.parsing.input.Position
 
 #### `LinkDefinition` - `toString`, `equals`, `hashCode`
 
@@ -662,11 +635,11 @@ In implementation terms, we don't have a single list.
         ( id == p.id ) &&
         ( url == p.url ) &&
         ( title == p.title ) &&
-        ( location == p.location )
+        ( position == p.position )
     }
 
     override def hashCode : Int =
-        43 + id.hashCode + url.hashCode + span.hashCode + location.hashCode
+        43 + id.hashCode + url.hashCode + span.hashCode + position.hashCode
 
 ### `Blockquote`
 
@@ -677,6 +650,7 @@ In implementation terms, we don't have a single list.
     
     import scala.io.Source
     import scala.xml.Elem
+    import scala.util.parsing.input.Position
 
 #### `Blockquote` - `toString`, `equals`, `hashCode`
 
@@ -692,7 +666,7 @@ In implementation terms, we don't have a single list.
     
     def sameElements( b : Blockquote ) = {
         ( children sameElements b.children ) &&
-        ( location == b.location )
+        ( position == b.position )
     }
     
     override def hashCode : Int = {
@@ -709,6 +683,7 @@ In implementation terms, we don't have a single list.
     package knockoff2
 
     import scala.xml.{ Node, Unparsed }
+    import scala.util.parsing.input.Position
 
 #### `HTMLBlock` - `toString`, `equals`, `hashCode`
 
@@ -724,7 +699,7 @@ In implementation terms, we don't have a single list.
     
     def sameElements( h : HTMLBlock ) : Boolean = {
         ( h.html == html ) &&
-        ( h.location == location )
+        ( h.position == position )
     }
     
     def canEqual( t : HTMLBlock ) : Boolean = t.getClass == getClass
@@ -738,6 +713,7 @@ In implementation terms, we don't have a single list.
 
     import scala.xml.{ Node, Unparsed }
     import scala.io.Source
+    import scala.util.parsing.input.Position
 
 #### `CodeBlock` - `toString`, `equals`, `hashCode`
 
@@ -753,7 +729,7 @@ In implementation terms, we don't have a single list.
     
     def sameElements( cb : CodeBlock ) : Boolean = {
         ( cb.preformatted == preformatted ) &&
-        ( cb.location == location )
+        ( cb.position == position )
     }
 
     def canEqual( t : CodeBlock ) : Boolean = t.getClass == getClass
@@ -767,16 +743,17 @@ In implementation terms, we don't have a single list.
 
     import scala.xml.{ Node, Unparsed }
     import scala.io.Source
+    import scala.util.parsing.input.Position
 
 #### `HorizontalRule` - `toString`, `equals`, `hashCode`
 
     // The HorizontalRule toString, equals, hashCode implementations
     override def toString = "HorizontalRule"
 
-    override def hashCode : Int = location.hashCode + 47
+    override def hashCode : Int = position.hashCode + 47
 
     override def equals( rhs : Any ) : Boolean = rhs match {
-        case t : HorizontalRule => t.canEqual( this ) && ( t.location == location )
+        case t : HorizontalRule => t.canEqual( this ) && ( t.position == position )
         case _ => false
     }
 
@@ -791,13 +768,14 @@ In implementation terms, we don't have a single list.
 
     import scala.xml.{ Node, Unparsed }
     import scala.io.Source
+    import scala.util.parsing.input.Position
 
 #### `SimpleItem` - `toString`, `equals`, `hashCode`
 
     // The SimpleItem toString, equals, hashCode implementations
     override def toString = "SimpleItem(" + markdown + ")"
 
-    override def hashCode : Int = location.hashCode + 47
+    override def hashCode : Int = position.hashCode + 47
 
     override def equals( rhs : Any ) : Boolean = rhs match {
         case t : SimpleItem => t.canEqual( this ) && ( this sameElements t )
@@ -806,7 +784,7 @@ In implementation terms, we don't have a single list.
     
     def sameElements( si : SimpleItem ) : Boolean = {
         ( span == si.span ) &&
-        ( location == si.location )
+        ( position == si.position )
     }
 
     def canEqual( t : SimpleItem ) : Boolean = t.getClass == getClass
@@ -820,13 +798,14 @@ In implementation terms, we don't have a single list.
 
     import scala.xml.{ Node, Unparsed }
     import scala.io.Source
+    import scala.util.parsing.input.Position
 
 #### `ComplexItem` - `toString`, `equals`, `hashCode`
 
     // The ComplexItem toString, equals, hashCode implementations
     override def toString = "ComplexItem(" + markdown + ")"
 
-    override def hashCode : Int = location.hashCode + 47
+    override def hashCode : Int = position.hashCode + 47
 
     override def equals( rhs : Any ) : Boolean = rhs match {
         case t : ComplexItem => t.canEqual( this ) && ( this sameElements t )
@@ -835,7 +814,7 @@ In implementation terms, we don't have a single list.
     
     def sameElements( ci : ComplexItem ) : Boolean = {
         ( children == ci.children ) &&
-        ( location == ci.location )
+        ( position == ci.position )
     }
 
     def canEqual( t : ComplexItem ) : Boolean = t.getClass == getClass
@@ -855,7 +834,7 @@ In implementation terms, we don't have a single list.
     // The MarkdownList toString, equals, hashCode implementations
     override def toString = "MarkdownList(" + markdown + ")"
 
-    override def hashCode : Int = location.hashCode + 47
+    override def hashCode : Int = position.hashCode + 47
 
     override def equals( rhs : Any ) : Boolean = rhs match {
         case t : MarkdownList => t.canEqual( this ) && ( t sameElements this )
