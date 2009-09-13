@@ -15,16 +15,6 @@ within documents".
 
 
 
-1. "Lexical" recognition, where whitespace matters a lot. This is where we figure
-out the block boundaries.
-
-2. Span recognition, where whitespace only matters in a couple of cases. This is
-probably where the final `Span` elements are located.
-
-3. Object model combining, where we take the `Span`s and the extra lexical data and
-figure out the final `Block` elements.
-
-
 ### A Bit Of History To Satisfy Myself ###
 
 In my first attempt, I tried building one big parser combinator, and then, slowly,

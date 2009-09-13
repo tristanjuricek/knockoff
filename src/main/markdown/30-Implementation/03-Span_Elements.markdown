@@ -142,7 +142,7 @@ These emphasize other spans, usually with `<strong>` tags.
     
     import scala.xml.Node
 
-    class Strong( children : SpanSeq ) extends ComplexSpan( children ) {
+    class Strong( val children : SpanSeq ) extends ComplexSpan {
         
         def markdown = "**" + childrenMarkdown + "**"
         
@@ -155,7 +155,7 @@ These emphasize other spans, usually with `<strong>` tags.
 
 Wraps other spans with `<em>` tags.
 
-    // In knockoff2/Strong.scala
+    // In knockoff2/Emphasis.scala
     package knockoff2
 
     import scala.xml.Node

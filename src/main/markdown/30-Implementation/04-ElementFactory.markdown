@@ -59,6 +59,12 @@ so that the output `BlockSeq` might render things a bit differently, for example
         /** A shorthand for text (popular with my tests) */
         def t( c : String ) = text( c )
         
+        def em( s : SpanSeq ) : Emphasis =
+            new Emphasis( s )
+        
+        def strong( s : SpanSeq ) : Strong =
+            new Strong( s )
+        
         def link( c : SpanSeq, u : String, t : Option[ String ] ) : Link =
             new Link( c, u, t )
         
@@ -81,6 +87,11 @@ so that the output `BlockSeq` might render things a bit differently, for example
         def htmlSpan( h : String ) : HTMLSpan =
             new HTMLSpan( h )
         
+        
+        // Uh... fun with my object model?
+        
+        def toSpan( seq : Seq[ Span ] ) : Span =
+            if ( seq.length == 1 ) seq.first else new GroupSpan( seq )
     }
 
 I used heavy abbreviation in this class in order to draw focus to the types.
