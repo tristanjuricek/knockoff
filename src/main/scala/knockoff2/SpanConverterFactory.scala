@@ -6,6 +6,9 @@ trait SpanConverterFactory extends ElementFactory {
         new SpanConverter( definitions, matchers, this )
         
     def matchers : Seq[ SpanMatcher ] = List(
+        DoubleCodeMatcher,
+        SingleCodeMatcher,
+        InlineHTMLSplitter,
         UnderscoreStrongMatcher,
         AsterixStrongMatcher,
         UnderscoreEmphasisMatcher,

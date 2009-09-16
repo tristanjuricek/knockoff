@@ -1,8 +1,8 @@
 package knockoff2
 
 class   EqualDelimiterMatcher(
-    val delim    : String,
-    val newMatch : ( Int, Option[ Text ], Span, Option[ String ], ElementFactory ) => SpanMatch
+    delim    : String,
+    newMatch : ( Int, Option[ Text ], Span, Option[ String ], ElementFactory ) => SpanMatch
 )
 extends SpanMatcher
 with    StringExtras {
@@ -21,7 +21,7 @@ with    StringExtras {
                 Some( newMatch(
                     start,
                     str.substringOption( 0, start ).map( text ),
-                    toSpan( convert( str.substring( start + delim.length, finish ) ) ),
+                    convert( str.substring( start + delim.length, finish ) ),
                     str.substringOption( finish + delim.length, str.length ),
                     factory
                 ) )

@@ -34,6 +34,9 @@ at a high-level, mostly for debugging purposes.
             new SpanConverter( definitions, matchers, this )
             
         def matchers : Seq[ SpanMatcher ] = List(
+            DoubleCodeMatcher,
+            SingleCodeMatcher,
+            InlineHTMLSplitter,
             UnderscoreStrongMatcher,
             AsterixStrongMatcher,
             UnderscoreEmphasisMatcher,
@@ -194,14 +197,120 @@ Like `Emphasis` elements, `Strong` elements use two underscores `__` or asterixe
     )
 
 
+## `Code` Matching ##
+
+Two varations of code blocks:
+
+    A `normal code` block
+    A ``code with a `backtick` inside``
+
+### `DoubleCodeMatcher` ###
+
+    // In knockoff2/DoubleCodeMatcher.scala
+    package knockoff2
+    
+    object DoubleCodeMatcher
+    extends CodeDelimiterMatcher(
+        "``",
+        (i,b,c,a,f) =>
+            SpanMatch( i, b, f.codeSpan( c.asInstanceOf[ Text ].content ), a )
+    )
+
+### `CodeMatcher` ###
+
+    // In knockoff2/SingleCodeMatcher.scala
+    package knockoff2
+    
+    object SingleCodeMatcher
+    extends CodeDelimiterMatcher(
+        "`",
+        (i,b,c,a,f) =>
+            SpanMatch( i, b, f.codeSpan( c.asInstanceOf[ Text ].content ), a )
+    )
+
+### `CodeDelimiterMatcher` ###
+
+    // In knockoff2/CodeDelimiterMatcher.scala
+    package knockoff2
+    
+    class CodeDelimiterMatcher(
+        val delim    : String,
+        val newMatch : ( Int, Option[ Text ], Span, Option[ String ], ElementFactory ) => SpanMatch
+    )
+    extends EqualDelimiterMatcher( delim, newMatch ) {
+     
+        override def find(
+                str     : String,
+                convert : String => Span
+            ) ( implicit
+                factory : ElementFactory
+            ) : Option[ SpanMatch ] = {
+            return super.find( str, source => factory.text( source ) )
+        }
+    }
+
+## HTML Matching ##
+
+If we find any kind of HTML/XML like element within the content, and it's not a
+single element, we try to find the ending element. If that segment isn't
+well-formed, we just ignore the element.
+
+    // In knockoff2/HTMLMatcher.scala
+    package knockoff2
+    
+    object InlineHTMLSplitter extends SpanMatcher with StringExtras {
+        
+        val startElement = """<[ ]*([a-zA-Z0-9_:]+)[ ]*[\w="'&&[^>]]*[ ]*(/?)>""".r
+        
+        def find(
+                str     : String,
+                convert : String => Span
+            ) ( implicit
+                factory : ElementFactory
+            ) : Option[ SpanMatch ] = {
+                
+            import factory.{ htmlSpan, text }
+                
+            startElement.findFirstMatchIn( str ) match {
+
+                case None => None
+             
+                case Some( open ) => {
+                    val hasEnd = open.group(2) == "/"
+                    if ( hasEnd ) {
+                        Some( SpanMatch(
+                            open.start,
+                            if ( open.before.length > 0 ) None else Some( text( open.before.toString ) ),
+                            htmlSpan( open.matched ),
+                            if ( open.after.length > 0 ) None else Some( open.after.toString )
+                        ) )
+                    } else {
+                        val closer = ("(?i)</[ ]*" + open.group(1) + "[ ]*>").r
+                        closer.findFirstMatchIn( open.after ) match {
+                            
+                            case None => None
+                            
+                            case Some( close ) => Some( SpanMatch(
+                                open.start,
+                                if ( open.before.length > 0 ) None else Some( text( open.before.toString ) ),
+                                htmlSpan( str.substring( open.start, close.end ) ),
+                                if ( close.after.length > 0 ) None else Some( close.after.toString )
+                            ) )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 ## `EqualDelimiterMatcher` ##
 
     // In knockoff2/EqualDelimiterMatcher.scala
     package knockoff2
     
     class   EqualDelimiterMatcher(
-        val delim    : String,
-        val newMatch : ( Int, Option[ Text ], Span, Option[ String ], ElementFactory ) => SpanMatch
+        delim    : String,
+        newMatch : ( Int, Option[ Text ], Span, Option[ String ], ElementFactory ) => SpanMatch
     )
     extends SpanMatcher
     with    StringExtras {
@@ -220,7 +329,7 @@ Like `Emphasis` elements, `Strong` elements use two underscores `__` or asterixe
                     Some( newMatch(
                         start,
                         str.substringOption( 0, start ).map( text ),
-                        toSpan( convert( str.substring( start + delim.length, finish ) ) ),
+                        convert( str.substring( start + delim.length, finish ) ),
                         str.substringOption( finish + delim.length, str.length ),
                         factory
                     ) )
