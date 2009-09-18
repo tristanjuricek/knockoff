@@ -216,7 +216,7 @@ Two varations of code blocks:
             SpanMatch( i, b, f.codeSpan( c.asInstanceOf[ Text ].content ), a )
     )
 
-### `CodeMatcher` ###
+### `SingleCodeMatcher` ###
 
     // In knockoff2/SingleCodeMatcher.scala
     package knockoff2
@@ -227,6 +227,27 @@ Two varations of code blocks:
         (i,b,c,a,f) =>
             SpanMatch( i, b, f.codeSpan( c.asInstanceOf[ Text ].content ), a )
     )
+
+#### `CodeMatcherSpec`
+
+    // In test knockoff2/SingleCodeMatcherSpec.scala
+    package knockoff2
+    
+    import org.scalatest._
+    
+    class SingleCodeMatcherSpec extends Spec with SpanConverterFactory {
+        describe( "SingleCodeMatcher" ) {
+            it( "should parse a couple of single code blocks in text" ) {
+                val spans = spanConverter( Nil )(
+                    TextChunk("a `code1` and a `code 2`")
+                )
+                val expected = List(
+                    t("a "), codeSpan("code1"), t(" and a "), codeSpan("code 2")
+                )
+                assert( spans sameElements expected )
+            }
+        }
+    }
 
 ### `CodeDelimiterMatcher` ###
 
@@ -260,7 +281,7 @@ well-formed, we just ignore the element.
     
     object InlineHTMLSplitter extends SpanMatcher with StringExtras {
         
-        val startElement = """<[ ]*([a-zA-Z0-9_:]+)[ ]*[\w="'&&[^>]]*[ ]*(/?)>""".r
+        val startElement = """<[ ]*([a-zA-Z:_]+)[ \t]*[^>]*?(/?+)>""".r
         
         def find(
                 str     : String,
@@ -270,7 +291,7 @@ well-formed, we just ignore the element.
             ) : Option[ SpanMatch ] = {
                 
             import factory.{ htmlSpan, text }
-                
+            
             startElement.findFirstMatchIn( str ) match {
 
                 case None => None
@@ -278,11 +299,21 @@ well-formed, we just ignore the element.
                 case Some( open ) => {
                     val hasEnd = open.group(2) == "/"
                     if ( hasEnd ) {
+                        val leading = {
+                            if ( open.before.length > 0 )
+                                Some( text( open.before.toString ) )
+                            else
+                                None
+                        }
+                        val trailing = {
+                            if ( open.after.length > 0 ) Some( open.after.toString )
+                            else None
+                        }
                         Some( SpanMatch(
                             open.start,
-                            if ( open.before.length > 0 ) None else Some( text( open.before.toString ) ),
+                            leading,
                             htmlSpan( open.matched ),
-                            if ( open.after.length > 0 ) None else Some( open.after.toString )
+                            trailing
                         ) )
                     } else {
                         val closer = ("(?i)</[ ]*" + open.group(1) + "[ ]*>").r
@@ -290,12 +321,26 @@ well-formed, we just ignore the element.
                             
                             case None => None
                             
-                            case Some( close ) => Some( SpanMatch(
-                                open.start,
-                                if ( open.before.length > 0 ) None else Some( text( open.before.toString ) ),
-                                htmlSpan( str.substring( open.start, close.end ) ),
-                                if ( close.after.length > 0 ) None else Some( close.after.toString )
-                            ) )
+                            case Some( close ) => {
+                                val leading = {
+                                    if ( open.before.length > 0 )
+                                        Some( text( open.before.toString ) )
+                                    else
+                                        None
+                                }
+                                val trailing = {
+                                    if ( close.after.length > 0 )
+                                        Some( close.after.toString )
+                                    else
+                                        None
+                                }
+                                Some( SpanMatch(
+                                    open.start,
+                                    leading,
+                                    htmlSpan( str.substring( open.start, open.end + close.end ) ),
+                                    trailing
+                                ) )
+                            }
                         }
                     }
                 }
@@ -303,10 +348,46 @@ well-formed, we just ignore the element.
         }
     }
 
+#### `InlineHTMLSplitterSpec`
+
+    // In test knockoff2/InlineHTMLSplitterSpec.scala
+    package knockoff2
+    
+    import org.scalatest._
+    import org.scalatest.matchers._
+    
+    class InlineHTMLSplitterSpec extends Spec with ShouldMatchers with SpanConverterFactory {
+
+        describe("InlineHTMLSplitter") {
+         
+            it("should find an <a> and an <img>") {
+                val spans = spanConverter( Nil )( TextChunk(
+                    """with <a href="http://example.com">a link</a> and an """ +
+                    """<img src="foo.img"/> ha!"""
+                ) )
+                
+                spans.toList should equal ( List(
+                    t("with "),
+                    htmlSpan("""<a href="http://example.com">a link</a>"""),
+                    t(" and an "),
+                    htmlSpan("""<img src="foo.img"/>"""),
+                    t(" ha!")
+                ) )
+            }
+        }
+    }
+
+
 ## `EqualDelimiterMatcher` ##
+
+Many of the elements are delimited by the identical character sequence on either
+side of the text. This does the dirty work of finding those matches, whatever that
+character sequence may be.
 
     // In knockoff2/EqualDelimiterMatcher.scala
     package knockoff2
+    
+    import scala.util.logging.Logged
     
     class   EqualDelimiterMatcher(
         delim    : String,

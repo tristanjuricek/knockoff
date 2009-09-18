@@ -1,12 +1,14 @@
 package knockoff2
 
+import scala.collection.mutable.ListBuffer
+
 trait StringExtras {
     
-    class KnockoffString( val s : String ) {
+    class KnockoffString( val wrapped : String ) {
      
         def substringOption( start : Int, finish : Int ) : Option[ String ] = {
             if ( start < finish )
-                Some( s.substring( start, finish ) )
+                Some( wrapped.substring( start, finish ) )
             else
                 None
         }
@@ -16,7 +18,7 @@ trait StringExtras {
          * @return A list of size n if found, otherwise Nil
          */
         def nextNIndicesOf( n : Int, str : String ) : List[ Int ] = {
-            val found = nextIndexOfN( n, str, s.length, Nil )
+            val found = nextIndexOfN( n, str, -1, new ListBuffer )
             if ( found.length == n ) found else Nil
         }
 
@@ -25,19 +27,16 @@ trait StringExtras {
                 left    : Int,
                 str     : String,
                 index   : Int,
-                current : List[ Int ]
+                current : ListBuffer[ Int ]
             ) : List[ Int ] = {
 
-            if ( left <= 0 || index < 0 ) return current
+            if ( left <= 0 || index >= wrapped.length ) return current.toList
             
-            val next = s.lastIndexOf( str, index - 1 )
+            val next = wrapped.indexOf( str, index )
             
-            nextIndexOfN(
-                left - 1,
-                str,
-                next,
-                if ( next > 0 ) next :: current else current
-            )
+            if ( next >= 0 ) current += next
+            
+            nextIndexOfN( left - 1, str, next + 1, current )
         }
     }
     

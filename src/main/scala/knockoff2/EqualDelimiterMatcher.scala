@@ -1,5 +1,7 @@
 package knockoff2
 
+import scala.util.logging.Logged
+
 class   EqualDelimiterMatcher(
     delim    : String,
     newMatch : ( Int, Option[ Text ], Span, Option[ String ], ElementFactory ) => SpanMatch

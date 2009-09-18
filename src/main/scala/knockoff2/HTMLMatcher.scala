@@ -2,7 +2,7 @@ package knockoff2
 
 object InlineHTMLSplitter extends SpanMatcher with StringExtras {
     
-    val startElement = """<[ ]*([a-zA-Z0-9_:]+)[ ]*[\w="'&&[^>]]*[ ]*(/?)>""".r
+    val startElement = """<[ ]*([a-zA-Z:_]+)[ \t]*[^>]*?(/?+)>""".r
     
     def find(
             str     : String,
@@ -12,7 +12,7 @@ object InlineHTMLSplitter extends SpanMatcher with StringExtras {
         ) : Option[ SpanMatch ] = {
             
         import factory.{ htmlSpan, text }
-            
+        
         startElement.findFirstMatchIn( str ) match {
 
             case None => None
@@ -20,11 +20,21 @@ object InlineHTMLSplitter extends SpanMatcher with StringExtras {
             case Some( open ) => {
                 val hasEnd = open.group(2) == "/"
                 if ( hasEnd ) {
+                    val leading = {
+                        if ( open.before.length > 0 )
+                            Some( text( open.before.toString ) )
+                        else
+                            None
+                    }
+                    val trailing = {
+                        if ( open.after.length > 0 ) Some( open.after.toString )
+                        else None
+                    }
                     Some( SpanMatch(
                         open.start,
-                        if ( open.before.length > 0 ) None else Some( text( open.before.toString ) ),
+                        leading,
                         htmlSpan( open.matched ),
-                        if ( open.after.length > 0 ) None else Some( open.after.toString )
+                        trailing
                     ) )
                 } else {
                     val closer = ("(?i)</[ ]*" + open.group(1) + "[ ]*>").r
@@ -32,12 +42,26 @@ object InlineHTMLSplitter extends SpanMatcher with StringExtras {
                         
                         case None => None
                         
-                        case Some( close ) => Some( SpanMatch(
-                            open.start,
-                            if ( open.before.length > 0 ) None else Some( text( open.before.toString ) ),
-                            htmlSpan( str.substring( open.start, close.end ) ),
-                            if ( close.after.length > 0 ) None else Some( close.after.toString )
-                        ) )
+                        case Some( close ) => {
+                            val leading = {
+                                if ( open.before.length > 0 )
+                                    Some( text( open.before.toString ) )
+                                else
+                                    None
+                            }
+                            val trailing = {
+                                if ( close.after.length > 0 )
+                                    Some( close.after.toString )
+                                else
+                                    None
+                            }
+                            Some( SpanMatch(
+                                open.start,
+                                leading,
+                                htmlSpan( str.substring( open.start, open.end + close.end ) ),
+                                trailing
+                            ) )
+                        }
                     }
                 }
             }

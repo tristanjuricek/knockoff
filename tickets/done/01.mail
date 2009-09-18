@@ -1,0 +1,12 @@
+Subject: A test suite needs to be organized for knockoff2 to reflect the 
+ problems I experienced before when attempting to test.
+Tags: quick, testing
+
+Unit tests are probably a good idea. Specifications around things?
+
+1. Write specs around each of these tiny classes, kind of uninteresting, but 
+   meh.
+
+2. The wrapper that calls these tiny classes needs to have a few more 
+   interesting tests, but then again, maybe that's just more intelligent
+   testing.
