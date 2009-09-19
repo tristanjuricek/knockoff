@@ -9,6 +9,7 @@ trait SpanConverterFactory extends ElementFactory {
         DoubleCodeMatcher,
         SingleCodeMatcher,
         InlineHTMLMatcher,
+        EntityMatcher,
         UnderscoreStrongMatcher,
         AsterixStrongMatcher,
         UnderscoreEmphasisMatcher,

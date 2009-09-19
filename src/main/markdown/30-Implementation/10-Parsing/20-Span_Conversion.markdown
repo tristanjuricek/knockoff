@@ -37,6 +37,7 @@ at a high-level, mostly for debugging purposes.
             DoubleCodeMatcher,
             SingleCodeMatcher,
             InlineHTMLMatcher,
+            EntityMatcher,
             UnderscoreStrongMatcher,
             AsterixStrongMatcher,
             UnderscoreEmphasisMatcher,
@@ -274,12 +275,16 @@ Two varations of code blocks:
 
 If we find any kind of HTML/XML-like element within the content, and it's not a
 single element, we try to find the ending element. If that segment isn't
-well-formed, we just ignore the element. The matcher
+well-formed, we just ignore the element, and treat it like text.
+
+We also match
 
 
 ### `InlineHTMLMatcher`
 
-Any sequences of HTML in content are matched by the `InlineHTMLMatcher`.
+Any sequences of HTML in content are matched by the `InlineHTMLMatcher`. Note that
+this uses a recursive method `hasMatchedClose` to deal with the situations where
+one span contains other spans - it's basically like parenthesis matching.
 
     // In knockoff2/InlineHTMLMatcher.scala
     package knockoff2
@@ -428,8 +433,31 @@ the text to simply "pass through" to the the final content.
                 )
             }
         }
-        
+    }
 
+#### `EntityMatcherSpec`
+
+    // In test knockoff2/EntityMatcherSpec.scala
+    package knockoff2
+    
+    import org.scalatest._
+    import org.scalatest.matchers._
+    
+    class EntityMatcherSpec extends Spec with ShouldMatchers with SpanConverterFactory {
+        describe("EntityMatcher") {
+            it("should find a couple of entities and pass them through") {
+                val converted = spanConverter( Nil )(
+                    TextChunk( "an &amp; and an &em; are in here" )
+                )
+                converted.toList should equal( List(
+                    t("an "),
+                    htmlSpan("&amp;"),
+                    t(" and an "),
+                    htmlSpan("&em;"),
+                    t(" are in here")
+                ) )
+            }
+        }
     }
 
 

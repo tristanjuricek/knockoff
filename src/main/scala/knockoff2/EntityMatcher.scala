@@ -26,6 +26,4 @@ object EntityMatcher extends SpanMatcher with StringExtras {
             )
         }
     }
-    
-
 }
