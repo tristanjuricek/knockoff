@@ -8,7 +8,7 @@ trait SpanConverterFactory extends ElementFactory {
     def matchers : Seq[ SpanMatcher ] = List(
         DoubleCodeMatcher,
         SingleCodeMatcher,
-        InlineHTMLSplitter,
+        InlineHTMLMatcher,
         UnderscoreStrongMatcher,
         AsterixStrongMatcher,
         UnderscoreEmphasisMatcher,

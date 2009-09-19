@@ -1,4 +1,6 @@
-package knockoff2
+# `ColoredLogger` #
+
+Useful for testing, not racism.
 
     // In knockoff2/ColoredLogger.scala
     package knockoff2

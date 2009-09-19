@@ -36,7 +36,7 @@ at a high-level, mostly for debugging purposes.
         def matchers : Seq[ SpanMatcher ] = List(
             DoubleCodeMatcher,
             SingleCodeMatcher,
-            InlineHTMLSplitter,
+            InlineHTMLMatcher,
             UnderscoreStrongMatcher,
             AsterixStrongMatcher,
             UnderscoreEmphasisMatcher,
@@ -272,14 +272,19 @@ Two varations of code blocks:
 
 ## HTML Matching ##
 
-If we find any kind of HTML/XML like element within the content, and it's not a
+If we find any kind of HTML/XML-like element within the content, and it's not a
 single element, we try to find the ending element. If that segment isn't
-well-formed, we just ignore the element.
+well-formed, we just ignore the element. The matcher
 
-    // In knockoff2/HTMLMatcher.scala
+
+### `InlineHTMLMatcher`
+
+Any sequences of HTML in content are matched by the `InlineHTMLMatcher`.
+
+    // In knockoff2/InlineHTMLMatcher.scala
     package knockoff2
     
-    object InlineHTMLSplitter extends SpanMatcher with StringExtras {
+    object InlineHTMLMatcher extends SpanMatcher with StringExtras with ColoredLogger {
         
         val startElement = """<[ ]*([a-zA-Z:_]+)[ \t]*[^>]*?(/?+)>""".r
         
@@ -292,73 +297,67 @@ well-formed, we just ignore the element.
                 
             import factory.{ htmlSpan, text }
             
-            startElement.findFirstMatchIn( str ) match {
+            startElement.findFirstMatchIn( str ).map { open =>
+                
+                val hasEnd = open.group(2) == "/"
 
-                case None => None
-             
-                case Some( open ) => {
-                    val hasEnd = open.group(2) == "/"
-                    if ( hasEnd ) {
-                        val leading = {
-                            if ( open.before.length > 0 )
-                                Some( text( open.before.toString ) )
-                            else
-                                None
-                        }
-                        val trailing = {
-                            if ( open.after.length > 0 ) Some( open.after.toString )
-                            else None
-                        }
-                        Some( SpanMatch(
+                if ( hasEnd ) {
+                    SpanMatch(
+                        open.start,
+                        open.before.toOption.map( text(_) ),
+                        htmlSpan( open.matched ),
+                        open.after.toOption
+                    )
+                } else {
+                    hasMatchedClose( str, open.group(1), open.end, 1 ).map {
+                        closeAndAfter => SpanMatch(
                             open.start,
-                            leading,
-                            htmlSpan( open.matched ),
-                            trailing
-                        ) )
-                    } else {
-                        val closer = ("(?i)</[ ]*" + open.group(1) + "[ ]*>").r
-                        closer.findFirstMatchIn( open.after ) match {
-                            
-                            case None => None
-                            
-                            case Some( close ) => {
-                                val leading = {
-                                    if ( open.before.length > 0 )
-                                        Some( text( open.before.toString ) )
-                                    else
-                                        None
-                                }
-                                val trailing = {
-                                    if ( close.after.length > 0 )
-                                        Some( close.after.toString )
-                                    else
-                                        None
-                                }
-                                Some( SpanMatch(
-                                    open.start,
-                                    leading,
-                                    htmlSpan( str.substring( open.start, open.end + close.end ) ),
-                                    trailing
-                                ) )
-                            }
-                        }
-                    }
+                            open.before.toOption.map( text(_) ),
+                            htmlSpan( str.substring( open.start, closeAndAfter._1 ) ),
+                            closeAndAfter._2.toOption
+                        )
+                    }.getOrElse( return None )
                 }
+            }
+        }
+        
+        private def hasMatchedClose(
+                source : String,
+                tag    : String,
+                from   : Int,
+                opens  : Int
+            ) : Option[ ( Int, CharSequence ) ] = {
+            
+            val opener = ("(?i)<[ ]*" + tag + "[ \t]*[^>]*?(/?+)*>").r
+            val closer = ("(?i)</[ ]*" + tag + "[ ]*>").r
+            
+            val nextOpen = opener.findFirstMatchIn( source.substring(from) )
+            val nextClose = closer.findFirstMatchIn( source.substring(from) )
+
+            if ( ! nextClose.isDefined ) return None
+            
+            if ( nextOpen.isDefined && ( nextOpen.get.start < nextClose.get.start ) ) {
+                hasMatchedClose( source, tag, from + nextOpen.get.end, opens + 1 )
+            } else if ( opens > 1 ) {
+                hasMatchedClose( source, tag, from + nextClose.get.end, opens - 1 )
+            } else {
+                Some( ( from + nextClose.get.end, nextClose.get.after ) )
             }
         }
     }
 
-#### `InlineHTMLSplitterSpec`
 
-    // In test knockoff2/InlineHTMLSplitterSpec.scala
+#### `InlineHTMLMatcherSpec`
+
+    // In test knockoff2/InlineHTMLMatcherSpec.scala
     package knockoff2
     
     import org.scalatest._
     import org.scalatest.matchers._
     
-    class InlineHTMLSplitterSpec extends Spec with ShouldMatchers with SpanConverterFactory {
+    class InlineHTMLMatcherSpec extends Spec with ShouldMatchers with SpanConverterFactory {
 
-        describe("InlineHTMLSplitter") {
+        describe("InlineHTMLMatcher") {
          
             it("should find an <a> and an <img>") {
                 val spans = spanConverter( Nil )( TextChunk(
@@ -374,7 +373,63 @@ well-formed, we just ignore the element.
                     t(" ha!")
                 ) )
             }
+            
+            it("should wrap a <span> that contains another <span>") {
+                val convertedSpans = spanConverter( Nil ){ TextChunk(
+                    """a <span class="container">contains <span>something</span>""" +
+                    """ else</span> without a problem <br /> !"""
+                ) }
+                
+                convertedSpans.toList should equal { List(
+                    t("a "),
+                    htmlSpan(
+                        """<span class="container">contains """ +
+                        """<span>something</span> else</span>"""
+                    ),
+                    t(" without a problem "),
+                    htmlSpan("<br />"),
+                    t(" !")
+                ) }
+            }
         }
+    }
+
+### `EntityMatcher`
+
+If we see HTML entity sequences in text, we'll mark that as html. This is to allow
+the text to simply "pass through" to the the final content.
+
+    // In knockoff2/EntityMatcher.scala
+    package knockoff2
+    
+    object EntityMatcher extends SpanMatcher with StringExtras {
+        override def recursive = false
+
+        val matchEntity = """&\w+;""".r
+
+        def find(
+                str     : String,
+                convert : String => Span
+            ) ( implicit
+                factory : ElementFactory
+            ) : Option[ SpanMatch ] = {
+                
+            matchEntity.findFirstMatchIn( str ) match {
+                
+                case None => None
+                
+                case Some( entityMatch ) => Some(
+                    SpanMatch(
+                        entityMatch.start,
+                        entityMatch.before.toOption.map( factory.text(_) ),
+                        factory.htmlSpan( entityMatch.matched ),
+                        entityMatch.after.toOption
+                    )
+                )
+            }
+        }
+        
+
     }
 
 

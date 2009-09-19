@@ -10,6 +10,9 @@ recurrence.
     
     trait StringExtras {
         
+        class   KnockoffCharSequence( val seq : CharSequence )
+        extends KnockoffString( seq.toString )
+        
         class KnockoffString( val wrapped : String ) {
          
             def substringOption( start : Int, finish : Int ) : Option[ String ] = {
@@ -18,6 +21,9 @@ recurrence.
                 else
                     None
             }
+            
+            def toOption : Option[ String ] =
+                if ( wrapped.isEmpty ) None else Some( wrapped )
          
             /**
              * Return the next N indices of a string where the sequence is found.
@@ -45,6 +51,9 @@ recurrence.
                 nextIndexOfN( left - 1, str, next + 1, current )
             }
         }
+
+        implicit def KnockoffCharSequence( s : CharSequence ) =
+            new KnockoffCharSequence( s )
         
         implicit def KnockoffString( s : String ) = new KnockoffString( s )
     }
