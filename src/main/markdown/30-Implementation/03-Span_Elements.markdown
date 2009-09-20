@@ -14,12 +14,12 @@ can have part of it's description be code.
     import scala.xml.Node
     
     trait Span extends SpanSeq {
-        def markdown : String
-        def xml : Node
+      def markdown : String
+      def xml : Node
     }
     
     object Span extends ElementFactory {
-        val empty : Span = t("")
+      val empty : Span = t("")
     }
 
 ## `SpanSeq` ##
@@ -30,10 +30,10 @@ Each `Block` is composed of these.
     package knockoff2
     
     trait SpanSeq extends Seq[ Span ] {
-        def theSeq : Seq[ Span ]
-        override def length : Int = theSeq.length
-        override def elements = theSeq.elements
-        override def apply( ii : Int ) = theSeq(ii)
+      def theSeq : Seq[ Span ]
+      override def length : Int = theSeq.length
+      override def elements = theSeq.elements
+      override def apply( ii : Int ) = theSeq(ii)
     }
 
 A simpler version is for the common case, where the span does not actually contain
@@ -43,7 +43,7 @@ other spans.
     package knockoff2
     
     trait SimpleSpan extends Span {
-        def theSeq = List( this )
+      def theSeq = List( this )
     }
 
 The other, complex case is where a span contains a straight list of children.
@@ -52,10 +52,10 @@ The other, complex case is where a span contains a straight list of children.
     package knockoff2
     
     trait ComplexSpan extends Span {
-        val children : SpanSeq
-        def theSeq = children
-        def childrenMarkdown = children.map( _.markdown ).mkString("")
-        def childrenXML = children.map( _.xml )
+      val children : SpanSeq
+      def theSeq = children
+      def childrenMarkdown = children.map( _.markdown ).mkString("")
+      def childrenXML = children.map( _.xml )
     }
 
 And a workaround to cases where we need just a container of spans.
@@ -67,13 +67,13 @@ And a workaround to cases where we need just a container of spans.
     
     class GroupSpan( val children : SpanSeq ) extends ComplexSpan {
      
-        def this( seq : Seq[ Span ] ) {
-            this( new SpanSeq { def theSeq = seq } )
-        }
-        
-        def xml = Group( children.map( _.xml ) )
-        
-        def markdown = children.map( _.markdown ).mkString("")
+      def this( seq : Seq[ Span ] ) {
+        this( new SpanSeq { def theSeq = seq } )
+      }
+      
+      def xml = Group( children.map( _.xml ) )
+      
+      def markdown = children.map( _.markdown ).mkString("")
     }
 
 
@@ -89,11 +89,11 @@ The most basic Span element that contains no other markup information.
     
     class Text( val content : String ) extends SimpleSpan {
 
-        def markdown = content
+      def markdown = content
 
-        def xml : Node = XMLText( content )
+      def xml : Node = XMLText( content )
 
-        // See the Text toString, hashCode, equals implementations
+      // See the Text toString, hashCode, equals implementations
     }
 
 ## `HTMLSpan` ##
@@ -107,11 +107,11 @@ These sequences are found inside of blocks, but still mean "just pass it on".
     
     class HTMLSpan( val content : String ) extends SimpleSpan {
 
-        def markdown = content
+      def markdown = content
 
-        def xml : Node = Unparsed( content )
+      def xml : Node = Unparsed( content )
 
-        // See the HTMLSpan toString, hashCode, equals implementations       
+      // See the HTMLSpan toString, hashCode, equals implementations       
     }
 
 ## `CodeSpan` ##
@@ -126,11 +126,11 @@ not to be confused with `CodeBlock` - a `CodeBlock` does not contain a `CodeSpan
     
     class CodeSpan( val content : String ) extends SimpleSpan {
 
-        def markdown = content
+      def markdown = content
 
-        def xml : Node = <code>{ content }</code>
+      def xml : Node = <code>{ content }</code>
 
-        // See the CodeSpan toString, hashCode, equals implementations       
+      // See the CodeSpan toString, hashCode, equals implementations       
     }
 
 ## `Strong` ##
@@ -143,12 +143,12 @@ These emphasize other spans, usually with `<strong>` tags.
     import scala.xml.Node
 
     class Strong( val children : SpanSeq ) extends ComplexSpan {
-        
-        def markdown = "**" + childrenMarkdown + "**"
-        
-        def xml : Node = <strong>{ childrenXML }</strong>
-        
-        // See the Strong toString, hashCode, equals implementations
+      
+      def markdown = "**" + childrenMarkdown + "**"
+      
+      def xml : Node = <strong>{ childrenXML }</strong>
+      
+      // See the Strong toString, hashCode, equals implementations
     }
 
 ## `Emphasis` ##
@@ -162,11 +162,11 @@ Wraps other spans with `<em>` tags.
 
     class Emphasis( val children : SpanSeq ) extends ComplexSpan {
 
-        def markdown = "_" + childrenMarkdown + "_"
+      def markdown = "_" + childrenMarkdown + "_"
 
-        def xml : Node = <em>{ childrenXML }</em>
+      def xml : Node = <em>{ childrenXML }</em>
 
-        // See the Emphasis toString, hashCode, equals implementations
+      // See the Emphasis toString, hashCode, equals implementations
     }
 
 ## Links ##
@@ -187,26 +187,26 @@ The direct link is is simply called a `Link`.
     import scala.xml.Node
 
     class Link(
-        val children    : SpanSeq,
-        val url         : String,
-        val title       : Option[ String ]
+      val children  : SpanSeq,
+      val url       : String,
+      val title     : Option[ String ]
     )
     extends ComplexSpan {
         
-        def markdown = {
-            "[" + childrenMarkdown + "](" +
-            url + {
-                title match {
-                    case Some( titleString ) => " \"" + titleString + "\""
-                    case None => ""
-                }
-            } + ")"
-        }
-        
-        def xml : Node =
-            <a href={ url } title={ title.getOrElse(null) }>{ childrenXML }</a>
-        
-        // See the Link toString, hashCode, equals implementations
+      def markdown = {
+        "[" + childrenMarkdown + "](" +
+        url + {
+          title match {
+            case Some( titleString ) => " \"" + titleString + "\""
+            case None => ""
+          }
+        } + ")"
+      }
+      
+      def xml : Node =
+        <a href={ url } title={ title.getOrElse(null) }>{ childrenXML }</a>
+      
+      // See the Link toString, hashCode, equals implementations
     }
 
 ### `IndirectLink`
@@ -218,15 +218,15 @@ type. (The link definitions can't be found in the middle of a paragraph.)
     package knockoff2
     
     class IndirectLink(
-        children        : SpanSeq,
-        val definition  : LinkDefinition
+      children        : SpanSeq,
+      val definition  : LinkDefinition
     )
     extends Link( children, definition.url, definition.title )
     with    ComplexSpan {
         
-        override def markdown = "[" + childrenMarkdown + "][" + definition.id + "]"
+      override def markdown = "[" + childrenMarkdown + "][" + definition.id + "]"
         
-        // See the IndirectLink toString, hashCode, equals implementations        
+      // See the IndirectLink toString, hashCode, equals implementations        
     }
 
 ### `ImageLink` and `IndirectImageLink`
@@ -240,13 +240,13 @@ image aspect is done via this trait:
     import scala.xml.Node
     
     trait ImageSpan extends Link {
-        override def markdown = "!" + super.markdown
-        
-        override def xml : Node = <img
-            src={ url }
-            title={ title.getOrElse(null) }
-            alt={ childrenXML.text }
-        ></img>
+      override def markdown = "!" + super.markdown
+      
+      override def xml : Node = <img
+        src={ url }
+        title={ title.getOrElse(null) }
+        alt={ childrenXML.text }
+      ></img>
     }
 
 We then the actual classes using a mixin.
@@ -259,13 +259,13 @@ We then the actual classes using a mixin.
     import scala.xml.Node
     
     class ImageLink(
-        children    : SpanSeq,
-        url         : String,
-        title       : Option[ String ]
+      children  : SpanSeq,
+      url       : String,
+      title     : Option[ String ]
     )
     extends Link( children, url, title )
     with    ImageSpan {
-        // See the ImageLink toString, hashCode, equals implementations
+      // See the ImageLink toString, hashCode, equals implementations
     }
 
 #### `IndirectImageLink`
@@ -276,12 +276,12 @@ We then the actual classes using a mixin.
     import scala.xml.Node
     
     class IndirectImageLink(
-        children    : SpanSeq,
-        definition  : LinkDefinition
+      children    : SpanSeq,
+      definition  : LinkDefinition
     )
     extends IndirectLink( children, definition )
     with    ImageSpan {
-        // See the IndirectImageLink toString, hashCode, equals implementations
+      // See the IndirectImageLink toString, hashCode, equals implementations
     }
 
 
@@ -302,8 +302,8 @@ this location... (yay?)
     override def hashCode : Int = content.hashCode
         
     override def equals( rhs : Any ) : Boolean = rhs match {
-        case t : Text => t.canEqual( this ) && ( t.content == content )
-        case _ => false
+      case t : Text => t.canEqual( this ) && ( t.content == content )
+      case _ => false
     }
         
     def canEqual( t : Text ) : Boolean = t.getClass == getClass
@@ -316,8 +316,8 @@ this location... (yay?)
     override def hashCode : Int = content.hashCode
         
     override def equals( rhs : Any ) : Boolean = rhs match {
-        case t : HTMLSpan => t.canEqual( this ) && ( t.content == content )
-        case _ => false
+      case t : HTMLSpan => t.canEqual( this ) && ( t.content == content )
+      case _ => false
     }
         
     def canEqual( t : HTMLSpan ) : Boolean = t.getClass == getClass
@@ -330,8 +330,8 @@ this location... (yay?)
     override def hashCode : Int = content.hashCode
         
     override def equals( rhs : Any ) : Boolean = rhs match {
-        case t : CodeSpan => t.canEqual( this ) && ( t.content == content )
-        case _ => false
+      case t : CodeSpan => t.canEqual( this ) && ( t.content == content )
+      case _ => false
     }
         
     def canEqual( t : CodeSpan ) : Boolean = t.getClass == getClass
@@ -342,11 +342,11 @@ this location... (yay?)
     override def toString = "Strong(" + markdown + ")"
 
     override def hashCode : Int =
-        41 + ( (3 /: children)( (sum, child) => 41 + sum + 3 * child.hashCode ) )
+      41 + ( (3 /: children)( (sum, child) => 41 + sum + 3 * child.hashCode ) )
 
     override def equals( rhs : Any ) : Boolean = rhs match {
-        case t : Strong => t.canEqual( this ) && ( t.children sameElements children )
-        case _ => false
+      case t : Strong => t.canEqual( this ) && ( t.children sameElements children )
+      case _ => false
     }
 
     def canEqual( s : Strong ) : Boolean = s.getClass == getClass
@@ -357,11 +357,11 @@ this location... (yay?)
     override def toString = "Emphasis(" + markdown + ")"
 
     override def hashCode : Int =
-        43 + ( (3 /: children)( (sum, child) => 43 + sum + 3 * child.hashCode ) )
+      43 + ( (3 /: children)( (sum, child) => 43 + sum + 3 * child.hashCode ) )
 
     override def equals( rhs : Any ) : Boolean = rhs match {
-        case t : Emphasis => t.canEqual( this ) && ( t.children sameElements children )
-        case _ => false
+      case t : Emphasis => t.canEqual( this ) && ( t.children sameElements children )
+      case _ => false
     }
 
     def canEqual( s : Emphasis ) : Boolean = s.getClass == getClass
@@ -372,22 +372,22 @@ this location... (yay?)
     override def toString = "Link(" + markdown + ")"
 
     override def hashCode : Int = {
-        ( 43 + ( (3 /: children)( (sum, child) => 43 + sum + 3 * child.hashCode ) ) ) +
-        ( 43 + url.hashCode ) +
-        ( 43 + title.hashCode )
+      ( 43 + ( (3 /: children)( (sum, child) => 43 + sum + 3 * child.hashCode ) ) ) +
+      ( 43 + url.hashCode ) +
+      ( 43 + title.hashCode )
     }
 
     override def equals( rhs : Any ) : Boolean = rhs match {
-        case t : Link => ( t.canEqual( this ) ) && ( this sameElements t )
-        case _ => false
+      case t : Link => ( t.canEqual( this ) ) && ( this sameElements t )
+      case _ => false
     }
 
     def canEqual( s : Link ) : Boolean = s.getClass == getClass
     
     def sameElements( l : Link ) : Boolean = {
-        ( l.children sameElements children ) &&
-        ( url == l.url ) &&
-        ( title == l.title )
+      ( l.children sameElements children ) &&
+      ( url == l.url ) &&
+      ( title == l.title )
     }
 
 
@@ -397,11 +397,11 @@ this location... (yay?)
     override def toString = "IndirectLink(" + markdown + ")"
 
     override def hashCode : Int =
-        41 + ( (7 /: children)( (sum, child) => 41 + sum + 7 * child.hashCode ) )
+      41 + ( (7 /: children)( (sum, child) => 41 + sum + 7 * child.hashCode ) )
 
     override def equals( rhs : Any ) : Boolean = rhs match {
-        case t : IndirectLink => ( t.canEqual( this ) ) && ( this sameElements t )
-        case _ => false
+      case t : IndirectLink => ( t.canEqual( this ) ) && ( this sameElements t )
+      case _ => false
     }
 
     def canEqual( s : IndirectLink ) : Boolean = s.getClass == getClass
@@ -412,11 +412,11 @@ this location... (yay?)
     override def toString = "ImageLink(" + markdown + ")"
 
     override def hashCode : Int =
-        37 + ( (13 /: children)( (sum, child) => 37 + sum + 13 * child.hashCode ) )
+      37 + ( (13 /: children)( (sum, child) => 37 + sum + 13 * child.hashCode ) )
 
     override def equals( rhs : Any ) : Boolean = rhs match {
-        case t : ImageLink => t.canEqual( this ) && ( this sameElements t )
-        case _ => false
+      case t : ImageLink => t.canEqual( this ) && ( this sameElements t )
+      case _ => false
     }
 
     def canEqual( s : ImageLink ) : Boolean = s.getClass == getClass
@@ -427,15 +427,15 @@ this location... (yay?)
     override def toString = "IndirectImageLink(" + markdown + ")"
 
     override def hashCode : Int = {
-        41 + ( (11 /: children)( (sum, child) => {
-            41 + sum + 11 * child.hashCode
-        } ) )
+      41 + ( (11 /: children){
+        (sum, child) => 41 + sum + 11 * child.hashCode
+      } )
     }
 
     override def equals( rhs : Any ) : Boolean = rhs match {
-        case t : IndirectImageLink =>
-            ( t.canEqual( this ) ) && ( this sameElements t )
-        case _ => false
+      case t : IndirectImageLink =>
+        ( t.canEqual( this ) ) && ( this sameElements t )
+      case _ => false
     }
 
     def canEqual( s : IndirectImageLink ) : Boolean = s.getClass == getClass

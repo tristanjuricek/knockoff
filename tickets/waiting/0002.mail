@@ -1,0 +1,9 @@
+Subject: Remove use of objects for span matchers
+
+Ideas:
+
+1. Use traits + factory that also depend on the `ElementFactory`
+2. Combine all the different parsers together in one wrapping trait; I don't ever
+   use these things individually.
+
+Hm.

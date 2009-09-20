@@ -9,6 +9,7 @@ ways. It does this by:
 
 1. Representing the markdown document in an object model, which can then
    be rebuilt.
+
 2. Creating a fairly simple HTML rendering logic, that can also be adjusted.
 
 ### Example: "Turning Down" the Header Level

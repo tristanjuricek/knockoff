@@ -12,26 +12,26 @@ are usually seen as separated by whitespace lines.
 
     trait Block extends BlockSeq {
         
-        /**
-         * The actual content of each block.
-         */
-        val span     : Span
+      /**
+        The actual content of each block.
+       */
+      val span     : Span
 
-        /**
-         * A markdown representation of this block - it may not equal the original
-         * source.
-         */
-        def markdown : String
+      /**
+        A markdown representation of this block - it may not equal the original
+        source.
+       */
+      def markdown : String
 
-        /**
-         * An HTML rendering of the Block element.
-         */
-        def xml      : Node
-        
-        /**
-         * The original source position used to make up this block.
-         */
-        val position : Position
+      /**
+        An HTML rendering of the Block element.
+       */
+      def xml      : Node
+      
+      /**
+        The original source position used to make up this block.
+       */
+      val position : Position
     }
 
 In many cases, the Block can not contain other blocks.
@@ -68,16 +68,16 @@ without any other real information.
     class   GroupBlock( val children : Seq[ Block ] )
     extends ComplexBlock {
      
-        val position : Position = children.firstOption match {
-            case None => NoPosition
-            case Some( child ) => child.position
-        }
-     
-        def xml : Node = Group( children.map( _.xml ) )
-        
-        def markdown = childrenMarkdown
-    
-        override def toString = "GroupBlock(" + markdown + ")"
+      val position : Position = children.firstOption match {
+        case None => NoPosition
+        case Some( child ) => child.position
+      }
+   
+      def xml : Node = Group( children.map( _.xml ) )
+      
+      def markdown = childrenMarkdown
+  
+      override def toString = "GroupBlock(" + markdown + ")"
     }
 
 
@@ -109,33 +109,33 @@ This is used only as a short hand for query expressions.
     // See the BlockSeq package and imports
     
     trait BlockSeq extends Seq[ Block ] {
-        
-        def theSeq : Seq[ Block ]
-        
-        override def length : Int = theSeq.length
-        
-        override def elements = theSeq.elements
-        
-        override def apply( ii : Int ) = theSeq(ii)
+      
+      def theSeq : Seq[ Block ]
+      
+      override def length : Int = theSeq.length
+      
+      override def elements = theSeq.elements
+      
+      override def apply( ii : Int ) = theSeq(ii)
 
-        /**
-         * Returns a BlockSeq that contains only that particular block type.
-         */
-        def ? [ T <: Block ] ( blockType : BlockType[T] ) : BlockSeq = {
-            BlockSeq.fromSeq( filter( blockType.wrappedClass.isInstance( _ ) ) )
-        }
-        
-        
-        /** Shorthand for the filter method. */
-        def ? ( query : Block => Boolean ) : BlockSeq =
-            BlockSeq.fromSeq( filter( query ) )
+      /**
+       * Returns a BlockSeq that contains only that particular block type.
+       */
+      def ? [ T <: Block ] ( blockType : BlockType[T] ) : BlockSeq = {
+        BlockSeq.fromSeq( filter( blockType.wrappedClass.isInstance( _ ) ) )
+      }
+      
+      
+      /** Shorthand for the filter method. */
+      def ? ( query : Block => Boolean ) : BlockSeq =
+        BlockSeq.fromSeq( filter( query ) )
     }
 
     object BlockSeq {
         
-        def fromSeq( seq : Seq[ Block ] ) = new BlockSeq {
-            override def theSeq = seq
-        }
+      def fromSeq( seq : Seq[ Block ] ) = new BlockSeq {
+        override def theSeq = seq
+      }
     }
 
 
@@ -151,16 +151,16 @@ Otherwise the paragraph is a simple `Block` type (does not contain other
     // See the Paragraph package and imports
 
     class Paragraph(
-        val span        : Span,
-        val position    : Position
+      val span      : Span,
+      val position  : Position
     )
     extends SimpleBlock {
 
-        def markdown = span.markdown
+      def markdown = span.markdown
 
-        def xml = <p>{ span.xml }</p>
-        
-        // See the Paragraph toString, equals, hashCode implementations
+      def xml = <p>{ span.xml }</p>
+      
+      // See the Paragraph toString, equals, hashCode implementations
     }
 
 
@@ -178,31 +178,31 @@ headers - `# Header #`.
     // See the Header package and imports
     
     class Header(
-        val level       : Int,
-        val span        : Span,
-        val position    : Position
+      val level     : Int,
+      val span      : Span,
+      val position  : Position
     )
     extends SimpleBlock {
 
-        def markdown = {
-            val sb = new StringBuilder
-            ( 0 until level ).foreach( _ => sb.append("#") )
-            sb.append(" ").append( span.markdown ).append(" ")
-            ( 0 until level ).foreach( _ => sb.append("#") )
-            sb.toString
-        }
-        
-        def xml = level match {
-            case 1 => <h1>{ span.xml }</h1>
-            case 2 => <h2>{ span.xml }</h2>
-            case 3 => <h3>{ span.xml }</h3>
-            case 4 => <h4>{ span.xml }</h4>
-            case 5 => <h5>{ span.xml }</h5>
-            case 6 => <h6>{ span.xml }</h6>
-            case _ => <div class={ "header" + level }>{ span.xml }</div>
-        }
+      def markdown = {
+        val sb = new StringBuilder
+        ( 0 until level ).foreach( _ => sb.append("#") )
+        sb.append(" ").append( span.markdown ).append(" ")
+        ( 0 until level ).foreach( _ => sb.append("#") )
+        sb.toString
+      }
+      
+      def xml = level match {
+        case 1 => <h1>{ span.xml }</h1>
+        case 2 => <h2>{ span.xml }</h2>
+        case 3 => <h3>{ span.xml }</h3>
+        case 4 => <h4>{ span.xml }</h4>
+        case 5 => <h5>{ span.xml }</h5>
+        case 6 => <h6>{ span.xml }</h6>
+        case _ => <div class={ "header" + level }>{ span.xml }</div>
+      }
 
-        // See the Header toString, equals, hashCode implementations
+      // See the Header toString, equals, hashCode implementations
     }
 
 
@@ -215,30 +215,30 @@ be defined later on a string like `[id]: url "optional title"`.
     // See the LinkDefinition package and imports
     
     class LinkDefinition(
-        val id          : String,
-        val url         : String,
-        val title       : Option[ String ],
-        val position    : Position
+      val id        : String,
+      val url       : String,
+      val title     : Option[ String ],
+      val position  : Position
     )
     extends SimpleBlock {
 
-        val span = Span.empty
-     
-        def xml : Node = Group( Nil )
-        
-        def markdown = {
-            val sb = new StringBuilder
-            sb.append("[").append( id ).append("]: ").append( url ).append(
-                title match {
-                    case None => ""
-                    // Remember that "This "Title" is Valid" as a single title.
-                    case Some( titleValue ) => "\"" + titleValue + "\""
-                }
-            )
-            sb.toString
-        }
-        
-        // See the LinkDefinition toString, equals, hashCode implementations
+      val span = Span.empty
+   
+      def xml : Node = Group( Nil )
+      
+      def markdown = {
+        val sb = new StringBuilder
+        sb.append("[").append( id ).append("]: ").append( url ).append(
+          title match {
+            case None => ""
+            // Remember that "This "Title" is Valid" as a single title.
+            case Some( titleValue ) => "\"" + titleValue + "\""
+          }
+        )
+        sb.toString
+      }
+      
+      // See the LinkDefinition toString, equals, hashCode implementations
     }
 
 
@@ -250,20 +250,19 @@ A block quote is really another markdown document, quoted.
     // See the Blockquote package and imports
 
     class Blockquote(
-        val children : BlockSeq,
-        val position : Position
+      val children : BlockSeq,
+      val position : Position
     )
     extends ComplexBlock {
                 
-        def markdown : String = {
-            Source.fromString( childrenMarkdown ).getLines.map { line =>
-                "> " + line
-            }.mkString( "" )
-        }
-        
-        def xml : Elem = <blockquote>{ childrenXML }</blockquote>
-        
-        // See the Blockquote toString, equals, hashCode implementations
+      def markdown : String = {
+        Source.fromString( childrenMarkdown )
+          .getLines.map( l => "> " + l ).mkString("")
+      }
+      
+      def xml : Elem = <blockquote>{ childrenXML }</blockquote>
+      
+      // See the Blockquote toString, equals, hashCode implementations
     }
 
 
@@ -278,13 +277,13 @@ string - everything else is just basically passed directly back.
     class   HTMLBlock( val html : String, val position : Position )
     extends SimpleBlock {
         
-        val span = new HTMLSpan( html )
-        
-        def xml : Node = Unparsed( html )
-        
-        def markdown = html
-        
-        // See the HTMLBlock toString, equals, hashCode implementations
+      val span = new HTMLSpan( html )
+      
+      def xml : Node = Unparsed( html )
+      
+      def markdown = html
+      
+      // See the HTMLBlock toString, equals, hashCode implementations
     }
 
 ## `CodeBlock` ##
@@ -308,22 +307,22 @@ if you want to inject a series of line numbers via `<span>` elements.
     class   CodeBlock( val text : Text, val position : Position )
     extends SimpleBlock {
 
-        def this( preformatted : String, position : Position ) =
-            this( new Text( preformatted ), position )
+      def this( preformatted : String, position : Position ) =
+        this( new Text( preformatted ), position )
 
-        val span = text
-     
-        val preformatted = text.markdown
-        
-        lazy val preformattedLines =
-            Source.fromString( preformatted ).getLines
-        
-        def markdown =
-            preformattedLines.map{ line =>  "    " + line }.mkString("")
-            
-        def xml : Node = <pre><code>{ Unparsed( preformatted ) }</code></pre>
-        
-        // See the CodeBlock toString, equals, hashCode implementations
+      val span = text
+   
+      val preformatted = text.markdown
+      
+      lazy val preformattedLines =
+        Source.fromString( preformatted ).getLines
+      
+      def markdown =
+        preformattedLines.map{ line =>  "    " + line }.mkString("")
+          
+      def xml : Node = <pre><code>{ Unparsed( preformatted ) }</code></pre>
+      
+      // See the CodeBlock toString, equals, hashCode implementations
     }
 
 
@@ -336,14 +335,14 @@ anything but replace a line of asterixes, underscores, or hyphens.
     // See the HorizontalRule package and imports
     
     class HorizontalRule( val position : Position ) extends SimpleBlock {
-        
-        def markdown = "* * *"
-        
-        val span = new Text( markdown )
-        
-        def xml = <hr/>
+      
+      def markdown = "* * *"
+      
+      val span = new Text( markdown )
+      
+      def xml = <hr/>
 
-        // See the HorizontalRule toString, equals, hashCode implementations
+      // See the HorizontalRule toString, equals, hashCode implementations
     }
 
 ## Lists - Unordered, Ordered, Simple, and Complex ##
@@ -355,25 +354,25 @@ unordered, though the `ElementFactory` has helper methods to make this decision.
 How this might look in code:
 
     val olist = olist(
-        li( para("some text") ),
-        li( para("uno"), para("dos") ),
+      li( para("some text") ),
+      li( para("uno"), para("dos") )
     )
     
     val ulist = ulist(
-        li("list item 1"),
-        li("list item 2")
+      li("list item 1"),
+      li("list item 2")
     )
     
 Thesre codes would be represented as:
 
     <ol>
-        <li><p>some text</p></li>
-        <li><p>uno</p><p>dos</p><li>
+      <li><p>some text</p></li>
+      <li><p>uno</p><p>dos</p><li>
     </ol>
     
     <ul>
-        <li>list item 1</li>
-        <li>list item 2</li>
+      <li>list item 1</li>
+      <li>list item 2</li>
     </ul>
 
 Only in the simple list case do we let the `<li>` operate as a simple implicit block
@@ -389,29 +388,29 @@ In implementation terms, we don't have a single list.
     import scala.util.parsing.input.Position
     
     trait PrefixedItem {
-        def itemPrefix : String
+      def itemPrefix : String
     }
     
     trait OrderedItem extends PrefixedItem {
-        def itemPrefix = "* "
+      def itemPrefix = "* "
     }
     
     trait UnorderedItem extends PrefixedItem {
-        def itemPrefix = "1. "
+      def itemPrefix = "1. "
     }
 
     abstract class SimpleItem (
-        val span     : Span,
-        val position : Position   
+      val span     : Span,
+      val position : Position   
     )
     extends SimpleBlock
     with    PrefixedItem {
         
-        def xml = <li>{ span.xml }</li>
-        
-        def markdown = itemPrefix + span.markdown
-        
-        // See the SimpleItem toString, equals, hashCode implementations
+      def xml = <li>{ span.xml }</li>
+      
+      def markdown = itemPrefix + span.markdown
+      
+      // See the SimpleItem toString, equals, hashCode implementations
     }
     
     class   OrderedSimpleItem( span : Span, position : Position )
@@ -430,24 +429,24 @@ In implementation terms, we don't have a single list.
     import scala.util.parsing.input.Position
     
     abstract class ComplexItem(
-        val children : BlockSeq,
-        val position : Position
+      val children : BlockSeq,
+      val position : Position
     )
     extends ComplexBlock
     with    PrefixedItem {
         
-        def xml = <li>{ childrenXML }</li>
-        
-        def markdown : String = {
-            if ( children.isEmpty ) return ""
+      def xml = <li>{ childrenXML }</li>
+      
+      def markdown : String = {
+        if ( children.isEmpty ) return ""
 
-            return (
-                ( itemPrefix + children.first.markdown + "  \n" ) +
-                children.drop(1).map( "    " + _.markdown + "  \n" ).mkString( "" )
-            )
-        }
-        
-        // See the ComplexItem toString, equals, hashCode implementations
+        return (
+          ( itemPrefix + children.first.markdown + "  \n" ) +
+          children.drop(1).map( "    " + _.markdown + "  \n" ).mkString( "" )
+        )
+      }
+      
+      // See the ComplexItem toString, equals, hashCode implementations
     }
     
     class   OrderedComplexItem( children : BlockSeq, position : Position )
@@ -470,23 +469,23 @@ In implementation terms, we don't have a single list.
      * @param ordered Alters the output, mostly.
      */
     class MarkdownList(
-        val ordered  : Boolean,
-        val children : BlockSeq
+      val ordered  : Boolean,
+      val children : BlockSeq
     ) extends ComplexBlock {
         
-        val position = children.firstOption match {
-            case None => NoPosition
-            case Some( child ) => child.position
-        }
-        
-        def xml = ordered match {
-            case true  => <ol>{ childrenXML }</ol>
-            case false => <ul>{ childrenXML }</ul>
-        }
-        
-        def markdown = childrenMarkdown
-        
-        // See the MarkdownList toString, equals, hashCode implementations
+      val position = children.firstOption match {
+        case None => NoPosition
+        case Some( child ) => child.position
+      }
+      
+      def xml = ordered match {
+        case true  => <ol>{ childrenXML }</ol>
+        case false => <ul>{ childrenXML }</ul>
+      }
+      
+      def markdown = childrenMarkdown
+      
+      // See the MarkdownList toString, equals, hashCode implementations
     }
     
 
@@ -501,33 +500,33 @@ In implementation terms, we don't have a single list.
 
     class BlockSuite extends Spec with ShouldMatchers with ElementFactory {
 
-        describe("BlockSeq") {
+      describe("BlockSeq") {
 
-            it( "should filter Paragraphs and Headers properly with ?" ) {
+        it( "should filter Paragraphs and Headers properly with ?" ) {
 
-                val p1 = para( t("p1"), NoPosition )
-                val h1 = head( 1, t("h1"), NoPosition )
+          val p1 = para( t("p1"), NoPosition )
+          val h1 = head( 1, t("h1"), NoPosition )
 
-                val blocks = BlockSeq.fromSeq( List( p1, h1 ) )
-                
-                ( blocks ? Paragraphs ) should have length (1)
-                assert( ( blocks ? Paragraphs ) contains p1 )
-                
-                ( blocks ? Headers ) should have length (1)
-                assert( ( blocks ? Headers ) contains h1 )
-            }
+          val blocks = BlockSeq.fromSeq( List( p1, h1 ) )
+          
+          ( blocks ? Paragraphs ) should have length (1)
+          assert( ( blocks ? Paragraphs ) contains p1 )
+          
+          ( blocks ? Headers ) should have length (1)
+          assert( ( blocks ? Headers ) contains h1 )
+        }
+      }
+      
+      describe("MarkdownList") {
+        
+        it("should implement simple lists") {
+            
         }
         
-        describe("MarkdownList") {
+        it("should implement complex lists") {
             
-            it("should implement simple lists") {
-                
-            }
-            
-            it("should implement complex lists") {
-                
-            }
         }
+      }
     }
 
 
@@ -564,15 +563,15 @@ In implementation terms, we don't have a single list.
     override def toString = "Paragraph(" + markdown + ")"
     
     override def equals( rhs : Any ):Boolean = rhs match {
-        case oth : Paragraph => ( oth canEqual this ) && ( this sameElements oth )
-        case _ => false
+      case oth : Paragraph => ( oth canEqual this ) && ( this sameElements oth )
+      case _ => false
     }
     
     def canEqual( p : Paragraph ) : Boolean = ( getClass == p.getClass )
     
     def sameElements( p : Paragraph ) : Boolean = {
-        ( span == p.span ) &&
-        ( position == p.position )
+      ( span == p.span ) &&
+      ( position == p.position )
     }
     
     override def hashCode : Int = span.hashCode + position.hashCode
@@ -593,20 +592,20 @@ In implementation terms, we don't have a single list.
     override def toString = "Header(" + markdown + ")"
 
     override def equals( rhs : Any ):Boolean = rhs match {
-        case oth : Header => ( oth canEqual this ) && ( this sameElements oth )
-        case _ => false
+      case oth : Header => ( oth canEqual this ) && ( this sameElements oth )
+      case _ => false
     }
 
     def canEqual( p : Header ) : Boolean = ( getClass == p.getClass )
 
     def sameElements( p : Header ) : Boolean = {
-        ( level == p.level ) &&
-        ( span == p.span ) &&
-        ( position == p.position )
+      ( level == p.level ) &&
+      ( span == p.span ) &&
+      ( position == p.position )
     }
 
     override def hashCode : Int =
-        43 + level + span.hashCode + position.hashCode
+      43 + level + span.hashCode + position.hashCode
 
 
 ### `LinkDefinition`
@@ -625,21 +624,21 @@ In implementation terms, we don't have a single list.
     override def toString = "LinkDefinition(" + markdown + ")"
 
     override def equals( rhs : Any ):Boolean = rhs match {
-        case oth : LinkDefinition => ( oth canEqual this ) && ( this sameElements oth )
-        case _ => false
+      case oth : LinkDefinition => ( oth canEqual this ) && ( this sameElements oth )
+      case _ => false
     }
 
     def canEqual( p : LinkDefinition ) : Boolean = ( getClass == p.getClass )
 
     def sameElements( p : LinkDefinition ) : Boolean = {
-        ( id == p.id ) &&
-        ( url == p.url ) &&
-        ( title == p.title ) &&
-        ( position == p.position )
+      ( id == p.id ) &&
+      ( url == p.url ) &&
+      ( title == p.title ) &&
+      ( position == p.position )
     }
 
     override def hashCode : Int =
-        43 + id.hashCode + url.hashCode + span.hashCode + position.hashCode
+      43 + id.hashCode + url.hashCode + span.hashCode + position.hashCode
 
 ### `Blockquote`
 
@@ -658,21 +657,23 @@ In implementation terms, we don't have a single list.
     override def toString = "Blockquote(" + markdown + ")"
     
     override def equals( rhs : Any ):Boolean = rhs match {
-        case oth : Blockquote => ( oth canEqual this ) && ( this sameElements oth )
-        case _ => false
+      case oth : Blockquote => ( oth canEqual this ) && ( this sameElements oth )
+      case _ => false
     }
     
     def canEqual( b : Blockquote ) : Boolean = ( getClass == b.getClass )
     
     def sameElements( b : Blockquote ) = {
-        ( children sameElements b.children ) &&
-        ( position == b.position )
+      ( children sameElements b.children ) &&
+      ( position == b.position )
     }
     
     override def hashCode : Int = {
-        43 + ( ( 3 /: children )( (sum, child) => {
-            sum + 43 + 3 * child.hashCode
-        } ) )
+      43 + (
+        ( 3 /: children ){
+          (sum, child) => { sum + 43 + 3 * child.hashCode }
+        }
+      )
     }
 
 ### `HTMLBlock`
@@ -693,13 +694,13 @@ In implementation terms, we don't have a single list.
     override def hashCode : Int = html.hashCode
         
     override def equals( rhs : Any ) : Boolean = rhs match {
-        case t : HTMLBlock => t.canEqual( this ) && ( this sameElements t )
-        case _ => false
+      case t : HTMLBlock => t.canEqual( this ) && ( this sameElements t )
+      case _ => false
     }
     
     def sameElements( h : HTMLBlock ) : Boolean = {
-        ( h.html == html ) &&
-        ( h.position == position )
+      ( h.html == html ) &&
+      ( h.position == position )
     }
     
     def canEqual( t : HTMLBlock ) : Boolean = t.getClass == getClass
@@ -723,13 +724,13 @@ In implementation terms, we don't have a single list.
     override def hashCode : Int = preformatted.hashCode
 
     override def equals( rhs : Any ) : Boolean = rhs match {
-        case t : CodeBlock => t.canEqual( this ) && ( this sameElements t )
-        case _ => false
+      case t : CodeBlock => t.canEqual( this ) && ( this sameElements t )
+      case _ => false
     }
     
     def sameElements( cb : CodeBlock ) : Boolean = {
-        ( cb.preformatted == preformatted ) &&
-        ( cb.position == position )
+      ( cb.preformatted == preformatted ) &&
+      ( cb.position == position )
     }
 
     def canEqual( t : CodeBlock ) : Boolean = t.getClass == getClass
@@ -753,8 +754,8 @@ In implementation terms, we don't have a single list.
     override def hashCode : Int = position.hashCode + 47
 
     override def equals( rhs : Any ) : Boolean = rhs match {
-        case t : HorizontalRule => t.canEqual( this ) && ( t.position == position )
-        case _ => false
+      case t : HorizontalRule => t.canEqual( this ) && ( t.position == position )
+      case _ => false
     }
 
     def canEqual( t : HorizontalRule ) : Boolean = t.getClass == getClass
@@ -778,13 +779,13 @@ In implementation terms, we don't have a single list.
     override def hashCode : Int = position.hashCode + 47
 
     override def equals( rhs : Any ) : Boolean = rhs match {
-        case t : SimpleItem => t.canEqual( this ) && ( this sameElements t )
-        case _ => false
+      case t : SimpleItem => t.canEqual( this ) && ( this sameElements t )
+      case _ => false
     }
     
     def sameElements( si : SimpleItem ) : Boolean = {
-        ( span == si.span ) &&
-        ( position == si.position )
+      ( span == si.span ) &&
+      ( position == si.position )
     }
 
     def canEqual( t : SimpleItem ) : Boolean = t.getClass == getClass
@@ -808,13 +809,13 @@ In implementation terms, we don't have a single list.
     override def hashCode : Int = position.hashCode + 47
 
     override def equals( rhs : Any ) : Boolean = rhs match {
-        case t : ComplexItem => t.canEqual( this ) && ( this sameElements t )
-        case _ => false
+      case t : ComplexItem => t.canEqual( this ) && ( this sameElements t )
+      case _ => false
     }
     
     def sameElements( ci : ComplexItem ) : Boolean = {
-        ( children == ci.children ) &&
-        ( position == ci.position )
+      ( children == ci.children ) &&
+      ( position == ci.position )
     }
 
     def canEqual( t : ComplexItem ) : Boolean = t.getClass == getClass
@@ -837,13 +838,13 @@ In implementation terms, we don't have a single list.
     override def hashCode : Int = position.hashCode + 47
 
     override def equals( rhs : Any ) : Boolean = rhs match {
-        case t : MarkdownList => t.canEqual( this ) && ( t sameElements this )
-        case _ => false
+      case t : MarkdownList => t.canEqual( this ) && ( t sameElements this )
+      case _ => false
     }
     
     def sameElements( ml : MarkdownList ) : Boolean = {
-        ( ordered == ml.ordered ) &&
-        ( children sameElements ml.children )
+      ( ordered == ml.ordered ) &&
+      ( children sameElements ml.children )
     }
 
     def canEqual( t : MarkdownList ) : Boolean = t.getClass == getClass

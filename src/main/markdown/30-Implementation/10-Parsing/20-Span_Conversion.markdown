@@ -461,6 +461,75 @@ the text to simply "pass through" to the the final content.
     }
 
 
+## Link Matching ##
+
+Recall that links come in 4 major varieties, and here is where we figure out what
+they are:
+
+1. Inline urls: `[wrapped](url "title")`
+2. Inline images: `![alt](url "title")`
+3. Reference: `[wrapped][id]`
+4. Automatic: `<url>`
+
+A major caveat is that we need to be able to handle parens within the wrapped text.
+So, things like:
+
+    I'm [a link](http://example.com "Title (in paren)")
+
+### `LinkMatcher`
+
+    // In knockoff2/LinkMatcher.scala
+    package knockoff2
+    
+    object LinkMatcher extends SpanMatcher with StringExtras {
+      
+      /**
+        This regular expression will try to match all of the "two bracket" types we
+        want. It will also create an optional group for the image reference tag.
+        We're only looking for the start of any image reference, and likely match,
+        not exact.
+      */
+      val normalLinks = """(!?)\[[^\]]*\][\[(][^\])]*[\])]""".r
+      
+      def find(
+          source  : String,
+          convert : String => Span
+        ) ( implicit
+          factory : ElementFactory
+        ) : Option[ SpanMatch ] = {
+
+        normalLinks.findFirstMatchIn( source ) match {
+          case None => findAutomaticMatch( source, convert )
+          case Some( match ) =>
+            findNormalMatch( source, convert, match, match.group(1) == "!" )
+        }
+      }
+      
+      /**
+        If it looks like an automatic link, then it probably is one.
+      */
+      val automaticLink = """<([^\s>]+)>""".r
+      
+      def findAutomaticMatch(
+          source  : String,
+          convert : String => Span
+        ) ( implicit
+          factory : ElementFactory
+        ) : Option[ SpanMatch ] = {
+          
+        automaticLinkRE.findFirstMatchIn( source ).map { aMatch =>
+          val url = automaticLink.group(1)
+          SpanMatch(
+            aMatch.start,
+            aMatch.before.toOption.map( text(_) ),
+            link( text( url ), url, None ),
+            aMatch.after.toOption
+          )
+        }
+      }
+    }
+
+
 ## `EqualDelimiterMatcher` ##
 
 Many of the elements are delimited by the identical character sequence on either
@@ -473,32 +542,33 @@ character sequence may be.
     import scala.util.logging.Logged
     
     class   EqualDelimiterMatcher(
-        delim    : String,
-        newMatch : ( Int, Option[ Text ], Span, Option[ String ], ElementFactory ) => SpanMatch
+      delim    : String,
+      newMatch : ( Int, Option[ Text ], Span, Option[ String ], ElementFactory ) => 
+                   SpanMatch
     )
     extends SpanMatcher
     with    StringExtras {
         
-        def find(
-                str     : String,
-                convert : String => Span
-            ) ( implicit
-                factory : ElementFactory
-            ) : Option[ SpanMatch ] = {
-         
-            import factory._
-         
-            str.nextNIndicesOf( 2, delim ) match {
-                case List( start, finish ) => {
-                    Some( newMatch(
-                        start,
-                        str.substringOption( 0, start ).map( text ),
-                        convert( str.substring( start + delim.length, finish ) ),
-                        str.substringOption( finish + delim.length, str.length ),
-                        factory
-                    ) )
-                }
-                case _ => None
-            }
+      def find(
+          str     : String,
+          convert : String => Span
+        ) ( implicit
+          factory : ElementFactory
+        ) : Option[ SpanMatch ] = {
+     
+        import factory._
+     
+        str.nextNIndicesOf( 2, delim ) match {
+          case List( start, finish ) => {
+            Some( newMatch(
+              start,
+              str.substringOption( 0, start ).map( text ),
+              convert( str.substring( start + delim.length, finish ) ),
+              str.substringOption( finish + delim.length, str.length ),
+              factory
+            ) )
+          }
+          case _ => None
         }
+      }
     }

@@ -14,46 +14,47 @@ recurrence.
         extends KnockoffString( seq.toString )
         
         class KnockoffString( val wrapped : String ) {
-         
-            def substringOption( start : Int, finish : Int ) : Option[ String ] = {
-                if ( start < finish )
-                    Some( wrapped.substring( start, finish ) )
-                else
-                    None
-            }
-            
-            def toOption : Option[ String ] =
-                if ( wrapped.isEmpty ) None else Some( wrapped )
-         
-            /**
-             * Return the next N indices of a string where the sequence is found.
-             * @return A list of size n if found, otherwise Nil
-             */
-            def nextNIndicesOf( n : Int, str : String ) : List[ Int ] = {
-                val found = nextIndexOfN( n, str, -1, new ListBuffer )
-                if ( found.length == n ) found else Nil
-            }
+       
+          def substringOption( start : Int, finish : Int ) : Option[ String ] = {
+            if ( start < finish )
+              Some( wrapped.substring( start, finish ) )
+            else
+              None
+          }
+          
+          def toOption : Option[ String ] =
+            if ( wrapped.isEmpty ) None else Some( wrapped )
+       
+          /**
+           * Return the next N indices of a string where the sequence is found.
+           * @return A list of size n if found, otherwise Nil
+           */
+          def nextNIndicesOf( n : Int, str : String ) : List[ Int ] = {
+            val found = nextIndexOfN( n, str, -1, new ListBuffer )
+            if ( found.length == n ) found else Nil
+          }
 
-            /** Recursive implementation that builds up the list of indices. */
-            private def nextIndexOfN(
-                    left    : Int,
-                    str     : String,
-                    index   : Int,
-                    current : ListBuffer[ Int ]
-                ) : List[ Int ] = {
+          /** Recursive implementation that builds up the list of indices. */
+          private def nextIndexOfN(
+              left    : Int,
+              str     : String,
+              index   : Int,
+              current : ListBuffer[ Int ]
+            ) : List[ Int ] = {
 
-                if ( left <= 0 || index >= wrapped.length ) return current.toList
-                
-                val next = wrapped.indexOf( str, index )
-                
-                if ( next >= 0 ) current += next
-                
-                nextIndexOfN( left - 1, str, next + 1, current )
-            }
+            if ( left <= 0 || index >= wrapped.length ) return current.toList
+            val next = wrapped.indexOf( str, index )
+            if ( next >= 0 ) current += next
+            nextIndexOfN( left - 1, str, next + 1, current )
+          }
+          
+          def findMatch( start : String, end : String ) : Option[ Int ] = {
+              
+          }
         }
 
         implicit def KnockoffCharSequence( s : CharSequence ) =
-            new KnockoffCharSequence( s )
+          new KnockoffCharSequence( s )
         
         implicit def KnockoffString( s : String ) = new KnockoffString( s )
     }
@@ -72,14 +73,14 @@ recurrence.
     with    ColoredLogger
     with    StringExtras {
         
-        describe("StringExtras.nextNIndices") {
+      describe("StringExtras.nextNIndices") {
 
-            it( "should find two different groups of the same time" ) {
-                "a `foo` b `bar`".nextNIndicesOf(2,"`") should equal ( List( 2, 6 ) )
-            }
-
-            it( "should deal with only one index" ) {
-                "a `foo with nothin'".nextNIndicesOf(2, "`") should equal (Nil)
-            }
+        it( "should find two different groups of the same time" ) {
+          "a `foo` b `bar`".nextNIndicesOf(2,"`") should equal ( List( 2, 6 ) )
         }
+
+        it( "should deal with only one index" ) {
+          "a `foo with nothin'".nextNIndicesOf(2, "`") should equal (Nil)
+        }
+      }
     }
