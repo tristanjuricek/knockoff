@@ -8,8 +8,8 @@ extends ChunkStreamFactory
 with    SpanConverterFactory {
 
   /**
-   * Parses and returns our best guess at the sequence of blocks. It will
-   * never fail, just log all suspicious things.
+    Parses and returns our best guess at the sequence of blocks. It will
+    never fail, just log all suspicious things.
    */
   def knockoff( source : java.lang.CharSequence ) : BlockSeq = {
       

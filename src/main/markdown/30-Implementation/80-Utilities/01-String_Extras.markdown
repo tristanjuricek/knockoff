@@ -29,18 +29,24 @@ recurrence.
            * Return the next N indices of a string where the sequence is found.
            * @return A list of size n if found, otherwise Nil
            */
-          def nextNIndicesOf( n : Int, str : String ) : List[ Int ] = {
+          def nextNIndicesOf( n : Int, str : String ) : List[Int] = {
             val found = nextIndexOfN( n, str, -1, new ListBuffer )
             if ( found.length == n ) found else Nil
           }
 
-          /** Recursive implementation that builds up the list of indices. */
+          /**
+            Recursive implementation that builds up the list of indices.
+            @param left The number of indexes remaining to be found.
+            @param str The source string.
+            @param index Where we start our search.
+            @param current The indexes we've found so far.
+          */
           private def nextIndexOfN(
               left    : Int,
               str     : String,
               index   : Int,
-              current : ListBuffer[ Int ]
-            ) : List[ Int ] = {
+              current : ListBuffer[Int]
+            ) : List[Int] = {
 
             if ( left <= 0 || index >= wrapped.length ) return current.toList
             val next = wrapped.indexOf( str, index )
@@ -48,8 +54,47 @@ recurrence.
             nextIndexOfN( left - 1, str, next + 1, current )
           }
           
-          def findMatch( start : String, end : String ) : Option[ Int ] = {
+          /**
+            Locates proper parenthetical sequences in a string.
+          */
+          def findBalanced(
+              open  : Char,
+              close : Char,
+              start : Index
+            ) : Option[Int] = {
+          
+            val nextOpen = wrapped.indexOf( open, start )
+            if ( (nextOpen == -1) || (wrapped.length == nextOpen + 1) ) return None
+            findBalancedClose( 1, open, close, start + 1 )
+          }
+          
+          /**
+            Recursive method for paren matching that is initialized by findBalanced.
+          */
+          private def findBalancedClose(
+              count : Int,
+              open  : Char,
+              close : Char,
+              index : Int
+            ) : Option[Int] = {
               
+            if ( wrapped.length >= index ) return None
+           
+            val nextOpen  = wrapped.indexOf( open, index )
+            val nextClose = wrapped.indexOf( close, index )
+            
+            if ( nextClose == -1 ) return None
+            
+            // We find another unbalanced open
+            if ( (nextOpen != - 1) && (nextOpen < nextClose) )
+              return findBalancedClose( count + 1, open, close, index + 1 )
+            
+            // We have a balanced close, but not everything is done
+            if ( count > 1 )
+              return findBalancedClose( count - 1, open, close, index + 1 )
+  
+            // Everything is balanced
+            Some( nextClose )
           }
         }
 
@@ -67,11 +112,8 @@ recurrence.
     import org.scalatest._
     import org.scalatest.matchers._
     
-    class   StringExtrasSpec
-    extends Spec
-    with    ShouldMatchers
-    with    ColoredLogger
-    with    StringExtras {
+    class StringExtrasSpec extends Spec with ShouldMatchers with ColoredLogger
+      with StringExtras {
         
       describe("StringExtras.nextNIndices") {
 

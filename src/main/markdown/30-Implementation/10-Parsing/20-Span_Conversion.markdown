@@ -74,6 +74,8 @@ of that span.
                 factory : ElementFactory
             ) : Span = {
 
+            implicit val defs = definitions // TODO this is fugly
+
             if ( content.isEmpty ) return factory.toSpan( current )
 
             val textOnly =
@@ -483,25 +485,21 @@ So, things like:
     
     object LinkMatcher extends SpanMatcher with StringExtras {
       
-      /**
-        This regular expression will try to match all of the "two bracket" types we
-        want. It will also create an optional group for the image reference tag.
-        We're only looking for the start of any image reference, and likely match,
-        not exact.
-      */
-      val normalLinks = """(!?)\[[^\]]*\][\[(][^\])]*[\])]""".r
-      
       def find(
           source  : String,
           convert : String => Span
         ) ( implicit
-          factory : ElementFactory
+          factory : ElementFactory,
+          defs    : Seq[ LinkDefinition ]
         ) : Option[ SpanMatch ] = {
 
         normalLinks.findFirstMatchIn( source ) match {
-          case None => findAutomaticMatch( source, convert )
-          case Some( match ) =>
-            findNormalMatch( source, convert, match, match.group(1) == "!" )
+          case None =>
+            findAutomaticMatch( source, convert ).getOrElse(
+              findReferenceMatch( source, convert )
+            )
+          case Some( matchr ) =>
+            findNormalMatch( source, convert, matchr )
         }
       }
       
@@ -513,9 +511,7 @@ So, things like:
       def findAutomaticMatch(
           source  : String,
           convert : String => Span
-        ) ( implicit
-          factory : ElementFactory
-        ) : Option[ SpanMatch ] = {
+        ) ( implicit factory : ElementFactory ) : Option[ SpanMatch ] = {
           
         automaticLinkRE.findFirstMatchIn( source ).map { aMatch =>
           val url = automaticLink.group(1)
@@ -527,6 +523,99 @@ So, things like:
           )
         }
       }
+      
+      def findNormalMatch(
+          source  : String,
+          convert : String => Span,
+          matchr  : Match
+        ) ( implicit factory : ElementFactory ) : Option[ SpanMatch ] = {
+         
+        import factory._
+
+        val isImage   = matchr.group(1) == "!" || matchr.group(4) == "!"
+        val hasTitle  = matchr.group(7) != null
+        val wrapped   = if( hasTitle ) matchr.group(5) else matchr.group(2)
+        val url       = if( hasTitle ) matchr.group(6) else matchr.group(3)
+
+        Some(
+          SpanMatch(
+            matchr.start,
+            matchr.before.toOption.map( text(_) ),
+            if ( isImage )
+              ilink( convert( wrapped ), url, titleOption )
+            else
+              link( convert( wrapped ), url, titleOption )
+            matchr.after.toOption
+          )
+        )
+      }
+      
+      /**
+        This regular expression will try to match links like: [wrap](url) and
+        [wrap](url "title"), in image mode or not.
+        
+        Groups:
+        <ul>
+        <li> 1 - "!" for image, no title </li>
+        <li> 2 - wrapped content, no title </li>
+        <li> 3 - url, no title </li>
+        <li> 4 - "!" for image, with title </li>
+        <li> 5 - wrapped content, with title </li>
+        <li> 6 - url, with title </li>
+        <li> 7 - title </li>
+        </ul>
+      */
+      val normalLinks = (
+        """(!?)\[([^\]]*)\][ ]*\(<?([\S&&[^)>]]*)>?\)|""" +
+        """(!?)\[([^\]]*)\][ ]*\(<?([\S&&[^)>]]*)>?[ ]+"([^)]*)"\)"""
+      ).r
+      
+      /**
+        We have to match parens, to support this stuff: [wr [app] ed] [thing]
+      */
+      def findReferenceMatch(
+          source  : String,
+          convert : String => Span
+        ) ( implicit
+          factory : ElementFactory,
+          defs    : Seq[ LinkDefinition ]
+        ) : Option[ SpanMatch ] = {
+          
+        import factory._
+          
+        val firstOpen = source.indexOf('[')
+        if ( firstOpen == -1 ) return None
+        
+        source.findBalanced('[', ']', firstOpen).map { firstClose =>
+
+          if ( source.length == firstClose ) return None
+
+          val secondPart = source.substring( firstClose + 1 )
+
+          """^\s(\[)""".r.findFirstMatchIn( secondPart ).map { secondMatch =>
+            
+            val secondClose = secondPart.findBalanced('[', ']', secondMatch.start)
+            
+            if ( secondClose == -1 ) return None
+            
+            val refID = secondSource.substring( secondMatch.start, secondClose )
+            
+            defs.find( _.id == refID ).map { definition =>
+              SpanMatch(
+                firstOpen,
+                source.substring( 0, firstOpen ).toOption.map( text(_) ),
+                link(
+                  text( source.substring( firstOpen + 1, firstClose ) ),
+                  definition.url,
+                  definition.title
+                ),
+                source.substring( firstClose ).toOption
+              )
+            }
+          }
+        }
+      }
+      
     }
 
 

@@ -3,18 +3,18 @@ package com.tristanhunt.knockoff
 import collection.immutable.SortedMap
 
 /**
- * Parses Markdown span elements, basically by functionally splitting each sequence of spanning 
- * elements into a list:
- *
- * 1. Preceding text (to treat like "stuff you just copy into a paragraph element")
- * 2. A fancy spanning thing (what we want to recognize)
- * 3. More stuff to process.
- *
- * So it's like a combinator parser, that consumes tokens, but here, we consume chunks of text at
- * a time. Ugly as hell right now, but hey, it works.
- *
- * @author Tristan Juricek <mr.tristan@gmail.com>
- */
+  Parses Markdown span elements, basically by functionally splitting each sequence
+  of spanning elements into a list:
+  
+  1. Preceding text (to treat like "stuff you just copy into a paragraph element")
+  2. A fancy spanning thing (what we want to recognize)
+  3. More stuff to process.
+  
+  So it's like a combinator parser, that consumes tokens, but here, we consume
+  chunks of text at a time. Ugly as hell right now, but hey, it works.
+  
+  @author Tristan Juricek <mr.tristan@gmail.com>
+  */
 class SpanParser( val links : SortedMap[ String, LinkDefinition ] ) {
 
     /**
