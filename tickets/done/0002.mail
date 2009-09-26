@@ -1,0 +1,56 @@
+Subject: Remove use of objects for span matchers
+
+Ideas:
+
+1. Use traits + factory that also depend on the `ElementFactory`
+2. Combine all the different parsers together in one wrapping trait; I don't ever
+   use these things individually.
+
+Hm.
+
+### How Should Things Work?
+
+OK, so basically we have an issue with the `ElementFactory`.
+
+    class MyDiscounter extends Discounter {
+        
+      override def codeSpan( c : String ) = new MyCodeSpan( c )
+    }
+
+What we want for the span converter, is to use that codeSpan when creating codes.
+But these are 'manufactured' for each document parsed, based upon the
+`LinkDefinition` objects found in each document. So, we can:
+
+1. Pass the `Discounter` reference as an `ElementFactory` to the `SpanConverter`
+instance.
+
+2. Create a separate `ElementFactory` instance that is a member that is passed
+around.
+
+I want #2, but I want to express it in a nice way. The first approach works, but provides the kitchen sink to the `SpanConverter`. Ew.
+
+    class ElementFactory {
+      
+      def codeSpan( c : String )
+    }
+    
+    trait HasElementFactory {
+     
+      def elementFactory : ElementFactory = defaultElementFactory
+      
+      private val defaultElementFactory = new ElementFactory
+    }
+    
+    class Discounter extends HasElementFactory
+    
+To customize:
+
+    class MyElementFactory extends ElementFactory {
+      
+      override def codeSpan( c : String ) = new MyCodeSpan
+    }
+    
+    class MyDiscounter {
+     
+      override val elementFactory = new MyElementFactory
+    }
