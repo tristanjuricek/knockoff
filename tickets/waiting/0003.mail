@@ -2,8 +2,7 @@ Subject: Things I have To Do
 
 Because I forget this shit.
 
-* Write a test over all the Spanning elements, particularly for links.
-* Make sure I've implemented the spanning stuff.
-* Do the conversion for ticket #0002.
+* Write the Link span conversion specs.
+* Make sure I've implemented all the remaining spanning stuff.
 
 => Then do the block stuff.
