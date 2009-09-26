@@ -7,6 +7,6 @@ trait Span extends SpanSeq {
   def xml : Node
 }
 
-object Span extends ElementFactory {
-  val empty : Span = t("")
+object Span {
+  val empty : Span = new Text("")
 }

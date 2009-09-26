@@ -1,33 +1,32 @@
 package knockoff2
 
-import scala.util.logging.Logged
+trait EqualDelimiterMatcher { self : SpanConverter with StringExtras =>
 
-class   EqualDelimiterMatcher(
-  delim    : String,
-  newMatch : ( Int, Option[ Text ], Span, Option[ String ], ElementFactory ) => 
-               SpanMatch
-)
-extends SpanMatcher
-with    StringExtras {
-    
-  def find(
-      str     : String,
-      convert : String => Span
-    ) ( implicit
-      factory : ElementFactory
-    ) : Option[ SpanMatch ] = {
- 
-    import factory._
- 
-    str.nextNIndicesOf( 2, delim ) match {
-      case List( start, finish ) => {
-        Some( newMatch(
-          start,
-          str.substringOption( 0, start ).map( text ),
-          convert( str.substring( start + delim.length, finish ) ),
-          str.substringOption( finish + delim.length, str.length ),
-          factory
-        ) )
+  /**
+    @param delim The delimiter string to match the next 2 sequences of.
+    @param toSpanMatch Factory to create the actual SpanMatch.
+    @param recursive If you want the contained element to be reconverted.
+  */
+  def matchEqualDelimiters( source : String )(
+    delim       : String,
+    toSpanMatch : ( Int, Option[ Text ], Span, Option[ String ] ) => SpanMatch,
+    recursive   : Boolean
+  ) : Option[ SpanMatch ] = {
+    source.nextNIndicesOf( 2, delim ) match {
+      case List( start, end ) => {
+        val contained = source.substring( start + delim.length, end )
+        val content = {
+          if ( recursive ) convert( contained, Nil )
+          else elementFactory.text( contained )
+        }
+        Some(
+          toSpanMatch(
+            start,
+            source.substringOption( 0, start ).map( elementFactory.text ),
+            content,
+            source.substringOption( end + delim.length, source.length )
+          )
+        )
       }
       case _ => None
     }

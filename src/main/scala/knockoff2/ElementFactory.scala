@@ -3,7 +3,7 @@ package knockoff2
 import scala.io.Source
 import scala.util.parsing.input.Position
 
-trait ElementFactory {
+class ElementFactory {
 
   // Block Elements
   

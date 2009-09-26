@@ -18,8 +18,8 @@ can have part of it's description be code.
       def xml : Node
     }
     
-    object Span extends ElementFactory {
-      val empty : Span = t("")
+    object Span {
+      val empty : Span = new Text("")
     }
 
 ## `SpanSeq` ##

@@ -498,7 +498,10 @@ In implementation terms, we don't have a single list.
     import org.scalatest._
     import matchers._
 
-    class BlockSuite extends Spec with ShouldMatchers with ElementFactory {
+    class BlockSuite extends Spec with ShouldMatchers with HasElementFactory {
+
+      val factory = elementFactory
+      import factory._
 
       describe("BlockSeq") {
 

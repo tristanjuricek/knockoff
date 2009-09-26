@@ -60,7 +60,7 @@ recurrence.
           def findBalanced(
               open  : Char,
               close : Char,
-              start : Index
+              start : Int
             ) : Option[Int] = {
           
             val nextOpen = wrapped.indexOf( open, start )

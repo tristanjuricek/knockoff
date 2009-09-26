@@ -5,10 +5,48 @@ Defines constructor methods used to build each of the elements in knockoff. This
 can then be easily overriden by specialized versions of the block or span elements,
 so that the output `BlockSeq` might render things a bit differently, for example.
 
+## `HasElementFactory`
+
+For any `Discounter`, there should really only be one, configurable,
+`ElementFactory` instance. And for the things that need to fetch that instance,
+there is the `HasElementFactory` trait.
+
+    // In knockoff2/HasElementFactory.scala
+    package knockoff2
+    
+    trait HasElementFactory {
+    
+        def elementFactory : ElementFactory = defaultElementFactory
+        
+        private val defaultElementFactory = new ElementFactory
+    }
+
+Note that the top-level element, `Discounter`, maintains this reference as well. So
+customizing the `ElementFactory` is pretty simple. You create a subtype of
+`ElementFactory`, then override that in your custom `Discounter` instance:
+
+    // Your custom ElementFactory
+    
+    // You probably want something like this to bind in prettification in your
+    // HTML documents...
+    class MyCodeSpan( content : String ) extends CodeSpan( content ) {
+      override def = <code class="myCodeClass">{ content }</code>
+    }
+    
+    class MyElementFactory extends ElementFactory {
+      override def codeSpan( c : String ) = new MyCodeSpan( c )
+    }
+    
+    class MyDiscounter extends Discounter {
+      override val elementFactory = new MyElementFactory
+    }
+
+### `ElementFactory`
+
     // In knockoff2/ElementFactory.scala
     // See the ElementFactory package and imports
     
-    trait ElementFactory {
+    class ElementFactory {
 
       // Block Elements
       

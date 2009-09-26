@@ -17,32 +17,21 @@ creates a bunch of mixins. These mixins are really only intended to
 
 ## `SpanConverterFactory` ##
 
-Basically, it just configures a converter routine with the link definitions that are
-found elsewhere in the document. This is the `trait` that is included in the top
-level element.
+We configure a conversion method with a list of `LinkDefinitions`, because we
+usually convert a chunk of text at a time, where the definitions are in other
+chunks, probably at the end of the document. Otherwise, the conversion method is a
+pretty simple mapping function.
 
-Also included here is the `matchers` method, which is a series of methods to do the
-matching replacement by the `SpanConverter`. This allows for convenient overriding
-at a high-level, mostly for debugging purposes.
+Conversion itself is a pretty brute-force approach encapsulated in the
+`SpanConverter` class.
 
     // In knockoff2/SpanConverterFactory.scala
     package knockoff2
     
-    trait SpanConverterFactory extends ElementFactory {
+    trait SpanConverterFactory extends HasElementFactory {
      
-        def spanConverter( definitions : Seq[ LinkDefinition ] ) : Chunk => SpanSeq =
-            new SpanConverter( definitions, matchers, this )
-            
-        def matchers : Seq[ SpanMatcher ] = List(
-            DoubleCodeMatcher,
-            SingleCodeMatcher,
-            InlineHTMLMatcher,
-            EntityMatcher,
-            UnderscoreStrongMatcher,
-            AsterixStrongMatcher,
-            UnderscoreEmphasisMatcher,
-            AsterixEmphasisMatcher
-        )
+      def spanConverter( definitions : Seq[ LinkDefinition ] ) : Chunk => SpanSeq =
+        new SpanConverter( definitions, elementFactory )
     }
 
 ## `SpanConverter` ##
@@ -58,31 +47,35 @@ of that span.
     package knockoff2
     
     class SpanConverter(
-        val definitions : Seq[ LinkDefinition ],
-        val matchers    : Seq[ SpanMatcher ],
-        val factory     : ElementFactory
+      val definitions    : Seq[ LinkDefinition ],
+      val elementFactory : ElementFactory
     )
-    extends Function1[ Chunk, SpanSeq ] {
-     
-			def apply( chunk : Chunk ) : SpanSeq =
-				convert( chunk.content, Nil )( factory )
-        
-			private def convert(
-					content : String,
-          current : List[ Span ]
-        ) ( implicit
-          factory : ElementFactory
-        ) : Span = {
+    extends Function1[ Chunk, SpanSeq ]
+    with    EqualDelimiterMatcher
+    with    CodeMatchers
+    with    EmphasisMatchers
+    with    StrongMatchers
+    with    HTMLMatchers
+    with    LinkMatcher
+    with    StringExtras {
+         
+      /**
+        The SpanConverter is a map method from Chunk to SpanSeq
+      */
+      def apply( chunk : Chunk ) : SpanSeq = convert( chunk.content, Nil )
+      
+      /**
+        Tail-recursive method halts when the content argument is empty.
+      */
+      protected def convert( content : String, current : List[ Span ] ) : Span = {
 
-        implicit val defs = definitions // TODO this is fugly
-
-        if ( content.isEmpty ) return factory.toSpan( current )
+        if ( content.isEmpty ) return elementFactory.toSpan( current )
 
         val textOnly =
-          SpanMatch( content.length, None, factory.text( content ), None )
+          SpanMatch( content.length, None, elementFactory.text( content ), None )
 
-        val bestMatch = ( textOnly /: matchers ){ (current, matcher) =>
-          matcher.find( content, convert( _, Nil )( factory ) ) match {
+        val bestMatch = ( textOnly /: matchers ){ (current, findMatch) =>
+          findMatch( content ) match {
             case None => current
             case Some( nextMatch ) => {
               if ( nextMatch.index < current.index )
@@ -97,10 +90,21 @@ of that span.
           current ::: bestMatch.before.toList ::: List( bestMatch.current )
       
         bestMatch.after match {
-          case None              => factory.toSpan( updated )
+          case None              => elementFactory.toSpan( updated )
           case Some( remaining ) => convert( remaining, updated )
         }
       }
+      
+      def matchers : List[ String => Option[SpanMatch] ] = List(
+        matchDoubleCodes,
+        matchSingleCodes,
+        matchEntity,
+        matchHTMLSpan,
+        matchUnderscoreStrong,
+        matchAsterixStrong,
+        matchUnderscoreEmphasis,
+        matchAsterixEmphasis
+      )
     }
 
 
@@ -120,24 +124,6 @@ attribute for determining the "best" match.
     )
 
 
-## `SpanMatcher` ##
-    
-    // In knockoff2/SpanMatcher.scala
-    package knockoff2
-    
-    trait SpanMatcher {
-
-      def recursive = true
-      
-      def find(
-          str     : String,
-          convert : String => Span
-        ) ( implicit
-          factory : ElementFactory
-        ) : Option[ SpanMatch ]
-    }
-
-
 ## `Emphasis` Matching ##
 
 Emphasis can start with an underscore `_` or an asterix `*`, and can have embedded
@@ -147,58 +133,82 @@ elements. Examples:
     *dude*
     an _emphasized expression `with code` inside!_
 
-So... we have a couple of different objects to do the real work.
+Both are configured by the `EmphasisMatchers`.
 
-### `UnderscoreEmphasisMatcher` ###
-
-    // In knockoff2/UnderscoreEmphasisMatcher.scala
+    // In knockoff2/EmphasisMatchers.scala
     package knockoff2
     
-    object  UnderscoreEmphasisMatcher
-    extends EqualDelimiterMatcher(
-      "_",
-      (i,b,c,a,f) => SpanMatch( i, b, f.em(c), a )
-    )
+    trait EmphasisMatchers { self : EqualDelimiterMatcher with SpanConverter =>
+     
+      def matchUnderscoreEmphasis( source : String ) =
+        matchEqualDelimiters( source )( "_", createEmphasisSpanMatch, true )
 
-### `AsterixEmphasisMatcher` ###
+      def matchAsterixEmphasis( source : String ) =
+        matchEqualDelimiters( source )( "*", createEmphasisSpanMatch, true )
 
-    // In knockoff2/AsterixEmphasisMatcher.scala
-    package knockoff2
-    
-    object   AsterixEmphasisMatcher
-    extends EqualDelimiterMatcher(
-      "*",
-      (i,b,c,a,f) => SpanMatch( i, b, f.em(c), a )
-    )
+      def createEmphasisSpanMatch(
+        i : Int, b : Option[Text], span : Span, a : Option[ String ]
+      ) = {
+        SpanMatch( i, b, elementFactory.em( span ), a )
+      }
+    }
 
+### `EmphasisMatchersSpec`
 
-## `Strong` Matching ##
+    // The EmphasisMatchers specification
+    describe( "EmphasisMatchers" ) {
+      it("should match underscores containing asterix emphases") {
+        val converted = spanConverter( Nil )(
+          TextChunk( "a _underscore *and block* em_" )
+        )
+        converted.toList should equal { List(
+          text("a "),
+          em( toSpan( List( t("underscore "), em( t("and block") ), t(" em") ) ) )
+        ) }
+      }
+    }
+
+## `Strong` (Like Bull) Matching ##
 
 Like `Emphasis` elements, `Strong` elements use two underscores `__` or asterixes
 `**` to figure themselves out.
 
-### `UnderscoreStrongMatcher` ###
-
-    // In knockoff2/UnderscoreStrongMatcher.scala
+    // In knockoff2/StrongMatchers.scala
     package knockoff2
     
-    object  UnderscoreStrongMatcher
-    extends EqualDelimiterMatcher(
-        "__",
-        (i,b,c,a,f) => SpanMatch( i, b, f.strong(c), a )
-    )
+    trait StrongMatchers { self : EqualDelimiterMatcher with SpanConverter =>
+      
+      def matchUnderscoreStrong( source : String ) =
+        matchEqualDelimiters( source )( "__", createStrongSpanMatch, true )
+      
+      def matchAsterixStrong( source : String ) =
+        matchEqualDelimiters( source )( "**", createStrongSpanMatch, true )
+      
+      def createStrongSpanMatch(
+        i : Int, b : Option[Text], span : Span, a : Option[ String ]
+      ) = {
+        SpanMatch( i, b, elementFactory.strong( span ), a )
+      }
+    }
 
-### `AsterixStrongMatcher` ###
+### `StrongMatchersSpec`
 
-    // In knockoff2/AsterixStrongMatcher.scala
-    package knockoff2
-    
-    object  AsterixStrongMatcher
-    extends EqualDelimiterMatcher(
-        "**",
-        (i,b,c,a,f) => SpanMatch( i, b, f.strong(c), a )
-    )
-
+    // The StrongMatchers specification
+    describe( "StrongMatchers" ) {
+      it("should match underscores containing asterix emphases") {
+        val converted = spanConverter( Nil )(
+          TextChunk( "an __underscore **and asterix** strong__" )
+        )
+        converted.toList should equal { List(
+          text("an "),
+          strong(
+            toSpan(
+              List( t("underscore "), strong( t("and asterix") ), t(" strong") )
+            )
+          )
+        ) }
+      }
+    }
 
 ## `Code` Matching ##
 
@@ -207,70 +217,54 @@ Two varations of code blocks:
     A `normal code` block
     A ``code with a `backtick` inside``
 
-### `DoubleCodeMatcher` ###
+This is all done by balanced code matching via the `EqualDelimiterMatcher`.
 
-    // In knockoff2/DoubleCodeMatcher.scala
+    // In knockoff2/CodeMatchers.scala
     package knockoff2
     
-    object DoubleCodeMatcher
-    extends CodeDelimiterMatcher(
-        "``",
-        (i,b,c,a,f) =>
-            SpanMatch( i, b, f.codeSpan( c.asInstanceOf[ Text ].content ), a )
-    )
+    trait CodeMatchers { self : EqualDelimiterMatcher with SpanConverter =>
+     
+      def matchDoubleCodes( source : String ) : Option[ SpanMatch ] =
+        matchEqualDelimiters( source )( "``", createCodeSpanMatch, false )
 
-### `SingleCodeMatcher` ###
-
-    // In knockoff2/SingleCodeMatcher.scala
-    package knockoff2
-    
-    object SingleCodeMatcher
-    extends CodeDelimiterMatcher(
-        "`",
-        (i,b,c,a,f) =>
-            SpanMatch( i, b, f.codeSpan( c.asInstanceOf[ Text ].content ), a )
-    )
+      def matchSingleCodes( source : String ) : Option[ SpanMatch ] =
+        matchEqualDelimiters( source )( "`", createCodeSpanMatch, false )
+      
+      def createCodeSpanMatch(
+        i : Int, b : Option[Text], span : Span, a : Option[ String ]
+      ) = {
+        val codeSpan = span match {
+          case text : Text => elementFactory.codeSpan( text.content )
+        }
+        SpanMatch( i, b, codeSpan, a )
+      }
+    }
 
 #### `CodeMatcherSpec`
 
-    // In test knockoff2/SingleCodeMatcherSpec.scala
-    package knockoff2
-    
-    import org.scalatest._
-    
-    class SingleCodeMatcherSpec extends Spec with SpanConverterFactory {
-        describe( "SingleCodeMatcher" ) {
-            it( "should parse a couple of single code blocks in text" ) {
-                val spans = spanConverter( Nil )(
-                    TextChunk("a `code1` and a `code 2`")
-                )
-                val expected = List(
-                    t("a "), codeSpan("code1"), t(" and a "), codeSpan("code 2")
-                )
-                assert( spans sameElements expected )
-            }
-        }
-    }
+    // The CodeMatchers specification
+    describe( "CodeMatchers" ) {
 
-### `CodeDelimiterMatcher` ###
+      it( "should parse a couple of single code blocks in text" ) {
+        val spans = spanConverter( Nil )(
+          TextChunk("a `code1` and a `code 2`")
+        )
+        val expected = List(
+          t("a "), codeSpan("code1"), t(" and a "), codeSpan("code 2")
+        )
+        assert( spans sameElements expected )
+      }
 
-    // In knockoff2/CodeDelimiterMatcher.scala
-    package knockoff2
-    
-    class CodeDelimiterMatcher(
-        val delim    : String,
-        val newMatch : ( Int, Option[ Text ], Span, Option[ String ], ElementFactory ) => SpanMatch
-    )
-    extends EqualDelimiterMatcher( delim, newMatch ) {
-     
-        override def find(
-                str     : String,
-                convert : String => Span
-            ) ( implicit
-                factory : ElementFactory
-            ) : Option[ SpanMatch ] = {
-            return super.find( str, source => factory.text( source ) )
-        }
+      it("should not care about other elements in the code") {
+        val converted = spanConverter( Nil )(
+          TextChunk("This `code block *with em*` is OK")
+        )
+        converted.toList should equal { List(
+          text("This "),
+          codeSpan( "code block *with em*" ),
+          text(" is OK")
+        ) }
+      }
     }
 
 ## HTML Matching ##
@@ -279,187 +273,130 @@ If we find any kind of HTML/XML-like element within the content, and it's not a
 single element, we try to find the ending element. If that segment isn't
 well-formed, we just ignore the element, and treat it like text.
 
-We also match
 
-
-### `InlineHTMLMatcher`
+### `HTMLMatchers`
 
 Any sequences of HTML in content are matched by the `InlineHTMLMatcher`. Note that
 this uses a recursive method `hasMatchedClose` to deal with the situations where
 one span contains other spans - it's basically like parenthesis matching.
 
-    // In knockoff2/InlineHTMLMatcher.scala
+    // In knockoff2/HTMLSpanMatcher.scala
     package knockoff2
     
-    object InlineHTMLMatcher extends SpanMatcher with StringExtras with ColoredLogger {
-        
-        val startElement = """<[ ]*([a-zA-Z:_]+)[ \t]*[^>]*?(/?+)>""".r
-        
-        def find(
-                str     : String,
-                convert : String => Span
-            ) ( implicit
-                factory : ElementFactory
-            ) : Option[ SpanMatch ] = {
-                
-            import factory.{ htmlSpan, text }
-            
-            startElement.findFirstMatchIn( str ).map { open =>
-                
-                val hasEnd = open.group(2) == "/"
-
-                if ( hasEnd ) {
-                    SpanMatch(
-                        open.start,
-                        open.before.toOption.map( text(_) ),
-                        htmlSpan( open.matched ),
-                        open.after.toOption
-                    )
-                } else {
-                    hasMatchedClose( str, open.group(1), open.end, 1 ).map {
-                        closeAndAfter => SpanMatch(
-                            open.start,
-                            open.before.toOption.map( text(_) ),
-                            htmlSpan( str.substring( open.start, closeAndAfter._1 ) ),
-                            closeAndAfter._2.toOption
-                        )
-                    }.getOrElse( return None )
-                }
-            }
+    trait HTMLMatchers { self : SpanConverter =>
+      
+      private val startElement = """<[ ]*([a-zA-Z:_]+)[ \t]*[^>]*?(/?+)>""".r
+      
+      def matchHTMLSpan( source : String ) : Option[ SpanMatch ] = {
+        startElement.findFirstMatchIn( source ).map { open =>
+          val hasEnd = open.group(2) == "/"
+          if ( hasEnd ) {
+            SpanMatch(
+              open.start,
+              open.before.toOption.map( elementFactory.text(_) ),
+              elementFactory.htmlSpan( open.matched ),
+              open.after.toOption
+            )
+          } else {
+            hasMatchedClose( source, open.group(1), open.end, 1 ).map {
+              closeAndAfter => SpanMatch(
+                open.start,
+                open.before.toOption.map( elementFactory.text(_) ),
+                elementFactory.htmlSpan(
+                  source.substring( open.start, closeAndAfter._1 )
+                ),
+                closeAndAfter._2.toOption
+              )
+            }.getOrElse( return None )
+          }
         }
+      }
+      
+      private def hasMatchedClose(
+        source : String,
+        tag    : String,
+        from   : Int,
+        opens  : Int
+      ) : Option[ ( Int, CharSequence ) ] = {
+        val opener = ("(?i)<[ ]*" + tag + "[ \t]*[^>]*?(/?+)*>").r
+        val closer = ("(?i)</[ ]*" + tag + "[ ]*>").r
         
-        private def hasMatchedClose(
-                source : String,
-                tag    : String,
-                from   : Int,
-                opens  : Int
-            ) : Option[ ( Int, CharSequence ) ] = {
-            
-            val opener = ("(?i)<[ ]*" + tag + "[ \t]*[^>]*?(/?+)*>").r
-            val closer = ("(?i)</[ ]*" + tag + "[ ]*>").r
-            
-            val nextOpen = opener.findFirstMatchIn( source.substring(from) )
-            val nextClose = closer.findFirstMatchIn( source.substring(from) )
+        val nextOpen  = opener.findFirstMatchIn( source.substring(from) )
+        val nextClose = closer.findFirstMatchIn( source.substring(from) )
 
-            if ( ! nextClose.isDefined ) return None
-            
-            if ( nextOpen.isDefined && ( nextOpen.get.start < nextClose.get.start ) ) {
-                hasMatchedClose( source, tag, from + nextOpen.get.end, opens + 1 )
-            } else if ( opens > 1 ) {
-                hasMatchedClose( source, tag, from + nextClose.get.end, opens - 1 )
-            } else {
-                Some( ( from + nextClose.get.end, nextClose.get.after ) )
-            }
+        if ( ! nextClose.isDefined ) return None
+        
+        if ( nextOpen.isDefined && ( nextOpen.get.start < nextClose.get.start ) ) {
+            hasMatchedClose( source, tag, from + nextOpen.get.end, opens + 1 )
+        } else if ( opens > 1 ) {
+            hasMatchedClose( source, tag, from + nextClose.get.end, opens - 1 )
+        } else {
+            Some( ( from + nextClose.get.end, nextClose.get.after ) )
         }
+      }
+      
+      private val matchEntityRE = """&\w+;""".r
+
+      def matchEntity( source : String ) : Option[ SpanMatch ] = {
+        matchEntityRE.findFirstMatchIn( source ).map{ entityMatch =>
+          SpanMatch(
+            entityMatch.start,
+            entityMatch.before.toOption.map( elementFactory.text(_) ),
+            elementFactory.htmlSpan( entityMatch.matched ),
+            entityMatch.after.toOption
+          )
+        }
+      }
     }
 
 
-#### `InlineHTMLMatcherSpec`
+#### `HTMLSpanMatcherSpec`
 
-    // In test knockoff2/InlineHTMLMatcherSpec.scala
-    package knockoff2
-    
-    import org.scalatest._
-    import org.scalatest.matchers._
-    
-    class InlineHTMLMatcherSpec extends Spec with ShouldMatchers with SpanConverterFactory {
-
-        describe("InlineHTMLMatcher") {
-         
-            it("should find an <a> and an <img>") {
-                val spans = spanConverter( Nil )( TextChunk(
-                    """with <a href="http://example.com">a link</a> and an """ +
-                    """<img src="foo.img"/> ha!"""
-                ) )
-                
-                spans.toList should equal ( List(
-                    t("with "),
-                    htmlSpan("""<a href="http://example.com">a link</a>"""),
-                    t(" and an "),
-                    htmlSpan("""<img src="foo.img"/>"""),
-                    t(" ha!")
-                ) )
-            }
-            
-            it("should wrap a <span> that contains another <span>") {
-                val convertedSpans = spanConverter( Nil ){ TextChunk(
-                    """a <span class="container">contains <span>something</span>""" +
-                    """ else</span> without a problem <br /> !"""
-                ) }
-                
-                convertedSpans.toList should equal { List(
-                    t("a "),
-                    htmlSpan(
-                        """<span class="container">contains """ +
-                        """<span>something</span> else</span>"""
-                    ),
-                    t(" without a problem "),
-                    htmlSpan("<br />"),
-                    t(" !")
-                ) }
-            }
-        }
-    }
-
-### `EntityMatcher`
-
-If we see HTML entity sequences in text, we'll mark that as html. This is to allow
-the text to simply "pass through" to the the final content.
-
-    // In knockoff2/EntityMatcher.scala
-    package knockoff2
-    
-    object EntityMatcher extends SpanMatcher with StringExtras {
-        override def recursive = false
-
-        val matchEntity = """&\w+;""".r
-
-        def find(
-                str     : String,
-                convert : String => Span
-            ) ( implicit
-                factory : ElementFactory
-            ) : Option[ SpanMatch ] = {
-                
-            matchEntity.findFirstMatchIn( str ) match {
-                
-                case None => None
-                
-                case Some( entityMatch ) => Some(
-                    SpanMatch(
-                        entityMatch.start,
-                        entityMatch.before.toOption.map( factory.text(_) ),
-                        factory.htmlSpan( entityMatch.matched ),
-                        entityMatch.after.toOption
-                    )
-                )
-            }
-        }
-    }
-
-#### `EntityMatcherSpec`
-
-    // In test knockoff2/EntityMatcherSpec.scala
-    package knockoff2
-    
-    import org.scalatest._
-    import org.scalatest.matchers._
-    
-    class EntityMatcherSpec extends Spec with ShouldMatchers with SpanConverterFactory {
-        describe("EntityMatcher") {
-            it("should find a couple of entities and pass them through") {
-                val converted = spanConverter( Nil )(
-                    TextChunk( "an &amp; and an &em; are in here" )
-                )
-                converted.toList should equal( List(
-                    t("an "),
-                    htmlSpan("&amp;"),
-                    t(" and an "),
-                    htmlSpan("&em;"),
-                    t(" are in here")
-                ) )
-            }
-        }
+    // The HTMLSpanMatcher specification
+    describe("HTMLSpanMatcher") {
+      it("should find an <a> and an <img>") {
+        val spans = spanConverter( Nil )( TextChunk(
+          """with <a href="http://example.com">a link</a> and an """ +
+          """<img src="foo.img"/> ha!"""
+        ) )
+        spans.toList should equal ( List(
+          t("with "),
+          htmlSpan("""<a href="http://example.com">a link</a>"""),
+          t(" and an "),
+          htmlSpan("""<img src="foo.img"/>"""),
+          t(" ha!")
+        ) )
+      }
+      
+      it("should wrap a <span> that contains another <span>") {
+        val convertedSpans = spanConverter( Nil ){ TextChunk(
+          """a <span class="container">contains <span>something</span>""" +
+          """ else</span> without a problem <br /> !"""
+        ) }
+        convertedSpans.toList should equal { List(
+          t("a "),
+          htmlSpan(
+            """<span class="container">contains """ +
+            """<span>something</span> else</span>"""
+          ),
+          t(" without a problem "),
+          htmlSpan("<br />"),
+          t(" !")
+        ) }
+      }
+      
+      it("should find a couple of entities and pass them through") {
+        val converted = spanConverter( Nil )(
+            TextChunk( "an &amp; and an &em; are in here" )
+        )
+        converted.toList should equal( List(
+          t("an "),
+          htmlSpan("&amp;"),
+          t(" and an "),
+          htmlSpan("&em;"),
+          t(" are in here")
+        ) )
+      }
     }
 
 
@@ -483,68 +420,48 @@ So, things like:
     // In knockoff2/LinkMatcher.scala
     package knockoff2
     
-    object LinkMatcher extends SpanMatcher with StringExtras {
+    import scala.util.matching.Regex.Match
+    
+    trait LinkMatcher { self : SpanConverter =>
       
-      def find(
-          source  : String,
-          convert : String => Span
-        ) ( implicit
-          factory : ElementFactory,
-          defs    : Seq[ LinkDefinition ]
-        ) : Option[ SpanMatch ] = {
-
+      def matchLink( source : String ) : Option[ SpanMatch ] = {
         normalLinks.findFirstMatchIn( source ) match {
           case None =>
-            findAutomaticMatch( source, convert ).getOrElse(
-              findReferenceMatch( source, convert )
-            )
+            findAutomaticMatch( source ).orElse( findReferenceMatch( source ) )
           case Some( matchr ) =>
-            findNormalMatch( source, convert, matchr )
+            findNormalMatch( source, matchr )
         }
       }
       
-      /**
-        If it looks like an automatic link, then it probably is one.
-      */
-      val automaticLink = """<([^\s>]+)>""".r
+      private val automaticLinkRE = """<([^\s>]+)>""".r
       
-      def findAutomaticMatch(
-          source  : String,
-          convert : String => Span
-        ) ( implicit factory : ElementFactory ) : Option[ SpanMatch ] = {
-          
+      def findAutomaticMatch( source : String ) : Option[ SpanMatch ] = {
         automaticLinkRE.findFirstMatchIn( source ).map { aMatch =>
-          val url = automaticLink.group(1)
+          val url = aMatch.group(1)
           SpanMatch(
             aMatch.start,
-            aMatch.before.toOption.map( text(_) ),
-            link( text( url ), url, None ),
+            aMatch.before.toOption.map( elementFactory.text(_) ),
+            elementFactory.link( elementFactory.text( url ), url, None ),
             aMatch.after.toOption
           )
         }
       }
       
-      def findNormalMatch(
-          source  : String,
-          convert : String => Span,
-          matchr  : Match
-        ) ( implicit factory : ElementFactory ) : Option[ SpanMatch ] = {
-         
-        import factory._
-
-        val isImage   = matchr.group(1) == "!" || matchr.group(4) == "!"
-        val hasTitle  = matchr.group(7) != null
-        val wrapped   = if( hasTitle ) matchr.group(5) else matchr.group(2)
-        val url       = if( hasTitle ) matchr.group(6) else matchr.group(3)
-
+      def findNormalMatch( source : String, matchr : Match )
+      : Option[ SpanMatch ] = {
+        val isImage     = matchr.group(1) == "!" || matchr.group(4) == "!"
+        val hasTitle    = matchr.group(7) != null
+        val wrapped     = if( hasTitle ) matchr.group(5) else matchr.group(2)
+        val url         = if( hasTitle ) matchr.group(6) else matchr.group(3)
+        val titleOption = if ( hasTitle ) Some( matchr.group(7) ) else None
         Some(
           SpanMatch(
             matchr.start,
-            matchr.before.toOption.map( text(_) ),
+            matchr.before.toOption.map( elementFactory.text(_) ),
             if ( isImage )
-              ilink( convert( wrapped ), url, titleOption )
+              elementFactory.ilink( convert( wrapped, Nil ), url, titleOption )
             else
-              link( convert( wrapped ), url, titleOption )
+              elementFactory.link( convert( wrapped, Nil ), url, titleOption ),
             matchr.after.toOption
           )
         )
@@ -573,16 +490,7 @@ So, things like:
       /**
         We have to match parens, to support this stuff: [wr [app] ed] [thing]
       */
-      def findReferenceMatch(
-          source  : String,
-          convert : String => Span
-        ) ( implicit
-          factory : ElementFactory,
-          defs    : Seq[ LinkDefinition ]
-        ) : Option[ SpanMatch ] = {
-          
-        import factory._
-          
+      def findReferenceMatch( source : String ) : Option[ SpanMatch ] = {
         val firstOpen = source.indexOf('[')
         if ( firstOpen == -1 ) return None
         
@@ -598,24 +506,23 @@ So, things like:
             
             if ( secondClose == -1 ) return None
             
-            val refID = secondSource.substring( secondMatch.start, secondClose )
+            val refID = secondPart.substring( secondMatch.start, secondClose.get )
             
-            defs.find( _.id == refID ).map { definition =>
+            definitions.find( _.id == refID ).map { definition =>
               SpanMatch(
                 firstOpen,
-                source.substring( 0, firstOpen ).toOption.map( text(_) ),
-                link(
-                  text( source.substring( firstOpen + 1, firstClose ) ),
+                source.substring( 0, firstOpen ).toOption.map( elementFactory.text(_) ),
+                elementFactory.link(
+                  elementFactory.text( source.substring( firstOpen + 1, firstClose ) ),
                   definition.url,
                   definition.title
                 ),
                 source.substring( firstClose ).toOption
               )
-            }
-          }
+            }.get
+          }.get
         }
       }
-      
     }
 
 
@@ -627,38 +534,63 @@ character sequence may be.
 
     // In knockoff2/EqualDelimiterMatcher.scala
     package knockoff2
-    
-    import scala.util.logging.Logged
-    
-    class   EqualDelimiterMatcher(
-      delim    : String,
-      newMatch : ( Int, Option[ Text ], Span, Option[ String ], ElementFactory ) =>
-                   SpanMatch
-    )
-    extends SpanMatcher
-    with    StringExtras {
-        
-      def find(
-          str     : String,
-          convert : String => Span
-        ) ( implicit
-          factory : ElementFactory
-        ) : Option[ SpanMatch ] = {
-     
-        import factory._
-     
-        str.nextNIndicesOf( 2, delim ) match {
-          case List( start, finish ) => {
-            Some( newMatch(
-              start,
-              str.substringOption( 0, start ).map( text ),
-              convert( str.substring( start + delim.length, finish ) ),
-              str.substringOption( finish + delim.length, str.length ),
-              factory
-            ) )
+
+    trait EqualDelimiterMatcher { self : SpanConverter with StringExtras =>
+
+      /**
+        @param delim The delimiter string to match the next 2 sequences of.
+        @param toSpanMatch Factory to create the actual SpanMatch.
+        @param recursive If you want the contained element to be reconverted.
+      */
+      def matchEqualDelimiters( source : String )(
+        delim       : String,
+        toSpanMatch : ( Int, Option[ Text ], Span, Option[ String ] ) => SpanMatch,
+        recursive   : Boolean
+      ) : Option[ SpanMatch ] = {
+        source.nextNIndicesOf( 2, delim ) match {
+          case List( start, end ) => {
+            val contained = source.substring( start + delim.length, end )
+            val content = {
+              if ( recursive ) convert( contained, Nil )
+              else elementFactory.text( contained )
+            }
+            Some(
+              toSpanMatch(
+                start,
+                source.substringOption( 0, start ).map( elementFactory.text ),
+                content,
+                source.substringOption( end + delim.length, source.length )
+              )
+            )
           }
           case _ => None
         }
       }
+    }
+    
 
+## Testing Specification via `SpanConverterSpec` ##
+
+    // In test knockoff2/SpanConverterSpec.scala
+    package knockoff2
+
+    import org.scalatest._
+    import org.scalatest.matchers._
+
+    class   SpanConverterSpec
+    extends Spec
+    with    ShouldMatchers
+    with    SpanConverterFactory
+    with    ColoredLogger {
+      
+      val factory = elementFactory
+      import factory._
+
+      // See the CodeMatchers specification
+      
+      // See the EmphasisMatchers specification
+
+      // See the StrongMatchers specification
+      
+      // See the HTMLSpanMatcher specification
     }

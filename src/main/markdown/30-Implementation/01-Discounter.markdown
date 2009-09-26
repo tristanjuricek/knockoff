@@ -15,7 +15,8 @@ Otherwise...
     
     trait   Discounter
     extends ChunkStreamFactory
-    with    SpanConverterFactory {
+    with    SpanConverterFactory
+    with    HasElementFactory {
   
       /**
         Parses and returns our best guess at the sequence of blocks. It will
