@@ -64,43 +64,43 @@ of that span.
     )
     extends Function1[ Chunk, SpanSeq ] {
      
-        def apply( chunk : Chunk ) : SpanSeq =
-            convert( chunk.content, Nil )( factory )
+			def apply( chunk : Chunk ) : SpanSeq =
+				convert( chunk.content, Nil )( factory )
         
-        private def convert(
-                content : String,
-                current : List[ Span ]
-            ) ( implicit
-                factory : ElementFactory
-            ) : Span = {
+			private def convert(
+					content : String,
+          current : List[ Span ]
+        ) ( implicit
+          factory : ElementFactory
+        ) : Span = {
 
-            implicit val defs = definitions // TODO this is fugly
+        implicit val defs = definitions // TODO this is fugly
 
-            if ( content.isEmpty ) return factory.toSpan( current )
+        if ( content.isEmpty ) return factory.toSpan( current )
 
-            val textOnly =
-                SpanMatch( content.length, None, factory.text( content ), None )
+        val textOnly =
+          SpanMatch( content.length, None, factory.text( content ), None )
 
-            val bestMatch = ( textOnly /: matchers ){ (current, matcher) =>
-                matcher.find( content, convert( _, Nil )( factory ) ) match {
-                    case None => current
-                    case Some( nextMatch ) => {
-                        if ( nextMatch.index < current.index )
-                            nextMatch
-                        else
-                            current
-                    }
-                }
+        val bestMatch = ( textOnly /: matchers ){ (current, matcher) =>
+          matcher.find( content, convert( _, Nil )( factory ) ) match {
+            case None => current
+            case Some( nextMatch ) => {
+              if ( nextMatch.index < current.index )
+                nextMatch
+              else
+                current
             }
-            
-            val updated =
-                current ::: bestMatch.before.toList ::: List( bestMatch.current )
-            
-            bestMatch.after match {
-                case None              => factory.toSpan( updated )
-                case Some( remaining ) => convert( remaining, updated )
-            }
+          }
         }
+      
+        val updated =
+          current ::: bestMatch.before.toList ::: List( bestMatch.current )
+      
+        bestMatch.after match {
+          case None              => factory.toSpan( updated )
+          case Some( remaining ) => convert( remaining, updated )
+        }
+      }
     }
 
 
@@ -113,10 +113,10 @@ attribute for determining the "best" match.
     package knockoff2
     
     case class SpanMatch(
-        val index   : Int,
-        val before  : Option[ Text ],
-        val current : Span,
-        val after   : Option[ String ]
+      val index   : Int,
+      val before  : Option[ Text ],
+      val current : Span,
+      val after   : Option[ String ]
     )
 
 
@@ -127,14 +127,14 @@ attribute for determining the "best" match.
     
     trait SpanMatcher {
 
-        def recursive = true
-        
-        def find(
-                str     : String,
-                convert : String => Span
-            ) ( implicit
-                factory : ElementFactory
-            ) : Option[ SpanMatch ]
+      def recursive = true
+      
+      def find(
+          str     : String,
+          convert : String => Span
+        ) ( implicit
+          factory : ElementFactory
+        ) : Option[ SpanMatch ]
     }
 
 
@@ -156,8 +156,8 @@ So... we have a couple of different objects to do the real work.
     
     object  UnderscoreEmphasisMatcher
     extends EqualDelimiterMatcher(
-        "_",
-        (i,b,c,a,f) => SpanMatch( i, b, f.em(c), a )
+      "_",
+      (i,b,c,a,f) => SpanMatch( i, b, f.em(c), a )
     )
 
 ### `AsterixEmphasisMatcher` ###
@@ -167,8 +167,8 @@ So... we have a couple of different objects to do the real work.
     
     object   AsterixEmphasisMatcher
     extends EqualDelimiterMatcher(
-        "*",
-        (i,b,c,a,f) => SpanMatch( i, b, f.em(c), a )
+      "*",
+      (i,b,c,a,f) => SpanMatch( i, b, f.em(c), a )
     )
 
 
@@ -632,7 +632,7 @@ character sequence may be.
     
     class   EqualDelimiterMatcher(
       delim    : String,
-      newMatch : ( Int, Option[ Text ], Span, Option[ String ], ElementFactory ) => 
+      newMatch : ( Int, Option[ Text ], Span, Option[ String ], ElementFactory ) =>
                    SpanMatch
     )
     extends SpanMatcher
@@ -660,4 +660,5 @@ character sequence may be.
           case _ => None
         }
       }
+
     }
