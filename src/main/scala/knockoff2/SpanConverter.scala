@@ -52,6 +52,7 @@ with    StringExtras {
   def matchers : List[ String => Option[SpanMatch] ] = List(
     matchDoubleCodes,
     matchSingleCodes,
+    matchLink,
     matchEntity,
     matchHTMLSpan,
     matchUnderscoreStrong,

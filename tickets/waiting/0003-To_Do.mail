@@ -1,0 +1,6 @@
+Subject: Things I have To Do
+
+* Get the full system starting to work for basic paragraphs.
+* Identify the different block sequences to test.
+* See if I can script the normal Markdown test suite into the testing process
+  somehow.

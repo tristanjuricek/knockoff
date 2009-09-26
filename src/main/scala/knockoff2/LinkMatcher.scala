@@ -74,33 +74,33 @@ trait LinkMatcher { self : SpanConverter =>
     val firstOpen = source.indexOf('[')
     if ( firstOpen == -1 ) return None
     
-    source.findBalanced('[', ']', firstOpen).map { firstClose =>
+    val firstClose =
+      source.findBalanced('[', ']', firstOpen).getOrElse( return None )
 
-      if ( source.length == firstClose ) return None
+    val secondPart = source.substring( firstClose + 1 )
 
-      val secondPart = source.substring( firstClose + 1 )
+    val secondMatch =
+      """^\s*(\[)""".r.findFirstMatchIn( secondPart ).getOrElse( return None )
 
-      """^\s(\[)""".r.findFirstMatchIn( secondPart ).map { secondMatch =>
-        
-        val secondClose = secondPart.findBalanced('[', ']', secondMatch.start)
-        
-        if ( secondClose == -1 ) return None
-        
-        val refID = secondPart.substring( secondMatch.start, secondClose.get )
-        
-        definitions.find( _.id == refID ).map { definition =>
-          SpanMatch(
-            firstOpen,
-            source.substring( 0, firstOpen ).toOption.map( elementFactory.text(_) ),
-            elementFactory.link(
-              elementFactory.text( source.substring( firstOpen + 1, firstClose ) ),
-              definition.url,
-              definition.title
-            ),
-            source.substring( firstClose ).toOption
-          )
-        }.get
-      }.get
+    val secondClose = secondPart.findBalanced('[', ']', secondMatch.start).get
+    if ( secondClose == -1 ) return None
+
+    val refID = secondPart.substring( secondMatch.start + 1, secondClose )
+    val precedingText = source.substring( 0, firstOpen ).toOption.map(
+      elementFactory.text(_)
+    )
+    
+    definitions.find( _.id == refID ).map { definition : LinkDefinition =>
+      SpanMatch(
+        firstOpen,
+        precedingText,
+        elementFactory.link(
+          elementFactory.text( source.substring( firstOpen + 1, firstClose ) ),
+          definition.url,
+          definition.title
+        ),
+        source.substring( firstClose + secondClose + 2 ).toOption
+      )
     }
   }
 }

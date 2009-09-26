@@ -2,6 +2,7 @@ package knockoff2
 
 import org.scalatest._
 import org.scalatest.matchers._
+import scala.util.parsing.input.NoPosition
 
 class   SpanConverterSpec
 extends Spec
@@ -11,6 +12,9 @@ with    ColoredLogger {
   
   val factory = elementFactory
   import factory._
+  
+  override def spanConverter( definitions : Seq[ LinkDefinition ] ) : Chunk => SpanSeq =
+    new SpanConverter( definitions, elementFactory ) with ColoredLogger
 
   describe( "CodeMatchers" ) {
   
@@ -107,6 +111,32 @@ with    ColoredLogger {
         htmlSpan("&em;"),
         t(" are in here")
       ) )
+    }
+  }
+  
+  describe("LinkMatcher") {
+    it("should discover inline, image, automatic, and reference links") {
+      val convert = spanConverter(
+        Seq( new LinkDefinition("link1", "http://example.com", Some("title"), NoPosition ) )
+      )
+      val converted = convert(
+        TextChunk(
+          "A [link](http://example.com/link1) " +
+          "An ![image link](http://example.com/image1 \"image test\") " +
+          "The <http://example.com/automatic> " +
+          "A [reference link][link1]"
+        )
+      )
+      converted.toList should equal { List(
+        text("A "),
+        link( t("link"), "http://example.com/link1" ),
+        text(" An "),
+        ilink( t("image link"), "http://example.com/image1", Some("image test") ),
+        text(" The "),
+        link( t("http://example.com/automatic"), "http://example.com/automatic" ),
+        text(" A "),
+        link( t("reference link"), "http://example.com", Some("title") )
+      ) }
     }
   }
 }

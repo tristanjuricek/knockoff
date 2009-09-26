@@ -72,7 +72,7 @@ trait StringExtras {
           index : Int
         ) : Option[Int] = {
           
-        if ( wrapped.length >= index ) return None
+        if ( wrapped.length <= index ) return None
        
         val nextOpen  = wrapped.indexOf( open, index )
         val nextClose = wrapped.indexOf( close, index )
