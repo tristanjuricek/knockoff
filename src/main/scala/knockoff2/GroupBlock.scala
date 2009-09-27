@@ -10,10 +10,10 @@ extends ComplexBlock {
     case None => NoPosition
     case Some( child ) => child.position
   }
-
-  def xml : Node = Group( children.map( _.xml ) )
-  
+     
   def markdown = childrenMarkdown
+  
+  def xml : Node = Group( children.map( _.xml ) )
 
   override def toString = "GroupBlock(" + markdown + ")"
 }

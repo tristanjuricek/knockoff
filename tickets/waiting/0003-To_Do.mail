@@ -1,6 +1,9 @@
 Subject: Things I have To Do
 
-* Get the full system starting to work for basic paragraphs.
-* Identify the different block sequences to test.
-* See if I can script the normal Markdown test suite into the testing process
-  somehow.
+* Add simple and complex list evaluation
+* Add code sequence evaluation
+* Add header inclusion
+* Add quotes in quotes parsing and evaluation
+
+
+... fix all MarkdownTest tests...

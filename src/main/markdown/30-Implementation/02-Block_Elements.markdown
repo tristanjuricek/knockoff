@@ -72,10 +72,10 @@ without any other real information.
         case None => NoPosition
         case Some( child ) => child.position
       }
-   
-      def xml : Node = Group( children.map( _.xml ) )
-      
+         
       def markdown = childrenMarkdown
+      
+      def xml : Node = Group( children.map( _.xml ) )
   
       override def toString = "GroupBlock(" + markdown + ")"
     }
@@ -117,6 +117,8 @@ This is used only as a short hand for query expressions.
       override def elements = theSeq.elements
       
       override def apply( ii : Int ) = theSeq(ii)
+
+      def toXML : Node = Group( theSeq.map( _.xml ) )
 
       /**
        * Returns a BlockSeq that contains only that particular block type.
@@ -548,7 +550,7 @@ In implementation terms, we don't have a single list.
     // The BlockSeq package and imports
     package knockoff2
 
-    import scala.xml.Elem
+    import scala.xml.{ Node, Elem, Group }
 
 ### `Paragraph`
 

@@ -1,6 +1,6 @@
 package knockoff2
 
-import scala.xml.Elem
+import scala.xml.{ Node, Elem, Group }
 
 trait BlockSeq extends Seq[ Block ] {
   
@@ -11,6 +11,8 @@ trait BlockSeq extends Seq[ Block ] {
   override def elements = theSeq.elements
   
   override def apply( ii : Int ) = theSeq(ii)
+
+  def toXML : Node = Group( theSeq.map( _.xml ) )
 
   /**
    * Returns a BlockSeq that contains only that particular block type.

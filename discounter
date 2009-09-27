@@ -1,0 +1,3 @@
+#!/bin/bash
+
+scala -cp /Users/tristan/dev/knockoff/lib/testng-5.8-jdk15.jar:/Users/tristan/dev/knockoff/target/test-classes:/Users/tristan/dev/knockoff/target/classes:/Users/tristan/dev/knockoff/target/test-resources:/Users/tristan/dev/knockoff/target/resources:/Users/tristan/dev/knockoff/lib_managed/compile/scalatest-0.9.5.jar knockoff2.DefaultDiscounter "$@"
