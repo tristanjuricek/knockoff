@@ -15,15 +15,15 @@ trait UnorderedItem extends PrefixedItem {
 }
 
 abstract class SimpleItem (
-  val span     : Span,
+  val span     : SpanSeq,
   val position : Position   
 )
 extends SimpleBlock
 with    PrefixedItem {
     
-  def xml = <li>{ span.xml }</li>
+  def xml = <li>{ span.toXML }</li>
   
-  def markdown = itemPrefix + span.markdown
+  def markdown = itemPrefix + span.toMarkdown
   
   override def toString = "SimpleItem(" + markdown + ")"
   
@@ -42,10 +42,10 @@ with    PrefixedItem {
   def canEqual( t : SimpleItem ) : Boolean = t.getClass == getClass
 }
 
-class   OrderedSimpleItem( span : Span, position : Position )
+class   OrderedSimpleItem( span : SpanSeq, position : Position )
 extends SimpleItem( span, position )
 with    OrderedItem
 
-class   UnorderedSimpleItem( span : Span, position : Position )
+class   UnorderedSimpleItem( span : SpanSeq, position : Position )
 extends SimpleItem( span, position )
 with    UnorderedItem

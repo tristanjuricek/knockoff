@@ -59,7 +59,28 @@ Otherwise...
 
         input.firstOption.foreach{ case ((chunk, spans, position)) =>
           chunk match {
-            case TextChunk(_)  => output += para( toSpan(spans), position )
+            case TextChunk(_) =>
+              output += para( toSpan(spans), position )
+            case BulletLineChunk(_) => {
+              val li = usi( toSpan(spans), position )
+              output.last match {
+                case ul : UnorderedList => {
+                  val appended = ul + li
+                  output.update( output.length - 1, appended )
+                }
+                case _ => output += simpleUL( li )
+              }
+            }
+            case NumberedLineChunk(_) => {
+              val li = osi( toSpan(spans), position )
+              output.last match {
+                case ol : OrderedList => {
+                  val appended = ol + li
+                  output.update( output.length - 1, appended )
+                }
+                case _ => output += simpleOL( li )
+              }
+            }
             case EmptySpace(_) => {}
           }
         }
@@ -91,8 +112,8 @@ The `--html4tags` argument will just do nothing, but not be processed as a file.
     
     import scala.util.logging.ConsoleLogger
     
-    object DefaultDiscounter extends Discounter with ConsoleLogger {
-      def main( args : Array[ String ] ) {
+    object DefaultDiscounter extends Discounter with ColoredLogger {
+      def main( args : Array[ String ] ) : Unit = try {
         if ( args.contains("--version") ) {
           Console.err.print( "DefaultDiscounter " )
         }
@@ -114,6 +135,10 @@ The `--html4tags` argument will just do nothing, but not be processed as a file.
             val group = knockoff( readText( fileName ) )
             println( knockoff( readText( fileName ) ).toXML.toString )
           }
+        }
+      } catch {
+        case th : Throwable => {
+          th.printStackTrace( Console.err )
         }
       }
       

@@ -8,7 +8,7 @@ class GroupSpan( val children : SpanSeq ) extends ComplexSpan {
     this( new SpanSeq { def theSeq = seq } )
   }
   
-  def xml = Group( children.map( _.xml ) )
+  def xml = toXML
   
-  def markdown = children.map( _.markdown ).mkString("")
+  def markdown = toMarkdown
 }

@@ -1,0 +1,17 @@
+Subject: How To Extend Markdown Syntax
+
+Take, for example, [MultiMarkdown][1]. Knockoff should be easy to extend to
+"alternatively" parse a multi-markdown document instead of just a markdown document.
+
+Food for thought.
+
+## Dispatching the recombine method ##
+
+The key mechanism is to set up the recombine method to be extensible. Most of the
+rest of the algorithm is pretty easy to do already (chunk parsing is simple, and
+span conversion means just adding the extra methods).
+
+We need to figure out how the `recombine` method works, and we're done.
+
+
+[1]: http://fletcherpenney.net/multimarkdown/users_guide/multimarkdown_syntax_guide/

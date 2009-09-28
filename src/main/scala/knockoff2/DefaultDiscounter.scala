@@ -2,8 +2,8 @@ package knockoff2
 
 import scala.util.logging.ConsoleLogger
 
-object DefaultDiscounter extends Discounter with ConsoleLogger {
-  def main( args : Array[ String ] ) {
+object DefaultDiscounter extends Discounter with ColoredLogger {
+  def main( args : Array[ String ] ) : Unit = try {
     if ( args.contains("--version") ) {
       Console.err.print( "DefaultDiscounter " )
     }
@@ -25,6 +25,10 @@ object DefaultDiscounter extends Discounter with ConsoleLogger {
         val group = knockoff( readText( fileName ) )
         println( knockoff( readText( fileName ) ).toXML.toString )
       }
+    }
+  } catch {
+    case th : Throwable => {
+      th.printStackTrace( Console.err )
     }
   }
   

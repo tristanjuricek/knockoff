@@ -4,43 +4,38 @@ Introduction to Knockoff
 Knockoff is a Markdown parser with a twist. Most Markdown systems just convert
 Markdown source to HTML. Knockoff converts from Markdown source to an
 in-memory model ... with a handy (X)HTML version. It's written in [Scala][1],
-whose power affords us simple and fast extension and generation.
+whose power affords us simple and fast extension.
 
-Simply put, it was rather easy for me to build a [literate programming][2]
-environment on top of an object model. This is more than just "generating" web
-documents. It's the backbone of a great "only what you need" approach to doing
-things built for web distribution.
+This is more than just "generating" web documents. It's the backbone of a great
+"only what you need" approach to doing things built for web distribution.
+
+For example, it was easy for me to build a [literate programming][2] environment on
+top of an object model. This approach "tags" specific bits of markdown code blocks
+with special meaning - stick this code block in a separate file in a particular
+format. And then, the markdown document itself is placed into a website.
+
+
+## Converting Markdown to HTML Knockoff ##
+
+Anyhow, the main thing you do with knockoff is translate Markdown documents into
+HTML. In Scala code, this is done via:
+
+    DefaultDiscounter.knockoff( markdownString ).toXML
+
+This returns the `Group` representation of the document.
+
+This is pretty easy to call from the console as well, using a shell script set up
+in the root of the project tree:
+
+    ./discounter [file ...]
+
+
+## What is This `Discounter` Thing, What The Hell Am I Thinking? ##
+
+The `Discounter` is the base object you can use to start to specialize how the
+document is parsed.
+
+
 
 [1]: http://scala-lang.org
 [2]: http://tristanhunt.com/projects/literable
-
-
-### New feature: Allow The Position Of The Model To Come Through
-
-Say we have the document with line numbers:
-
-    1: Header 1
-    2: ========
-    3:
-    4: Paragraph one
-    5:
-    6:     Code block 1
-    7:
-    8: Paragraph two
-
-It would be _very_ handy to have the line numbers. This allows us to backwards
-patch into the original markdown document.
-
-    scala> blockSeq(2).location.startLine
-    Int = 6
-    
-    scala> blockSeq(0).location.endLine
-    Int = 2
-
-Note that this is only significant for `Block` elements. And in reality I'll
-probably start with 0.
-
-
-Currently it is too easy to mess up the definition by mixing up the types of list
-items. This is a case where I think it will be easier to create a mutable model, or,
-have different types of model elements... (hm)

@@ -29,11 +29,17 @@ Each `Block` is composed of these.
     // In knockoff2/SpanSeq.scala
     package knockoff2
     
+    import scala.xml.Group
+    
     trait SpanSeq extends Seq[ Span ] {
       def theSeq : Seq[ Span ]
       override def length : Int = theSeq.length
       override def elements = theSeq.elements
       override def apply( ii : Int ) = theSeq(ii)
+      
+      def toXML = Group( theSeq.map( _.xml ) )
+      
+      def toMarkdown = theSeq.map( _.markdown ).mkString("")
     }
 
 A simpler version is for the common case, where the span does not actually contain
@@ -71,9 +77,9 @@ And a workaround to cases where we need just a container of spans.
         this( new SpanSeq { def theSeq = seq } )
       }
       
-      def xml = Group( children.map( _.xml ) )
+      def xml = toXML
       
-      def markdown = children.map( _.markdown ).mkString("")
+      def markdown = toMarkdown
     }
 
 

@@ -2,12 +2,12 @@ package knockoff2
 
 import scala.util.parsing.combinator.RegexParsers
 
-trait ChunkParsers extends RegexParsers {
+class ChunkParser extends RegexParsers {
     
   override def skipWhitespace = false
   
   def chunk : Parser[ Chunk ] = {
-    textBlock | emptyLines
+    bulletLead | textBlock | emptyLines
   }
   
   def emptyLines : Parser[ Chunk ] =
@@ -22,6 +22,22 @@ trait ChunkParsers extends RegexParsers {
   /** Match any line up until it ends with a newline. */
   def textLine : Parser[ Chunk ] =
     """[\t ]*\S[^\n]*\n?""".r ^^ ( str => TextChunk( str ) )
+  
+  /**
+    Match a single line that is likely a bullet item.
+  */
+  def bulletLead : Parser[ Chunk ] = {
+    """[ ]{0,3}[*\-+][\t ]+""".r ~> textLine ^^ { textChunk =>
+      BulletLineChunk( textChunk.content )
+    }
+  }
+  
+  def numberedLead : Parser[ Chunk ] = {
+    """[ ]{0,3}\d+\.[\t ]+""".r ~> textLine ^^ { textChunk =>
+      NumberedLineChunk( textChunk.content )
+    }
+  }
+  
   
   // Utility Methods
   

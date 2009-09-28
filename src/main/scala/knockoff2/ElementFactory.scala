@@ -23,16 +23,16 @@ class ElementFactory {
     new HTMLBlock( h, p )
   
   def simpleOL( osis : OrderedSimpleItem * ) : MarkdownList =
-    new MarkdownList( true, new GroupBlock( osis ) )
+    new OrderedList( new BlockSeq{ def theSeq = osis } )
   
   def complexOL( ocis : OrderedComplexItem * ) : MarkdownList =
-    new MarkdownList( true, new GroupBlock( ocis ) )
+    new OrderedList( new BlockSeq{ def theSeq = ocis } )
   
   def simpleUL( usis : UnorderedSimpleItem * ) : MarkdownList =
-    new MarkdownList( false, new GroupBlock( usis ) )
+    new UnorderedList( new BlockSeq{ def theSeq = usis } )
 
   def complexUL( ucis : UnorderedComplexItem * ) : MarkdownList =
-    new MarkdownList( false, new GroupBlock( ucis ) )
+    new UnorderedList( new BlockSeq{ def theSeq = ucis } )
   
   def osi( s : Span, p : Position ) : OrderedSimpleItem =
     new OrderedSimpleItem( s, p )

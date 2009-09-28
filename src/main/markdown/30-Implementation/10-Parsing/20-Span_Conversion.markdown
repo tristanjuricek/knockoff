@@ -579,6 +579,7 @@ character sequence may be.
       ) : Option[ SpanMatch ] = {
         source.nextNIndicesOf( 2, delim ) match {
           case List( start, end ) => {
+            if ( start + delim.length >= end ) return None
             val contained = source.substring( start + delim.length, end )
             val content = {
               if ( recursive ) convert( contained, Nil )

@@ -10,11 +10,13 @@ When we run into something we can't parse, there's a simple rule; go on. If I de
 that there will be more and more problems, well. Hm.
 
 Notably, this remembers the position of each chunk in the input.
-    
+
     // In knockoff2/ChunkStreamFactory.scala
     // See the ChunkStreamFactory package and imports
     
-    trait ChunkStreamFactory extends ChunkParsers with Logged {
+    trait ChunkStreamFactory extends Logged {
+
+      val chunkParser = new ChunkParser
 
       def createChunkStream( str : String ) : Stream[(Chunk, Position)] =
         createChunkStream( new CharSequenceReader( str, 0 ) )
@@ -23,21 +25,21 @@ Notably, this remembers the position of each chunk in the input.
           
         if ( reader.atEnd ) return Stream.empty
         
-        parse( chunk, reader ) match {
+        chunkParser.parse( chunkParser.chunk, reader ) match {
 
-          case Error( msg, next ) => {
+          case chunkParser.Error( msg, next ) => {
             log( msg )
             log( "next == reader : " + (next == reader) )
             createChunkStream( next )
           }
           
-          case Failure( msg, next ) => {
+          case chunkParser.Failure( msg, next ) => {
             log( msg )
             log( "next == reader : " + (next == reader) )
             createChunkStream( next )
           }
           
-          case Success( result, next ) => Stream.cons(
+          case chunkParser.Success( result, next ) => Stream.cons(
             ( result, reader.pos ),
             createChunkStream( next )
           )

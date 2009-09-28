@@ -15,7 +15,7 @@ are usually seen as separated by whitespace lines.
       /**
         The actual content of each block.
        */
-      val span     : Span
+      val span     : SpanSeq
 
       /**
         A markdown representation of this block - it may not equal the original
@@ -50,7 +50,7 @@ In some other cases, the block is a pretty complex thing:
     
     trait ComplexBlock extends Block {
         val children : Seq[ Block ]
-        val span = new GroupSpan( children.map( _.span ) )
+        val span = new SpanSeq{ def theSeq = children.flatMap( _.span ) }
         def theSeq = children
         def childrenMarkdown = children.map( _.markdown ).mkString("\n")
         def childrenXML = children.map( _.xml )
@@ -153,14 +153,14 @@ Otherwise the paragraph is a simple `Block` type (does not contain other
     // See the Paragraph package and imports
 
     class Paragraph(
-      val span      : Span,
+      val span      : SpanSeq,
       val position  : Position
     )
     extends SimpleBlock {
 
-      def markdown = span.markdown
+      def markdown = span.toMarkdown
 
-      def xml = <p>{ span.xml }</p>
+      def xml = <p>{ span.toXML }</p>
       
       // See the Paragraph toString, equals, hashCode implementations
     }
@@ -171,7 +171,7 @@ Otherwise the paragraph is a simple `Block` type (does not contain other
 Represents an `<h1>`, `<h2>`, etc., element in the markdown document.
 
 The header element is a simple `Block` type, but can contain any kind of
-`Span`.
+`SpanSeq`.
 
 The `markdown` representation of the Header should always be the ATX-style
 headers - `# Header #`.
@@ -181,7 +181,7 @@ headers - `# Header #`.
     
     class Header(
       val level     : Int,
-      val span      : Span,
+      val span      : SpanSeq,
       val position  : Position
     )
     extends SimpleBlock {
@@ -189,19 +189,19 @@ headers - `# Header #`.
       def markdown = {
         val sb = new StringBuilder
         ( 0 until level ).foreach( _ => sb.append("#") )
-        sb.append(" ").append( span.markdown ).append(" ")
+        sb.append(" ").append( span.toMarkdown ).append(" ")
         ( 0 until level ).foreach( _ => sb.append("#") )
         sb.toString
       }
       
       def xml = level match {
-        case 1 => <h1>{ span.xml }</h1>
-        case 2 => <h2>{ span.xml }</h2>
-        case 3 => <h3>{ span.xml }</h3>
-        case 4 => <h4>{ span.xml }</h4>
-        case 5 => <h5>{ span.xml }</h5>
-        case 6 => <h6>{ span.xml }</h6>
-        case _ => <div class={ "header" + level }>{ span.xml }</div>
+        case 1 => <h1>{ span.toXML }</h1>
+        case 2 => <h2>{ span.toXML }</h2>
+        case 3 => <h3>{ span.toXML }</h3>
+        case 4 => <h4>{ span.toXML }</h4>
+        case 5 => <h5>{ span.toXML }</h5>
+        case 6 => <h6>{ span.toXML }</h6>
+        case _ => <div class={ "header" + level }>{ span.toXML }</div>
       }
 
       // See the Header toString, equals, hashCode implementations
@@ -402,24 +402,24 @@ In implementation terms, we don't have a single list.
     }
 
     abstract class SimpleItem (
-      val span     : Span,
+      val span     : SpanSeq,
       val position : Position   
     )
     extends SimpleBlock
     with    PrefixedItem {
         
-      def xml = <li>{ span.xml }</li>
+      def xml = <li>{ span.toXML }</li>
       
-      def markdown = itemPrefix + span.markdown
+      def markdown = itemPrefix + span.toMarkdown
       
       // See the SimpleItem toString, equals, hashCode implementations
     }
     
-    class   OrderedSimpleItem( span : Span, position : Position )
+    class   OrderedSimpleItem( span : SpanSeq, position : Position )
     extends SimpleItem( span, position )
     with    OrderedItem
     
-    class   UnorderedSimpleItem( span : Span, position : Position )
+    class   UnorderedSimpleItem( span : SpanSeq, position : Position )
     extends SimpleItem( span, position )
     with    UnorderedItem
 
@@ -470,8 +470,7 @@ In implementation terms, we don't have a single list.
     /**
      * @param ordered Alters the output, mostly.
      */
-    class MarkdownList(
-      val ordered  : Boolean,
+    abstract class MarkdownList(
       val children : BlockSeq
     ) extends ComplexBlock {
         
@@ -480,14 +479,33 @@ In implementation terms, we don't have a single list.
         case Some( child ) => child.position
       }
       
-      def xml = ordered match {
-        case true  => <ol>{ childrenXML }</ol>
-        case false => <ul>{ childrenXML }</ul>
-      }
-      
       def markdown = childrenMarkdown
       
       // See the MarkdownList toString, equals, hashCode implementations
+    }
+    
+    class OrderedList( children : BlockSeq )
+    extends MarkdownList( children ) {
+     
+      def xml = <ol>{ childrenXML }</ol>
+      
+      def + ( item : OrderedSimpleItem ) : OrderedList =
+        new OrderedList( new GroupBlock( children ++ Seq( item ) ) )
+      
+      def + ( item : OrderedComplexItem ) : OrderedList =
+        new OrderedList( new GroupBlock( children ++ Seq( item ) ) )
+    }
+    
+    class UnorderedList( children : BlockSeq )
+    extends MarkdownList( children ) {
+     
+      def xml = <ul>{ childrenXML }</ul>
+      
+      def + ( item : UnorderedSimpleItem ) : UnorderedList =
+        new UnorderedList( new GroupBlock( children ++ Seq( item ) ) )
+      
+      def + ( item : UnorderedComplexItem ) : UnorderedList =
+        new UnorderedList( new GroupBlock( children ++ Seq( item ) ) )
     }
     
 
@@ -848,7 +866,6 @@ In implementation terms, we don't have a single list.
     }
     
     def sameElements( ml : MarkdownList ) : Boolean = {
-      ( ordered == ml.ordered ) &&
       ( children sameElements ml.children )
     }
 

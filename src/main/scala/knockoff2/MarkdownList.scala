@@ -6,19 +6,13 @@ import scala.util.parsing.input.{ NoPosition, Position }
 /**
  * @param ordered Alters the output, mostly.
  */
-class MarkdownList(
-  val ordered  : Boolean,
+abstract class MarkdownList(
   val children : BlockSeq
 ) extends ComplexBlock {
     
   val position = children.firstOption match {
     case None => NoPosition
     case Some( child ) => child.position
-  }
-  
-  def xml = ordered match {
-    case true  => <ol>{ childrenXML }</ol>
-    case false => <ul>{ childrenXML }</ul>
   }
   
   def markdown = childrenMarkdown
@@ -33,9 +27,32 @@ class MarkdownList(
   }
   
   def sameElements( ml : MarkdownList ) : Boolean = {
-    ( ordered == ml.ordered ) &&
     ( children sameElements ml.children )
   }
   
   def canEqual( t : MarkdownList ) : Boolean = t.getClass == getClass
+}
+
+class OrderedList( children : BlockSeq )
+extends MarkdownList( children ) {
+ 
+  def xml = <ol>{ childrenXML }</ol>
+  
+  def + ( item : OrderedSimpleItem ) : OrderedList =
+    new OrderedList( new GroupBlock( children ++ Seq( item ) ) )
+  
+  def + ( item : OrderedComplexItem ) : OrderedList =
+    new OrderedList( new GroupBlock( children ++ Seq( item ) ) )
+}
+
+class UnorderedList( children : BlockSeq )
+extends MarkdownList( children ) {
+ 
+  def xml = <ul>{ childrenXML }</ul>
+  
+  def + ( item : UnorderedSimpleItem ) : UnorderedList =
+    new UnorderedList( new GroupBlock( children ++ Seq( item ) ) )
+  
+  def + ( item : UnorderedComplexItem ) : UnorderedList =
+    new UnorderedList( new GroupBlock( children ++ Seq( item ) ) )
 }

@@ -50,7 +50,28 @@ with    HasElementFactory {
 
     input.firstOption.foreach{ case ((chunk, spans, position)) =>
       chunk match {
-        case TextChunk(_)  => output += para( toSpan(spans), position )
+        case TextChunk(_) =>
+          output += para( toSpan(spans), position )
+        case BulletLineChunk(_) => {
+          val li = usi( toSpan(spans), position )
+          output.last match {
+            case ul : UnorderedList => {
+              val appended = ul + li
+              output.update( output.length - 1, appended )
+            }
+            case _ => output += simpleUL( li )
+          }
+        }
+        case NumberedLineChunk(_) => {
+          val li = osi( toSpan(spans), position )
+          output.last match {
+            case ol : OrderedList => {
+              val appended = ol + li
+              output.update( output.length - 1, appended )
+            }
+            case _ => output += simpleOL( li )
+          }
+        }
         case EmptySpace(_) => {}
       }
     }

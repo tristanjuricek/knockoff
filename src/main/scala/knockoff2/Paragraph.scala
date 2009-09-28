@@ -4,14 +4,14 @@ import scala.xml.Elem
 import scala.util.parsing.input.Position
 
 class Paragraph(
-  val span      : Span,
+  val span      : SpanSeq,
   val position  : Position
 )
 extends SimpleBlock {
 
-  def markdown = span.markdown
+  def markdown = span.toMarkdown
 
-  def xml = <p>{ span.xml }</p>
+  def xml = <p>{ span.toXML }</p>
   
   override def toString = "Paragraph(" + markdown + ")"
   
