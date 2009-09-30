@@ -90,6 +90,16 @@ trait StringExtras {
         // Everything is balanced
         Some( nextClose )
       }
+      
+      def countLeading( ch : Char ) : Int = {
+        ( 0 /: wrapped ){ (total, next) =>
+          if ( next != ch ) return total
+          total + 1
+        }
+      }
+      
+      def trim( ch : Char ) : String =
+        ("^" + ch + "+(.*?\\s?)" + ch + "*+$").r.replaceFirstIn( wrapped, "$1" )
     }
 
     implicit def KnockoffCharSequence( s : CharSequence ) =

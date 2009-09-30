@@ -32,50 +32,24 @@ with    HasElementFactory {
   }
   
   /**
-    Recursively combine the next element of the input into the output sequence.
-    Because some elements (lists, code blocks separated uncleanly) affect the
-    output of nearby elements, this can alter how the next element is converted.
-    
-    @param input The recognized element being operated on
-    @param output The output sequence built in order.
+    Consume input and append the right thing to the output until empty. The
+    Chunk itself determines the "right thing to do". All chunks only know what
+    has come before itself, by peering into the output. (It shouldn't matter
+    what comes next...)
   */
   private def combine(
     input   : List[ (Chunk, SpanSeq, Position) ],
     output  : ListBuffer[ Block ]
   ) : BlockSeq = {
+
     if ( input.isEmpty ) return new GroupBlock( output.toSeq )
 
-    val factory = elementFactory
-    import factory._
+    input.head._1.appendNewBlock(
+      output,         // Adds block to the _end_
+      input.head._2,  // The spanning sequence (may be ignored)
+      input.head._3   // The position shoudl be passed through
+    )( elementFactory)
 
-    input.firstOption.foreach{ case ((chunk, spans, position)) =>
-      chunk match {
-        case TextChunk(_) =>
-          output += para( toSpan(spans), position )
-        case BulletLineChunk(_) => {
-          val li = usi( toSpan(spans), position )
-          output.last match {
-            case ul : UnorderedList => {
-              val appended = ul + li
-              output.update( output.length - 1, appended )
-            }
-            case _ => output += simpleUL( li )
-          }
-        }
-        case NumberedLineChunk(_) => {
-          val li = osi( toSpan(spans), position )
-          output.last match {
-            case ol : OrderedList => {
-              val appended = ol + li
-              output.update( output.length - 1, appended )
-            }
-            case _ => output += simpleOL( li )
-          }
-        }
-        case EmptySpace(_) => {}
-      }
-    }
-    
     combine( input.tail, output )
   }
 }

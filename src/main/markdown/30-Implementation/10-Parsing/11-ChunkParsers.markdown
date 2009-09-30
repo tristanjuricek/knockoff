@@ -9,12 +9,12 @@ part separately from the expressions here.
     
     import scala.util.parsing.combinator.RegexParsers
 
-    class ChunkParser extends RegexParsers {
+    class ChunkParser extends RegexParsers with StringExtras {
         
       override def skipWhitespace = false
       
       def chunk : Parser[ Chunk ] = {
-        bulletLead | textBlock | emptyLines
+        bulletLead | numberedLead | header | textBlock | emptyLines
       }
       
       def emptyLines : Parser[ Chunk ] =
@@ -45,6 +45,24 @@ part separately from the expressions here.
         }
       }
       
+      def header : Parser[ Chunk ] =
+        ( setextHeaderEquals | setextHeaderDashes | atxHeader )
+
+      def setextHeaderEquals : Parser[ Chunk ] =
+        textLine <~ equalsLine ^^ ( s => HeaderChunk( 1, s.content ) )
+
+      def setextHeaderDashes : Parser[ Chunk ] =
+        textLine <~ dashesLine ^^ ( s => HeaderChunk( 2, s.content ) )
+
+      def equalsLine : Parser[Any] = """=+\n?""".r
+
+      def dashesLine : Parser[Any] = """-+\n?""".r
+
+      def atxHeader : Parser[ Chunk ] = {
+        """#+ .*\n?""".r ^^ ( s =>
+          HeaderChunk( s.countLeading('#'), s.trim('#') )
+        )
+      }
       
       // Utility Methods
       

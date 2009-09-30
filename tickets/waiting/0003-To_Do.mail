@@ -1,8 +1,17 @@
 Subject: Things I have To Do
 
+
+
+* Each of the list elements should just simply be capable of having shit attached
+  via an append method. You don't know what that will be until then, but...
+
+* OK, the ChunkParser step may have to also be recursive. This is for cases like
+  blockquotes. Mmm... but how to manipulate position?
+
+* I need the <hr> and header stuff sorted before I complete the list tests
+
 # Add simple and complex list evaluation #
-* I don't see the numbered lines being matched in the test code
-* The header starts by being messed up
+* The header starts by ... being not implemented
 * The complex versus simple items are not cleanly sorted. We should only go to using
   internal <p> elements if there are truly complex statements. Hm...
 
