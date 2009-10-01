@@ -55,6 +55,9 @@ customizing the `ElementFactory` is pretty simple. You create a subtype of
       
       def head( l : Int, s : Span, p : Position ) =
         new Header( l, s, p )
+        
+      def hr( p : Position ) =
+        new HorizontalRule( p )
       
       def linkdef( i : String, u : String, t : Option[ String ], p : Position ) =
         new LinkDefinition( i, u, t, p )

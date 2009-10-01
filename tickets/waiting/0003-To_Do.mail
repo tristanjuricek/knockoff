@@ -1,7 +1,6 @@
 Subject: Things I have To Do
 
 
-
 * Each of the list elements should just simply be capable of having shit attached
   via an append method. You don't know what that will be until then, but...
 

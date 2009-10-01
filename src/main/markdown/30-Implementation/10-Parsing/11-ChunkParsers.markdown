@@ -14,7 +14,7 @@ part separately from the expressions here.
       override def skipWhitespace = false
       
       def chunk : Parser[ Chunk ] = {
-        bulletLead | numberedLead | header | textBlock | emptyLines
+        horizontalRule | bulletLead | numberedLead | header | textBlock | emptyLines
       }
       
       def emptyLines : Parser[ Chunk ] =
@@ -63,6 +63,13 @@ part separately from the expressions here.
           HeaderChunk( s.countLeading('#'), s.trim('#') )
         )
       }
+      
+      def horizontalRule : Parser[ Chunk ] = {
+        """[ ]{0,3}[*\-_][\t ]?[*\-_][\t ]?[*\-_][\t *\-_]*\n""".r ^^ {
+          s => HorizontalRuleChunk
+        }
+      }
+      
       
       // Utility Methods
       

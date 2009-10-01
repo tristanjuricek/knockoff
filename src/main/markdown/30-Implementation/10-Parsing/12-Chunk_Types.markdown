@@ -21,6 +21,7 @@ This is more of a reference to the typing of chunks.
     
     /** Mostly, a Chunk that is not empty. */
     case class TextChunk( val content : String ) extends Chunk {
+
       def appendNewBlock(
         list     : ListBuffer[ Block ],
         spans    : SpanSeq,
@@ -29,9 +30,22 @@ This is more of a reference to the typing of chunks.
         list += elementFactory.para( elementFactory.toSpan( spans ), position )
       }
     }
+    
+    case object HorizontalRuleChunk extends Chunk {
+      val content = "* * *\n"
+      
+      def appendNewBlock(
+        list     : ListBuffer[ Block ],
+        spans    : SpanSeq,
+        position : Position
+      )( elementFactory : ElementFactory ) {
+        list += elementFactory.hr( position )
+      }
+    }
 
     /** Note that this does not cover forced line breaks. */
     case class EmptySpace( val content : String ) extends Chunk {
+
       def appendNewBlock(
         list     : ListBuffer[ Block ],
         spans    : SpanSeq,
@@ -42,6 +56,7 @@ This is more of a reference to the typing of chunks.
     }
 
     case class BulletLineChunk( val content : String ) extends Chunk {
+
       def appendNewBlock(
         list     : ListBuffer[ Block ],
         spans    : SpanSeq,
@@ -63,6 +78,7 @@ This is more of a reference to the typing of chunks.
     }
     
     case class NumberedLineChunk( val content : String ) extends Chunk {
+
       def appendNewBlock(
         list     : ListBuffer[ Block ],
         spans    : SpanSeq,
@@ -84,6 +100,7 @@ This is more of a reference to the typing of chunks.
     }
     
     case class HeaderChunk( val level : Int, val content : String ) extends Chunk {
+
       def appendNewBlock(
         list     : ListBuffer[ Block ],
         spans    : SpanSeq,
