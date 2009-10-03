@@ -20,7 +20,7 @@ extends SimpleBlock {
   def markdown =
     preformattedLines.map{ line =>  "    " + line }.mkString("")
       
-  def xml : Node = <pre><code>{ Unparsed( preformatted ) }</code></pre>
+  def xml : Node = <pre><code>{ preformatted }</code></pre>
   
   override def toString = "CodeBlock(" + preformatted + ")"
   

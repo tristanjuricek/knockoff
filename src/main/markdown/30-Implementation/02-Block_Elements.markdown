@@ -322,7 +322,7 @@ if you want to inject a series of line numbers via `<span>` elements.
       def markdown =
         preformattedLines.map{ line =>  "    " + line }.mkString("")
           
-      def xml : Node = <pre><code>{ Unparsed( preformatted ) }</code></pre>
+      def xml : Node = <pre><code>{ preformatted }</code></pre>
       
       // See the CodeBlock toString, equals, hashCode implementations
     }
