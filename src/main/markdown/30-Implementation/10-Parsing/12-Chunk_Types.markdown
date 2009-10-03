@@ -110,3 +110,23 @@ This is more of a reference to the typing of chunks.
       }
     }
 
+    /**
+      This represents a group of lines that have at least 4 spaces/1 tab preceding
+      the line.
+    */
+    case class IndentedChunk( val content : String ) extends Chunk {
+      
+      lazy val lines = io.Source.fromString( content ).getLines.toList
+      
+      /**
+        If the block before is a list, we append this to the end of that list.
+        Otherwise, append it as a new block item.
+      */
+      def appendNewBlock(
+        list     : ListBuffer[ Block ],
+        spans    : SpanSeq,
+        position : Position
+      )( elementFactory : ElementFactory ) {
+        
+      }
+    }

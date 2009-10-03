@@ -356,16 +356,20 @@ unordered, though the `ElementFactory` has helper methods to make this decision.
 How this might look in code:
 
     val olist = olist(
-      li( para("some text") ),
-      li( para("uno"), para("dos") )
+      oi( para("some text") ),
+      oi( para("uno"), para("dos") )
     )
     
     val ulist = ulist(
-      li("list item 1"),
-      li("list item 2")
+      ui("list item 1"),
+      ui("list item 2")
     )
-    
-Thesre codes would be represented as:
+
+Note the difference between the list items `oi` of the `olist` and the `ui` of the
+`ulist`. This makes discovery of the list much simpler during the parsing process,
+and prevents you from mistakenly globbing inconsistent lists together.
+
+These codes would be represented as:
 
     <ol>
       <li><p>some text</p></li>
@@ -384,21 +388,54 @@ In implementation terms, we don't have a single list.
 
 #### `SimpleItem`
 
+> TODO : Self, you are in the middle of redefining what these lists
+> are to become.  I think you made a mistake by having "simple" and
+> "complex" lists. You should just have "lists". And those lists are
+> really just groups of either ordered or unordered items. Each item
+> can just append more blocks, which turns the item into something a
+> bit more complex: when the item has more than 1 block, everything
+> underneath is delimited - by <p> or whatever. Otherwise, it just
+> slides right into li.
+>
+> Hm, we may need to consult the testing plan, because it could be that
+> the spec wants blocks as consistent within the list. Not hard, either
+> way.
+
     // In knockoff2/SimpleItem.scala
     package knockoff2
     
     import scala.util.parsing.input.Position
     
-    trait PrefixedItem {
+    trait PrefixedItem { self : ComplexBlock =>
       def itemPrefix : String
+      
+      /** Create a new unordered item ... */
+      def + ( b : Block ) : UnorderedItem
+      
     }
     
-    trait OrderedItem extends PrefixedItem {
-      def itemPrefix = "* "
-    }
-    
-    trait UnorderedItem extends PrefixedItem {
+    class OrderedItem(
+      val children : BlockSeq,
+      val position : Position
+    ) extends ComplexBlock with PrefixedItem {
+      
       def itemPrefix = "1. "
+      
+      
+    }
+        
+    class UnorderedItem(
+      val children : BlockSeq,
+      val position : Position
+    ) extends PrefixedItem with ComplexBlock {
+      
+      def this( s : SpanSeq, p : Position ) =
+        this(
+      
+      def itemPrefix = "* "
+      
+      
+      // TODO toString, equals, hashCode (yay)
     }
 
     abstract class SimpleItem (
