@@ -62,16 +62,19 @@ This is more of a reference to the typing of chunks.
         spans    : SpanSeq,
         position : Position
       )( elementFactory : ElementFactory ) {
-        val li = elementFactory.usi( elementFactory.toSpan(spans), position )
+        val li = elementFactory.uli(
+          elementFactory.para(spans, position),
+          position
+        )
         if ( list.isEmpty ) {
-          list += elementFactory.simpleUL( li )
+          list += elementFactory.ulist( li )
         } else {
           list.last match {
             case ul : UnorderedList => {
               val appended = ul + li
               list.update( list.length - 1, appended )
             }
-            case _ => list += elementFactory.simpleUL( li )
+            case _ => list += elementFactory.ulist( li )
           }
         }
       }
@@ -84,16 +87,19 @@ This is more of a reference to the typing of chunks.
         spans    : SpanSeq,
         position : Position
       )( elementFactory : ElementFactory ) {
-        val li = elementFactory.osi( elementFactory.toSpan(spans), position )
+        val li = elementFactory.oli(
+          elementFactory.para(spans, position),
+          position
+        )
         if ( list.isEmpty ) {
-          list += elementFactory.simpleOL( li )
+          list += elementFactory.olist( li )
         } else {
           list.last match {
             case ol : OrderedList => {
               val appended = ol + li
               list.update( list.length - 1, appended )
             }
-            case _ => list += elementFactory.simpleOL( li )
+            case _ => list += elementFactory.olist( li )
           }
         }
       }
@@ -127,6 +133,18 @@ This is more of a reference to the typing of chunks.
         spans    : SpanSeq,
         position : Position
       )( elementFactory : ElementFactory ) {
-        
+        list.last match {
+          case ml : MarkdownList => {
+            list += elementFactory.para( spans, position )
+          }
+          case _ => {
+            spans.first match {
+              case text : Text =>
+                list += elementFactory.codeBlock( text, position )
+              case s : Span =>
+                error( "Expected Text(code) for code block addition, not " + s )
+            }
+          }
+        }
       }
     }

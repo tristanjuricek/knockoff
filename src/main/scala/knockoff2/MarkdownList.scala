@@ -9,7 +9,7 @@ import scala.util.parsing.input.{ NoPosition, Position }
 abstract class MarkdownList(
   val children : BlockSeq
 ) extends ComplexBlock {
-    
+  
   val position = children.firstOption match {
     case None => NoPosition
     case Some( child ) => child.position
@@ -19,7 +19,10 @@ abstract class MarkdownList(
   
   override def toString = "MarkdownList(" + markdown + ")"
   
-  override def hashCode : Int = position.hashCode + 47
+  override def hashCode : Int = {
+    ( 13 /: children )( (total, child) => total + 51 + 3 * child.hashCode ) +
+    position.hashCode + 47
+  }
   
   override def equals( rhs : Any ) : Boolean = rhs match {
     case t : MarkdownList => t.canEqual( this ) && ( t sameElements this )
@@ -38,11 +41,8 @@ extends MarkdownList( children ) {
  
   def xml = <ol>{ childrenXML }</ol>
   
-  def + ( item : OrderedSimpleItem ) : OrderedList =
-    new OrderedList( new GroupBlock( children ++ Seq( item ) ) )
-  
-  def + ( item : OrderedComplexItem ) : OrderedList =
-    new OrderedList( new GroupBlock( children ++ Seq( item ) ) )
+  def + ( item : OrderedItem ) : OrderedList =
+    new OrderedList( new GroupBlock( children ++ Seq( item ) ) )      
 }
 
 class UnorderedList( children : BlockSeq )
@@ -50,9 +50,6 @@ extends MarkdownList( children ) {
  
   def xml = <ul>{ childrenXML }</ul>
   
-  def + ( item : UnorderedSimpleItem ) : UnorderedList =
-    new UnorderedList( new GroupBlock( children ++ Seq( item ) ) )
-  
-  def + ( item : UnorderedComplexItem ) : UnorderedList =
+  def + ( item : UnorderedItem ) : UnorderedList =
     new UnorderedList( new GroupBlock( children ++ Seq( item ) ) )
 }

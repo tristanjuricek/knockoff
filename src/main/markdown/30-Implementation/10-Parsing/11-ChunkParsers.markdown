@@ -14,7 +14,8 @@ part separately from the expressions here.
       override def skipWhitespace = false
       
       def chunk : Parser[ Chunk ] = {
-        horizontalRule | bulletLead | numberedLead | header | textBlock | emptyLines
+        horizontalRule | bulletLead | numberedLead | indentedChunk | 
+        header | textBlock | emptyLines
       }
       
       def emptyLines : Parser[ Chunk ] =
@@ -69,6 +70,13 @@ part separately from the expressions here.
           s => HorizontalRuleChunk
         }
       }
+      
+      def indentedChunk : Parser[ Chunk ] = 
+        rep1( indentedLine ) ^^ ( lines => IndentedChunk( foldedString( lines ) ) )
+      
+      def indentedLine : Parser[ Chunk ] =
+        """\t|[ ]{4}""".r ~> ( textLine | emptyLine )
+      
       
       
       // Utility Methods

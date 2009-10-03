@@ -52,7 +52,7 @@ In some other cases, the block is a pretty complex thing:
         val children : Seq[ Block ]
         val span = new SpanSeq{ def theSeq = children.flatMap( _.span ) }
         def theSeq = children
-        def childrenMarkdown = children.map( _.markdown ).mkString("\n")
+        def childrenMarkdown = children.map( _.markdown ).mkString("\n") + "\n"
         def childrenXML = children.map( _.xml )
     }
 
@@ -401,80 +401,19 @@ In implementation terms, we don't have a single list.
 > the spec wants blocks as consistent within the list. Not hard, either
 > way.
 
-    // In knockoff2/SimpleItem.scala
+    // In knockoff2/ListItem.scala
     package knockoff2
     
     import scala.util.parsing.input.Position
+    import scala.xml.Node
     
-    trait PrefixedItem { self : ComplexBlock =>
+    abstract class ListItem(
+      val children : BlockSeq,
+      val position : Position
+    )
+    extends ComplexBlock {
+
       def itemPrefix : String
-      
-      /** Create a new unordered item ... */
-      def + ( b : Block ) : UnorderedItem
-      
-    }
-    
-    class OrderedItem(
-      val children : BlockSeq,
-      val position : Position
-    ) extends ComplexBlock with PrefixedItem {
-      
-      def itemPrefix = "1. "
-      
-      
-    }
-        
-    class UnorderedItem(
-      val children : BlockSeq,
-      val position : Position
-    ) extends PrefixedItem with ComplexBlock {
-      
-      def this( s : SpanSeq, p : Position ) =
-        this(
-      
-      def itemPrefix = "* "
-      
-      
-      // TODO toString, equals, hashCode (yay)
-    }
-
-    abstract class SimpleItem (
-      val span     : SpanSeq,
-      val position : Position   
-    )
-    extends SimpleBlock
-    with    PrefixedItem {
-        
-      def xml = <li>{ span.toXML }</li>
-      
-      def markdown = itemPrefix + span.toMarkdown
-      
-      // See the SimpleItem toString, equals, hashCode implementations
-    }
-    
-    class   OrderedSimpleItem( span : SpanSeq, position : Position )
-    extends SimpleItem( span, position )
-    with    OrderedItem
-    
-    class   UnorderedSimpleItem( span : SpanSeq, position : Position )
-    extends SimpleItem( span, position )
-    with    UnorderedItem
-
-#### `ComplexItem`
-
-    // In knockoff2/ComplexItem.scala
-    package knockoff2
-    
-    import scala.util.parsing.input.Position
-    
-    abstract class ComplexItem(
-      val children : BlockSeq,
-      val position : Position
-    )
-    extends ComplexBlock
-    with    PrefixedItem {
-        
-      def xml = <li>{ childrenXML }</li>
       
       def markdown : String = {
         if ( children.isEmpty ) return ""
@@ -485,18 +424,65 @@ In implementation terms, we don't have a single list.
         )
       }
       
-      // See the ComplexItem toString, equals, hashCode implementations
+      def xml( complex : Boolean ) : Node = <li>{
+        if ( isComplex )
+          children.first.span.toXML
+        else
+          childrenXML 
+      }</li>
+      
+      def xml : Node = xml( isComplex )
+      
+      def isComplex = children.length > 1
+      
+      // See the ListItem toString, equals, hashCode implementation
     }
-    
-    class   OrderedComplexItem( children : BlockSeq, position : Position )
-    extends ComplexItem( children, position )
-    with    OrderedItem
+      
+### `OrderedItem`
 
-    class   UnorderedComplexItem( children : BlockSeq, position : Position )
-    extends ComplexItem( children, position )
-    with    UnorderedItem
+    // In knockoff2/OrderedItem.scala
+    package knockoff2
+
+    import scala.util.parsing.input.Position
     
+    class OrderedItem( children : BlockSeq, position : Position )
+    extends ListItem( children, position ) {
+
+      def this( block : Block, position : Position ) =
+        this( new BlockSeq{ val theSeq = Seq( block ) }, position )
+      
+      def itemPrefix = "1. "
+      
+      def + ( b : Block ) : OrderedItem =
+        new OrderedItem( children, children.first.position )        
+    }
+
+### `UnorderedItem`
+
+    // In knockoff2/UnorderedItem.scala
+    package knockoff2
+    
+    import scala.util.parsing.input.Position
+        
+    class UnorderedItem( children : BlockSeq, position : Position )
+    extends ListItem( children, position ) {
+      
+      def this( block : Block, position : Position ) =
+        this( new BlockSeq{ val theSeq = Seq( block ) }, position )
+      
+      def itemPrefix = "* "
+      
+      def + ( b : Block ) : UnorderedItem =
+        new UnorderedItem( children, children.first.position )
+    }
+
 #### `MarkdownList`
+
+Lists just contain items, and are either ordered or unordered.
+
+The position of a list is a little spurious: the start of the list should be
+the position of the first item, however, it's elements may not contain the
+entire content; whitespace will be missing in complex cases.
 
     // In knockoff2/MarkdownList.scala
     package knockoff2
@@ -510,7 +496,7 @@ In implementation terms, we don't have a single list.
     abstract class MarkdownList(
       val children : BlockSeq
     ) extends ComplexBlock {
-        
+      
       val position = children.firstOption match {
         case None => NoPosition
         case Some( child ) => child.position
@@ -526,11 +512,8 @@ In implementation terms, we don't have a single list.
      
       def xml = <ol>{ childrenXML }</ol>
       
-      def + ( item : OrderedSimpleItem ) : OrderedList =
-        new OrderedList( new GroupBlock( children ++ Seq( item ) ) )
-      
-      def + ( item : OrderedComplexItem ) : OrderedList =
-        new OrderedList( new GroupBlock( children ++ Seq( item ) ) )
+      def + ( item : OrderedItem ) : OrderedList =
+        new OrderedList( new GroupBlock( children ++ Seq( item ) ) )      
     }
     
     class UnorderedList( children : BlockSeq )
@@ -538,10 +521,7 @@ In implementation terms, we don't have a single list.
      
       def xml = <ul>{ childrenXML }</ul>
       
-      def + ( item : UnorderedSimpleItem ) : UnorderedList =
-        new UnorderedList( new GroupBlock( children ++ Seq( item ) ) )
-      
-      def + ( item : UnorderedComplexItem ) : UnorderedList =
+      def + ( item : UnorderedItem ) : UnorderedList =
         new UnorderedList( new GroupBlock( children ++ Seq( item ) ) )
     }
     
@@ -820,65 +800,32 @@ In implementation terms, we don't have a single list.
 
     def canEqual( t : HorizontalRule ) : Boolean = t.getClass == getClass
 
-### `SimpleItem`
 
-#### `SimpleItem` - Package and Imports
+### `ListItem`
 
-    // The SimpleItem package and imports
-    package knockoff2
+#### `ListItem` - `toString`, `equals`, `hashCode`
 
-    import scala.xml.{ Node, Unparsed }
-    import scala.io.Source
-    import scala.util.parsing.input.Position
+    // The ListItem toString, equals, hashCode implementations
+    override def toString = "ListItem(" + markdown + ")"
 
-#### `SimpleItem` - `toString`, `equals`, `hashCode`
-
-    // The SimpleItem toString, equals, hashCode implementations
-    override def toString = "SimpleItem(" + markdown + ")"
-
-    override def hashCode : Int = position.hashCode + 47
+    override def hashCode : Int =  {
+      ( 11 /: children )( (total, child) => total + 51 + 3 * child.hashCode ) +
+      position.hashCode + 47
+    }
 
     override def equals( rhs : Any ) : Boolean = rhs match {
-      case t : SimpleItem => t.canEqual( this ) && ( this sameElements t )
+      case t : ListItem => t.canEqual( this ) && ( this sameElements t )
       case _ => false
     }
     
-    def sameElements( si : SimpleItem ) : Boolean = {
-      ( span == si.span ) &&
-      ( position == si.position )
-    }
-
-    def canEqual( t : SimpleItem ) : Boolean = t.getClass == getClass
-
-### `ComplexItem`
-
-#### `ComplexItem` - Package and Imports
-
-    // The ComplexItem package and imports
-    package knockoff2
-
-    import scala.xml.{ Node, Unparsed }
-    import scala.io.Source
-    import scala.util.parsing.input.Position
-
-#### `ComplexItem` - `toString`, `equals`, `hashCode`
-
-    // The ComplexItem toString, equals, hashCode implementations
-    override def toString = "ComplexItem(" + markdown + ")"
-
-    override def hashCode : Int = position.hashCode + 47
-
-    override def equals( rhs : Any ) : Boolean = rhs match {
-      case t : ComplexItem => t.canEqual( this ) && ( this sameElements t )
-      case _ => false
-    }
-    
-    def sameElements( ci : ComplexItem ) : Boolean = {
+    def sameElements( ci : ListItem ) : Boolean = {
       ( children == ci.children ) &&
       ( position == ci.position )
     }
 
-    def canEqual( t : ComplexItem ) : Boolean = t.getClass == getClass
+    def canEqual( t : ListItem ) : Boolean = t.getClass == getClass
+
+
 
 ### `MarkdownList`
 
@@ -895,7 +842,10 @@ In implementation terms, we don't have a single list.
     // The MarkdownList toString, equals, hashCode implementations
     override def toString = "MarkdownList(" + markdown + ")"
 
-    override def hashCode : Int = position.hashCode + 47
+    override def hashCode : Int = {
+      ( 13 /: children )( (total, child) => total + 51 + 3 * child.hashCode ) +
+      position.hashCode + 47
+    }
 
     override def equals( rhs : Any ) : Boolean = rhs match {
       case t : MarkdownList => t.canEqual( this ) && ( t sameElements this )

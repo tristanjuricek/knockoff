@@ -62,7 +62,12 @@ of that span.
       /**
         The SpanConverter is a map method from Chunk to SpanSeq
       */
-      def apply( chunk : Chunk ) : SpanSeq = convert( chunk.content, Nil )
+      def apply( chunk : Chunk ) : SpanSeq = {
+        chunk match {
+          case IndentedChunk( content ) => new Text( content )
+          case _ => convert( chunk.content, Nil )
+        }
+      }
       
       /**
         Tail-recursive method halts when the content argument is empty.

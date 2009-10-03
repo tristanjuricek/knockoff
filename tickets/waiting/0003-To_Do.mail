@@ -1,11 +1,9 @@
 Subject: Things I have To Do
 
+* Complete code vs list item attachment
 
-* Each of the list elements should just simply be capable of having shit attached
-  via an append method. You don't know what that will be until then, but...
-
-* OK, the ChunkParser step may have to also be recursive. This is for cases like
-  blockquotes. Mmm... but how to manipulate position?
+* OK, the ChunkParser step may have to also be recursive. This is for cases
+  like blockquotes. Mmm... but how to manipulate position?
 
 * I need the <hr> and header stuff sorted before I complete the list tests
 

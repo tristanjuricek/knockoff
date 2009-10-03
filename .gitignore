@@ -1,1 +1,8 @@
 knockoff.tmproj
+lib
+lib_managed
+target
+project/boot
+*/project/boot
+src_managed
+test-output

@@ -5,7 +5,7 @@ extends DefaultProject( info )
 with    knockoff.Literable {
   
   override def compileOptions = {
-    List( MaxCompileErrors( 10 ), CompileOption("-unchecked") ) :::
+    List( MaxCompileErrors( 5 ), CompileOption("-unchecked") ) :::
     super.compileOptions.toList
   }
   

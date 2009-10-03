@@ -50,10 +50,10 @@ customizing the `ElementFactory` is pretty simple. You create a subtype of
 
       // Block Elements
       
-      def para( s : Span, p : Position ) =
+      def para( s : SpanSeq, p : Position ) =
         new Paragraph( s, p )
       
-      def head( l : Int, s : Span, p : Position ) =
+      def head( l : Int, s : SpanSeq, p : Position ) =
         new Header( l, s, p )
         
       def hr( p : Position ) =
@@ -68,29 +68,31 @@ customizing the `ElementFactory` is pretty simple. You create a subtype of
       def htmlBlock( h : String, p : Position ) : HTMLBlock =
         new HTMLBlock( h, p )
       
-      def simpleOL( osis : OrderedSimpleItem * ) : MarkdownList =
-        new OrderedList( new BlockSeq{ def theSeq = osis } )
+      def codeBlock( s : String, p : Position ) : CodeBlock =
+        codeBlock( text(s), p )
       
-      def complexOL( ocis : OrderedComplexItem * ) : MarkdownList =
-        new OrderedList( new BlockSeq{ def theSeq = ocis } )
+      def codeBlock( t : Text, p : Position ) : CodeBlock =
+        new CodeBlock( t, p )
       
-      def simpleUL( usis : UnorderedSimpleItem * ) : MarkdownList =
-        new UnorderedList( new BlockSeq{ def theSeq = usis } )
+      def olist( olis : OrderedItem * ) : OrderedList = new OrderedList(
+        if ( olis.length == 1 ) olis.first else new GroupBlock( olis )
+      )
+      
+      def ulist( ulis : UnorderedItem * ) : UnorderedList = new UnorderedList(
+        if ( ulis.length == 1 ) ulis.first else new GroupBlock( ulis )
+      )
+      
+      def uli( b : Block, p : Position ) : UnorderedItem =
+        new UnorderedItem( b, p )
+  
+      def uli( bs : BlockSeq, p : Position ) : UnorderedItem =
+        new UnorderedItem( bs, p )
 
-      def complexUL( ucis : UnorderedComplexItem * ) : MarkdownList =
-        new UnorderedList( new BlockSeq{ def theSeq = ucis } )
-      
-      def osi( s : Span, p : Position ) : OrderedSimpleItem =
-        new OrderedSimpleItem( s, p )
-      
-      def oci( b : BlockSeq, p : Position ) : OrderedComplexItem =
-        new OrderedComplexItem( b, p )
+      def oli( b : Block, p : Position ) : OrderedItem =
+        new OrderedItem( b, p )
 
-      def usi( s : Span, p : Position ) : UnorderedSimpleItem =
-        new UnorderedSimpleItem( s, p )
-
-      def uci( b : BlockSeq, p : Position ) : UnorderedComplexItem =
-        new UnorderedComplexItem( b, p )
+      def oli( bs : BlockSeq, p : Position ) : OrderedItem =
+        new OrderedItem( bs, p )
       
       
       // Span Elements

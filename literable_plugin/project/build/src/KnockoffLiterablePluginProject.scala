@@ -13,7 +13,7 @@ class KnockoffLiterablePluginProject(info: ProjectInfo) extends PluginProject(in
     val knockoff    = "com.tristanhunt" % "knockoff" % "0.4.1"
     val site_step   = "com.tristanhunt" % "site_step" % "0.4.0"
     val literable   = "com.tristanhunt" % "literable" % "0.4.5"
-    val sbt_plugin  = "com.tristanhunt" % "literable_sbt_plugin" % "0.4.5"
+    val sbt_plugin  = "com.tristanhunt" % "literable_sbt_plugin" % "0.4.4"
     
     override def managedStyle = ManagedStyle.Maven
     val publishTo = "tristanhunt releases" at "http://tristanhunt.com:8081/content/repositories/releases/"
