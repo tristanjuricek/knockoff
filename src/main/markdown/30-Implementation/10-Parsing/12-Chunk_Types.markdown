@@ -16,7 +16,7 @@ This is more of a reference to the typing of chunks.
         list     : ListBuffer[ Block ],
         spans    : SpanSeq,
         position : Position
-      )( elementFactory : ElementFactory )
+      )( elementFactory : ElementFactory, discounter : Discounter )
     }
     
     /** Mostly, a Chunk that is not empty. */
@@ -26,7 +26,7 @@ This is more of a reference to the typing of chunks.
         list     : ListBuffer[ Block ],
         spans    : SpanSeq,
         position : Position
-      )( elementFactory : ElementFactory ) {
+      )( elementFactory : ElementFactory, discounter : Discounter ) {
         list += elementFactory.para( elementFactory.toSpan( spans ), position )
       }
     }
@@ -38,7 +38,7 @@ This is more of a reference to the typing of chunks.
         list     : ListBuffer[ Block ],
         spans    : SpanSeq,
         position : Position
-      )( elementFactory : ElementFactory ) {
+      )( elementFactory : ElementFactory, discounter : Discounter ) {
         list += elementFactory.hr( position )
       }
     }
@@ -50,7 +50,7 @@ This is more of a reference to the typing of chunks.
         list     : ListBuffer[ Block ],
         spans    : SpanSeq,
         position : Position
-      )( elementFactory : ElementFactory ) {
+      )( elementFactory : ElementFactory, discounter : Discounter ) {
         // This space for rent.
       }
     }
@@ -61,7 +61,7 @@ This is more of a reference to the typing of chunks.
         list     : ListBuffer[ Block ],
         spans    : SpanSeq,
         position : Position
-      )( elementFactory : ElementFactory ) {
+      )( elementFactory : ElementFactory, discounter : Discounter ) {
         val li = elementFactory.uli(
           elementFactory.para(spans, position),
           position
@@ -86,7 +86,7 @@ This is more of a reference to the typing of chunks.
         list     : ListBuffer[ Block ],
         spans    : SpanSeq,
         position : Position
-      )( elementFactory : ElementFactory ) {
+      )( elementFactory : ElementFactory, discounter : Discounter ) {
         val li = elementFactory.oli(
           elementFactory.para(spans, position),
           position
@@ -111,7 +111,7 @@ This is more of a reference to the typing of chunks.
         list     : ListBuffer[ Block ],
         spans    : SpanSeq,
         position : Position
-      )( elementFactory : ElementFactory ) {
+      )( elementFactory : ElementFactory, discounter : Discounter ) {
         list += elementFactory.head( level, elementFactory.toSpan(spans), position )
       }
     }
@@ -132,7 +132,7 @@ This is more of a reference to the typing of chunks.
         list     : ListBuffer[ Block ],
         spans    : SpanSeq,
         position : Position
-      )( elementFactory : ElementFactory ) {
+      )( elementFactory : ElementFactory, discounter : Discounter ) {
         list.last match {
           case ml : MarkdownList => {
             list += elementFactory.para( spans, position )

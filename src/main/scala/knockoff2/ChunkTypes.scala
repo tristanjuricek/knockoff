@@ -11,7 +11,7 @@ trait Chunk {
     list     : ListBuffer[ Block ],
     spans    : SpanSeq,
     position : Position
-  )( elementFactory : ElementFactory )
+  )( elementFactory : ElementFactory, discounter : Discounter )
 }
 
 /** Mostly, a Chunk that is not empty. */
@@ -21,7 +21,7 @@ case class TextChunk( val content : String ) extends Chunk {
     list     : ListBuffer[ Block ],
     spans    : SpanSeq,
     position : Position
-  )( elementFactory : ElementFactory ) {
+  )( elementFactory : ElementFactory, discounter : Discounter ) {
     list += elementFactory.para( elementFactory.toSpan( spans ), position )
   }
 }
@@ -33,7 +33,7 @@ case object HorizontalRuleChunk extends Chunk {
     list     : ListBuffer[ Block ],
     spans    : SpanSeq,
     position : Position
-  )( elementFactory : ElementFactory ) {
+  )( elementFactory : ElementFactory, discounter : Discounter ) {
     list += elementFactory.hr( position )
   }
 }
@@ -45,7 +45,7 @@ case class EmptySpace( val content : String ) extends Chunk {
     list     : ListBuffer[ Block ],
     spans    : SpanSeq,
     position : Position
-  )( elementFactory : ElementFactory ) {
+  )( elementFactory : ElementFactory, discounter : Discounter ) {
     // This space for rent.
   }
 }
@@ -56,7 +56,7 @@ case class BulletLineChunk( val content : String ) extends Chunk {
     list     : ListBuffer[ Block ],
     spans    : SpanSeq,
     position : Position
-  )( elementFactory : ElementFactory ) {
+  )( elementFactory : ElementFactory, discounter : Discounter ) {
     val li = elementFactory.uli(
       elementFactory.para(spans, position),
       position
@@ -81,7 +81,7 @@ case class NumberedLineChunk( val content : String ) extends Chunk {
     list     : ListBuffer[ Block ],
     spans    : SpanSeq,
     position : Position
-  )( elementFactory : ElementFactory ) {
+  )( elementFactory : ElementFactory, discounter : Discounter ) {
     val li = elementFactory.oli(
       elementFactory.para(spans, position),
       position
@@ -106,7 +106,7 @@ case class HeaderChunk( val level : Int, val content : String ) extends Chunk {
     list     : ListBuffer[ Block ],
     spans    : SpanSeq,
     position : Position
-  )( elementFactory : ElementFactory ) {
+  )( elementFactory : ElementFactory, discounter : Discounter ) {
     list += elementFactory.head( level, elementFactory.toSpan(spans), position )
   }
 }
@@ -127,7 +127,7 @@ case class IndentedChunk( val content : String ) extends Chunk {
     list     : ListBuffer[ Block ],
     spans    : SpanSeq,
     position : Position
-  )( elementFactory : ElementFactory ) {
+  )( elementFactory : ElementFactory, discounter : Discounter ) {
     list.last match {
       case ml : MarkdownList => {
         list += elementFactory.para( spans, position )
