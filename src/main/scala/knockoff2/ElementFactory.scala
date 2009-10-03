@@ -31,13 +31,11 @@ class ElementFactory {
   def codeBlock( t : Text, p : Position ) : CodeBlock =
     new CodeBlock( t, p )
   
-  def olist( olis : OrderedItem * ) : OrderedList = new OrderedList(
-    if ( olis.length == 1 ) olis.first else new GroupBlock( olis )
-  )
+  def olist( olis : OrderedItem * ) : OrderedList =
+    new OrderedList( olis )
   
-  def ulist( ulis : UnorderedItem * ) : UnorderedList = new UnorderedList(
-    if ( ulis.length == 1 ) ulis.first else new GroupBlock( ulis )
-  )
+  def ulist( ulis : UnorderedItem * ) : UnorderedList =
+    new UnorderedList( ulis )
   
   def uli( b : Block, p : Position ) : UnorderedItem =
     new UnorderedItem( b, p )

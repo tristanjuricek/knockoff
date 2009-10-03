@@ -31,5 +31,7 @@ extends ComplexBlock {
   
   def isComplex = children.length > 1
   
+  def + ( block : Block ) : ListItem
+  
   // See the ListItem toString, equals, hashCode implementation
 }

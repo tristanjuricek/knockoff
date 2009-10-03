@@ -386,20 +386,7 @@ container.
 
 In implementation terms, we don't have a single list.
 
-#### `SimpleItem`
-
-> TODO : Self, you are in the middle of redefining what these lists
-> are to become.  I think you made a mistake by having "simple" and
-> "complex" lists. You should just have "lists". And those lists are
-> really just groups of either ordered or unordered items. Each item
-> can just append more blocks, which turns the item into something a
-> bit more complex: when the item has more than 1 block, everything
-> underneath is delimited - by <p> or whatever. Otherwise, it just
-> slides right into li.
->
-> Hm, we may need to consult the testing plan, because it could be that
-> the spec wants blocks as consistent within the list. Not hard, either
-> way.
+#### `ListItem`
 
     // In knockoff2/ListItem.scala
     package knockoff2
@@ -435,6 +422,8 @@ In implementation terms, we don't have a single list.
       
       def isComplex = children.length > 1
       
+      def + ( block : Block ) : ListItem
+      
       // See the ListItem toString, equals, hashCode implementation
     }
       
@@ -453,8 +442,8 @@ In implementation terms, we don't have a single list.
       
       def itemPrefix = "1. "
       
-      def + ( b : Block ) : OrderedItem =
-        new OrderedItem( children, children.first.position )        
+      def + ( b : Block ) : ListItem =
+        new OrderedItem( new GroupBlock( children ++ Seq(b) ), children.first.position )
     }
 
 ### `UnorderedItem`
@@ -472,8 +461,8 @@ In implementation terms, we don't have a single list.
       
       def itemPrefix = "* "
       
-      def + ( b : Block ) : UnorderedItem =
-        new UnorderedItem( children, children.first.position )
+      def + ( b : Block ) : ListItem =
+        new UnorderedItem( new GroupBlock( children ++ Seq(b) ), children.first.position )
     }
 
 #### `MarkdownList`
@@ -494,8 +483,10 @@ entire content; whitespace will be missing in complex cases.
      * @param ordered Alters the output, mostly.
      */
     abstract class MarkdownList(
-      val children : BlockSeq
+      val items : Seq[ ListItem ]
     ) extends ComplexBlock {
+      
+      val children = items
       
       val position = children.firstOption match {
         case None => NoPosition
@@ -504,25 +495,38 @@ entire content; whitespace will be missing in complex cases.
       
       def markdown = childrenMarkdown
       
+      /**
+        Create a new list with the block appended to the last item.
+      */
+      def + ( block : Block ) : MarkdownList 
+      
       // See the MarkdownList toString, equals, hashCode implementations
     }
     
-    class OrderedList( children : BlockSeq )
-    extends MarkdownList( children ) {
+    class OrderedList( items : Seq[ ListItem ] )
+    extends MarkdownList( items ) {
      
       def xml = <ol>{ childrenXML }</ol>
       
       def + ( item : OrderedItem ) : OrderedList =
-        new OrderedList( new GroupBlock( children ++ Seq( item ) ) )      
+        new OrderedList( children ++ Seq(item) )
+    
+      def + ( block : Block ) : MarkdownList = new OrderedList(
+        children.take( children.length - 1 ) ++ Seq(children.last + block)
+      )
     }
     
-    class UnorderedList( children : BlockSeq )
-    extends MarkdownList( children ) {
+    class UnorderedList( items : Seq[ ListItem ] )
+    extends MarkdownList( items ) {
      
       def xml = <ul>{ childrenXML }</ul>
       
       def + ( item : UnorderedItem ) : UnorderedList =
-        new UnorderedList( new GroupBlock( children ++ Seq( item ) ) )
+        new UnorderedList( children ++ Seq(item) )
+
+      def + ( block : Block ) : MarkdownList = new UnorderedList(
+        children.take( children.length - 1 ) ++ Seq(children.last + block)
+      )
     }
     
 

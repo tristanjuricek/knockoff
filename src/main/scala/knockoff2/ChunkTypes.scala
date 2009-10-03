@@ -118,10 +118,19 @@ case class HeaderChunk( val level : Int, val content : String ) extends Chunk {
 case class IndentedChunk( val content : String ) extends Chunk {
   
   lazy val lines = io.Source.fromString( content ).getLines.toList
+
+  lazy val shiftedLines = lines.map{ line =>
+    """^[ ]{4}|^\t""".r.replaceAllIn( line, "" )
+  }
+  
+  lazy val shiftedContent = shiftedLines.mkString("\n") + "\n"
   
   /**
     If the block before is a list, we append this to the end of that list.
-    Otherwise, append it as a new block item.
+    Otherwise, append it as a new code block. Two code blocks will get combined
+    here (because it's common to have an empty line not be indented in many
+    editors). Appending to the end of a list means that we strip out the first
+    indent and reparse things.
   */
   def appendNewBlock(
     list     : ListBuffer[ Block ],
@@ -130,7 +139,9 @@ case class IndentedChunk( val content : String ) extends Chunk {
   )( elementFactory : ElementFactory, discounter : Discounter ) {
     list.last match {
       case ml : MarkdownList => {
-        list += elementFactory.para( spans, position )
+        val bs = discounter.knockoff( shiftedContent )
+        val updated = ( ml /: bs )( (ml, block) => ml + block )
+        list.update( list.length - 1, updated )
       }
       case _ => {
         spans.first match {

@@ -7,8 +7,10 @@ import scala.util.parsing.input.{ NoPosition, Position }
  * @param ordered Alters the output, mostly.
  */
 abstract class MarkdownList(
-  val children : BlockSeq
+  val items : Seq[ ListItem ]
 ) extends ComplexBlock {
+  
+  val children = items
   
   val position = children.firstOption match {
     case None => NoPosition
@@ -16,6 +18,11 @@ abstract class MarkdownList(
   }
   
   def markdown = childrenMarkdown
+  
+  /**
+    Create a new list with the block appended to the last item.
+  */
+  def + ( block : Block ) : MarkdownList 
   
   override def toString = "MarkdownList(" + markdown + ")"
   
@@ -36,20 +43,28 @@ abstract class MarkdownList(
   def canEqual( t : MarkdownList ) : Boolean = t.getClass == getClass
 }
 
-class OrderedList( children : BlockSeq )
-extends MarkdownList( children ) {
+class OrderedList( items : Seq[ ListItem ] )
+extends MarkdownList( items ) {
  
   def xml = <ol>{ childrenXML }</ol>
   
   def + ( item : OrderedItem ) : OrderedList =
-    new OrderedList( new GroupBlock( children ++ Seq( item ) ) )      
+    new OrderedList( children ++ Seq(item) )
+
+  def + ( block : Block ) : MarkdownList = new OrderedList(
+    children.take( children.length - 1 ) ++ Seq(children.last + block)
+  )
 }
 
-class UnorderedList( children : BlockSeq )
-extends MarkdownList( children ) {
+class UnorderedList( items : Seq[ ListItem ] )
+extends MarkdownList( items ) {
  
   def xml = <ul>{ childrenXML }</ul>
   
   def + ( item : UnorderedItem ) : UnorderedList =
-    new UnorderedList( new GroupBlock( children ++ Seq( item ) ) )
+    new UnorderedList( children ++ Seq(item) )
+
+  def + ( block : Block ) : MarkdownList = new UnorderedList(
+    children.take( children.length - 1 ) ++ Seq(children.last + block)
+  )
 }

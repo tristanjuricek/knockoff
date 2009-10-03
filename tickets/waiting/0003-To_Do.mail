@@ -1,11 +1,6 @@
 Subject: Things I have To Do
 
-* Complete code vs list item attachment
-
-* OK, the ChunkParser step may have to also be recursive. This is for cases
-  like blockquotes. Mmm... but how to manipulate position?
-
-* I need the <hr> and header stuff sorted before I complete the list tests
+* Investigate why the list tests are failing
 
 # Add simple and complex list evaluation #
 * The header starts by ... being not implemented

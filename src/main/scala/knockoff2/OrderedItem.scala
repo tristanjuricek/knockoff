@@ -10,6 +10,6 @@ extends ListItem( children, position ) {
   
   def itemPrefix = "1. "
   
-  def + ( b : Block ) : OrderedItem =
-    new OrderedItem( children, children.first.position )        
+  def + ( b : Block ) : ListItem =
+    new OrderedItem( new GroupBlock( children ++ Seq(b) ), children.first.position )
 }
