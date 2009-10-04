@@ -8,7 +8,7 @@ class ChunkParser extends RegexParsers with StringExtras {
   
   def chunk : Parser[ Chunk ] = {
     horizontalRule | bulletLead | numberedLead | indentedChunk | 
-    header | textBlock | emptyLines
+    header | blockquote | textBlock | emptyLines
   }
   
   def emptyLines : Parser[ Chunk ] =
@@ -70,6 +70,16 @@ class ChunkParser extends RegexParsers with StringExtras {
   def indentedLine : Parser[ Chunk ] =
     """\t|[ ]{4}""".r ~> ( textLine | emptyLine )
   
+  def blockquote : Parser[ Chunk ] = {
+    blockquotedLine ~ rep( blockquotedLine | textLine ) ^^ {
+      case ~(lead, trailing) => BlockquotedChunk( foldedString( lead :: trailing ) )
+    }
+  }
+  
+  def blockquotedLine : Parser[ Chunk ] =
+    """^>[\t ]*""".r ~> ( textLine | emptyLine )
+
+    
   
   
   // Utility Methods

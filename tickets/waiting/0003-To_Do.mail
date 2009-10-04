@@ -1,15 +1,6 @@
 Subject: Things I have To Do
 
-* Investigate why the list tests are failing
+* blockquotes!
 
-# Add simple and complex list evaluation #
-* The header starts by ... being not implemented
-* The complex versus simple items are not cleanly sorted. We should only go to using
-  internal <p> elements if there are truly complex statements. Hm...
-
-
-* Add code sequence evaluation
-* Add header inclusion
-* Add quotes in quotes parsing and evaluation
 
 ... fix all MarkdownTest tests...

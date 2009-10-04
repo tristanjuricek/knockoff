@@ -120,16 +120,7 @@ This is more of a reference to the typing of chunks.
       This represents a group of lines that have at least 4 spaces/1 tab preceding
       the line.
     */
-    case class IndentedChunk( val content : String ) extends Chunk {
-      
-      lazy val lines = io.Source.fromString( content ).getLines.toList
-
-      lazy val shiftedLines = lines.map{ line =>
-        """^[ ]{4}|^\t""".r.replaceAllIn( line, "" )
-      }
-      
-      lazy val shiftedContent = shiftedLines.mkString("")
-      
+    case class IndentedChunk( val content : String ) extends Chunk {      
       /**
         If the block before is a list, we append this to the end of that list.
         Otherwise, append it as a new code block. Two code blocks will get combined
@@ -157,5 +148,26 @@ This is more of a reference to the typing of chunks.
             }
           }
         }
+      }
+    }
+    
+    /**
+      Represents a single level of blockquoted material.
+
+      @param content The material, not parsed, but also not containing this level's
+                     '>' characters.
+    */
+    case class BlockquotedChunk( val content : String ) extends Chunk {
+      /**
+        We parse the content as a separate document, which is then appended to the
+        list as a Blockquote.
+      */
+      def appendNewBlock(
+        list     : ListBuffer[ Block ],
+        spans    : SpanSeq,
+        position : Position
+      )( elementFactory : ElementFactory, discounter : Discounter ) {
+        val blocks = discounter.knockoff( content )
+        list += elementFactory.blockquote( blocks, position )
       }
     }

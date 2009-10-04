@@ -4,6 +4,9 @@ Mostly, this is a series of regular expressions built to find the next chunk in 
 markdown document. Some expressions, like headings, will determine the "real span"
 part separately from the expressions here.
 
+All of the methods return a `Chunk` parser type, even when grouping the parsers
+together. To group things together, the `foldedString` will combine
+
     // In knockoff2/ChunkParsers.scala
     package knockoff2
     
@@ -15,7 +18,7 @@ part separately from the expressions here.
       
       def chunk : Parser[ Chunk ] = {
         horizontalRule | bulletLead | numberedLead | indentedChunk | 
-        header | textBlock | emptyLines
+        header | blockquote | textBlock | emptyLines
       }
       
       def emptyLines : Parser[ Chunk ] =
@@ -77,6 +80,16 @@ part separately from the expressions here.
       def indentedLine : Parser[ Chunk ] =
         """\t|[ ]{4}""".r ~> ( textLine | emptyLine )
       
+      def blockquote : Parser[ Chunk ] = {
+        blockquotedLine ~ rep( blockquotedLine | textLine ) ^^ {
+          case ~(lead, trailing) => BlockquotedChunk( foldedString( lead :: trailing ) )
+        }
+      }
+      
+      def blockquotedLine : Parser[ Chunk ] =
+        """^>[\t ]*""".r ~> ( textLine | emptyLine )
+    
+        
       
       
       // Utility Methods
