@@ -17,7 +17,7 @@ creates a bunch of mixins. These mixins are really only intended to
 
 ## `SpanConverterFactory` ##
 
-We configure a conversion method with a list of `LinkDefinitions`, because we
+We configure a conversion method with a list of `LinkDefinitionChunks`, because we
 usually convert a chunk of text at a time, where the definitions are in other
 chunks, probably at the end of the document. Otherwise, the conversion method is a
 pretty simple mapping function.
@@ -30,7 +30,7 @@ Conversion itself is a pretty brute-force approach encapsulated in the
     
     trait SpanConverterFactory extends HasElementFactory {
      
-      def spanConverter( definitions : Seq[ LinkDefinition ] ) : Chunk => SpanSeq =
+      def spanConverter( definitions : Seq[ LinkDefinitionChunk ] ) : Chunk => SpanSeq =
         new SpanConverter( definitions, elementFactory )
     }
 
@@ -47,7 +47,7 @@ of that span.
     package knockoff2
     
     class SpanConverter(
-      val definitions    : Seq[ LinkDefinition ],
+      val definitions    : Seq[ LinkDefinitionChunk ],
       val elementFactory : ElementFactory
     )
     extends Function1[ Chunk, SpanSeq ]
@@ -508,15 +508,16 @@ So, things like:
         val secondMatch =
           """^\s*(\[)""".r.findFirstMatchIn( secondPart ).getOrElse( return None )
 
-        val secondClose = secondPart.findBalanced('[', ']', secondMatch.start).get
+        val secondClose =
+          secondPart.findBalanced( '[', ']', secondMatch.start(1) ).get
         if ( secondClose == -1 ) return None
 
-        val refID = secondPart.substring( secondMatch.start + 1, secondClose )
+        val refID = secondPart.substring( secondMatch.start(1) + 1, secondClose )
         val precedingText = source.substring( 0, firstOpen ).toOption.map(
           elementFactory.text(_)
         )
         
-        definitions.find( _.id == refID ).map { definition : LinkDefinition =>
+        definitions.find( _.id == refID ).map { definition : LinkDefinitionChunk =>
           SpanMatch(
             firstOpen,
             precedingText,
@@ -537,14 +538,14 @@ So, things like:
     describe("LinkMatcher") {
       it("should discover inline, image, automatic, and reference links") {
         val convert = spanConverter(
-          Seq( new LinkDefinition("link1", "http://example.com", Some("title"), NoPosition ) )
+          Seq( new LinkDefinitionChunk("link1", "http://example.com", Some("title") ) )
         )
         val converted = convert(
           TextChunk(
             "A [link](http://example.com/link1) " +
             "An ![image link](http://example.com/image1 \"image test\") " +
             "The <http://example.com/automatic> " +
-            "A [reference link][link1]"
+            "A [reference link] [link1]"
           )
         )
         converted.toList should equal { List(
@@ -623,7 +624,7 @@ character sequence may be.
       val factory = elementFactory
       import factory._
       
-      override def spanConverter( definitions : Seq[ LinkDefinition ] ) : Chunk => SpanSeq =
+      override def spanConverter( definitions : Seq[ LinkDefinitionChunk ] ) : Chunk => SpanSeq =
         new SpanConverter( definitions, elementFactory ) with ColoredLogger
 
       // See the CodeMatchers specification

@@ -1,3 +1,6 @@
 Subject: Things I have To Do
 
+* I'm doing the case matching incorrectly for LinkDefinitionChunk. Fix.
+
 * Fix the smaller markdown tests.
+* Why are things being evaluated twice?

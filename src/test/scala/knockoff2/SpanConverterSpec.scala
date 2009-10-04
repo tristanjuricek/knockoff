@@ -13,7 +13,7 @@ with    ColoredLogger {
   val factory = elementFactory
   import factory._
   
-  override def spanConverter( definitions : Seq[ LinkDefinition ] ) : Chunk => SpanSeq =
+  override def spanConverter( definitions : Seq[ LinkDefinitionChunk ] ) : Chunk => SpanSeq =
     new SpanConverter( definitions, elementFactory ) with ColoredLogger
 
   describe( "CodeMatchers" ) {
@@ -117,14 +117,14 @@ with    ColoredLogger {
   describe("LinkMatcher") {
     it("should discover inline, image, automatic, and reference links") {
       val convert = spanConverter(
-        Seq( new LinkDefinition("link1", "http://example.com", Some("title"), NoPosition ) )
+        Seq( new LinkDefinitionChunk("link1", "http://example.com", Some("title") ) )
       )
       val converted = convert(
         TextChunk(
           "A [link](http://example.com/link1) " +
           "An ![image link](http://example.com/image1 \"image test\") " +
           "The <http://example.com/automatic> " +
-          "A [reference link][link1]"
+          "A [reference link] [link1]"
         )
       )
       converted.toList should equal { List(

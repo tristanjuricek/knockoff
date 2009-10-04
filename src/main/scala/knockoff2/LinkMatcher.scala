@@ -82,15 +82,16 @@ trait LinkMatcher { self : SpanConverter =>
     val secondMatch =
       """^\s*(\[)""".r.findFirstMatchIn( secondPart ).getOrElse( return None )
 
-    val secondClose = secondPart.findBalanced('[', ']', secondMatch.start).get
+    val secondClose =
+      secondPart.findBalanced( '[', ']', secondMatch.start(1) ).get
     if ( secondClose == -1 ) return None
 
-    val refID = secondPart.substring( secondMatch.start + 1, secondClose )
+    val refID = secondPart.substring( secondMatch.start(1) + 1, secondClose )
     val precedingText = source.substring( 0, firstOpen ).toOption.map(
       elementFactory.text(_)
     )
     
-    definitions.find( _.id == refID ).map { definition : LinkDefinition =>
+    definitions.find( _.id == refID ).map { definition : LinkDefinitionChunk =>
       SpanMatch(
         firstOpen,
         precedingText,

@@ -18,7 +18,7 @@ together. To group things together, the `foldedString` will combine
       
       def chunk : Parser[ Chunk ] = {
         horizontalRule | bulletLead | numberedLead | indentedChunk | 
-        header | blockquote | textBlock | emptyLines
+        header | blockquote | linkDefinition | textBlock | emptyLines
       }
       
       def emptyLines : Parser[ Chunk ] =
@@ -89,7 +89,31 @@ together. To group things together, the `foldedString` will combine
       def blockquotedLine : Parser[ Chunk ] =
         """^>[\t ]?""".r ~> ( textLine | emptyLine )
     
-        
+      def linkDefinition : Parser[ Chunk ] = {
+        linkIDAndURL ~ opt( linkTitle ) <~ """[ ]*\n?""".r ^^ {
+          case ~( idAndURL, titleOpt ) =>
+            LinkDefinitionChunk( idAndURL._1, idAndURL._2, titleOpt )
+        }
+      }
+
+      private def linkIDAndURL : Parser[ (String, String) ] = {
+        """[ ]{0,3}\[[^\[\]]*\]:[ ]+<?[\w\p{Punct}]+>?""".r ^^ (
+          linkString => {
+            val linkMatch = {
+              """^\[([^\[\]]+)\]:[ ]+<?([\w\p{Punct}]+)>?$""".r.findFirstMatchIn(
+                linkString.trim
+              ).get
+            }
+            ( linkMatch.group(1), linkMatch.group(2) )
+          }
+        )
+      }
+
+      private def linkTitle : Parser[ String ] = {
+        """\s*""".r ~> """["'(].*["')]""".r ^^ ( str =>
+          str.substring( 1, str.length - 1 )
+        )
+      }
       
       
       // Utility Methods

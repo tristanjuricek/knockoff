@@ -4,7 +4,9 @@ Parsing Overview
 Parsing is done in three steps:
 
 1. Chunk Parsing - The document is converted to a series of Chunk objects, each
-eventually mapping to a block. This is kicked off by the `ChunkStreamFactory`.
+eventually mapping to a block. This is kicked off by the `ChunkStreamFactory`. A
+`Chunk` is generally a "block-level" element, but the final determination of what
+is a block level element isn't complete until step 3.
 
 2. Span Parsing - The spans of each chunk are identified.
 

@@ -5,6 +5,8 @@ import scala.util.parsing.input.Position
 
 trait Chunk {
   def content : String
+  
+  def isLinkDefinition = false
 
   /** Create the Block and append to the list. */
   def appendNewBlock(
@@ -164,5 +166,26 @@ case class BlockquotedChunk( val content : String ) extends Chunk {
   )( elementFactory : ElementFactory, discounter : Discounter ) {
     val blocks = discounter.knockoff( content )
     list += elementFactory.blockquote( blocks, position )
+  }
+}
+
+case class LinkDefinitionChunk(
+  val id    : String,
+  val url   : String,
+  val title : Option[ String ]
+) extends Chunk {
+
+  override def isLinkDefinition = true
+  
+  def content : String = "[" + id + "]: " + url + (
+    title.map( " \"" + _ + "\"" ).getOrElse("")
+  )
+  
+  def appendNewBlock(
+    list     : ListBuffer[ Block ],
+    spans    : SpanSeq,
+    position : Position
+  )( elementFactory : ElementFactory, discounter : Discounter ) {
+    list += elementFactory.linkdef( id, url, title, position )
   }
 }

@@ -1,7 +1,7 @@
 package knockoff2
 
 class SpanConverter(
-  val definitions    : Seq[ LinkDefinition ],
+  val definitions    : Seq[ LinkDefinitionChunk ],
   val elementFactory : ElementFactory
 )
 extends Function1[ Chunk, SpanSeq ]

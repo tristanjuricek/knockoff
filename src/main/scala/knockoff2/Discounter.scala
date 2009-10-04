@@ -17,10 +17,14 @@ with    HasElementFactory {
       
     val chunks = createChunkStream( new CharSequenceReader( source, 0 ) )
 
-    val linkDefinitions = chunks.flatMap( chunk => chunk match {
-      case ld : LinkDefinition => List( ld )
-      case _ => Nil
-    } )
+    // These next lines are really ugly because I couldn't figure out a nice
+    // way to match a tuple argument (thank you erasure!)
+    val linkDefinitions = chunks.flatMap{ case ((chunk, pos)) =>
+      if ( chunk.isLinkDefinition )
+        List( chunk.asInstanceOf[ LinkDefinitionChunk ] )
+      else
+        Nil
+    }
     
     val convert = spanConverter( linkDefinitions )
     
