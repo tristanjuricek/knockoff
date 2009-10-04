@@ -87,7 +87,7 @@ together. To group things together, the `foldedString` will combine
       }
       
       def blockquotedLine : Parser[ Chunk ] =
-        """^>[\t ]*""".r ~> ( textLine | emptyLine )
+        """^>[\t ]?""".r ~> ( textLine | emptyLine )
     
         
       

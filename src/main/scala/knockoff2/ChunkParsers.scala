@@ -77,7 +77,7 @@ class ChunkParser extends RegexParsers with StringExtras {
   }
   
   def blockquotedLine : Parser[ Chunk ] =
-    """^>[\t ]*""".r ~> ( textLine | emptyLine )
+    """^>[\t ]?""".r ~> ( textLine | emptyLine )
 
     
   
