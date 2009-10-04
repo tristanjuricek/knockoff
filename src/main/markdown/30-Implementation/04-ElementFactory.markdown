@@ -83,13 +83,13 @@ customizing the `ElementFactory` is pretty simple. You create a subtype of
       def uli( b : Block, p : Position ) : UnorderedItem =
         new UnorderedItem( b, p )
   
-      def uli( bs : BlockSeq, p : Position ) : UnorderedItem =
+      def uli( bs : Seq[ Block ], p : Position ) : UnorderedItem =
         new UnorderedItem( bs, p )
 
       def oli( b : Block, p : Position ) : OrderedItem =
         new OrderedItem( b, p )
 
-      def oli( bs : BlockSeq, p : Position ) : OrderedItem =
+      def oli( bs : Seq[ Block ], p : Position ) : OrderedItem =
         new OrderedItem( bs, p )
       
       

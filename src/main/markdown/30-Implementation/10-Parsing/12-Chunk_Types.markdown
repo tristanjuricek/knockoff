@@ -128,7 +128,7 @@ This is more of a reference to the typing of chunks.
         """^[ ]{4}|^\t""".r.replaceAllIn( line, "" )
       }
       
-      lazy val shiftedContent = shiftedLines.mkString("\n") + "\n"
+      lazy val shiftedContent = shiftedLines.mkString("")
       
       /**
         If the block before is a list, we append this to the end of that list.
@@ -144,7 +144,7 @@ This is more of a reference to the typing of chunks.
       )( elementFactory : ElementFactory, discounter : Discounter ) {
         list.last match {
           case ml : MarkdownList => {
-            val bs = discounter.knockoff( shiftedContent )
+            val bs = discounter.knockoff( content )
             val updated = ( ml /: bs )( (ml, block) => ml + block )
             list.update( list.length - 1, updated )
           }

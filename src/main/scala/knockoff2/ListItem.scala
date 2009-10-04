@@ -4,10 +4,12 @@ import scala.util.parsing.input.Position
 import scala.xml.Node
 
 abstract class ListItem(
-  val children : BlockSeq,
+  val items    : Seq[ Block ],
   val position : Position
 )
 extends ComplexBlock {
+  
+  val children = new GroupBlock( items )
 
   def itemPrefix : String
   
@@ -22,14 +24,14 @@ extends ComplexBlock {
   
   def xml( complex : Boolean ) : Node = <li>{
     if ( isComplex )
-      children.first.span.toXML
-    else
       childrenXML 
+    else
+      children.first.span.toXML
   }</li>
   
   def xml : Node = xml( isComplex )
   
-  def isComplex = children.length > 1
+  def isComplex = items.length > 1
   
   def + ( block : Block ) : ListItem
   

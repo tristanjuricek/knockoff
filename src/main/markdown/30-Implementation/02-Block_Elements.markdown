@@ -395,10 +395,12 @@ In implementation terms, we don't have a single list.
     import scala.xml.Node
     
     abstract class ListItem(
-      val children : BlockSeq,
+      val items    : Seq[ Block ],
       val position : Position
     )
     extends ComplexBlock {
+      
+      val children = new GroupBlock( items )
 
       def itemPrefix : String
       
@@ -413,14 +415,14 @@ In implementation terms, we don't have a single list.
       
       def xml( complex : Boolean ) : Node = <li>{
         if ( isComplex )
-          children.first.span.toXML
-        else
           childrenXML 
+        else
+          children.first.span.toXML
       }</li>
       
       def xml : Node = xml( isComplex )
       
-      def isComplex = children.length > 1
+      def isComplex = items.length > 1
       
       def + ( block : Block ) : ListItem
       
@@ -434,16 +436,16 @@ In implementation terms, we don't have a single list.
 
     import scala.util.parsing.input.Position
     
-    class OrderedItem( children : BlockSeq, position : Position )
-    extends ListItem( children, position ) {
+    class OrderedItem( items : Seq[ Block ], position : Position )
+    extends ListItem( items, position ) {
 
       def this( block : Block, position : Position ) =
-        this( new BlockSeq{ val theSeq = Seq( block ) }, position )
+        this( Seq( block ), position )
       
       def itemPrefix = "1. "
       
       def + ( b : Block ) : ListItem =
-        new OrderedItem( new GroupBlock( children ++ Seq(b) ), children.first.position )
+        new OrderedItem( children ++ Seq(b), children.first.position )
     }
 
 ### `UnorderedItem`
@@ -453,16 +455,16 @@ In implementation terms, we don't have a single list.
     
     import scala.util.parsing.input.Position
         
-    class UnorderedItem( children : BlockSeq, position : Position )
-    extends ListItem( children, position ) {
+    class UnorderedItem( items : Seq[ Block ], position : Position )
+    extends ListItem( items, position ) {
       
       def this( block : Block, position : Position ) =
-        this( new BlockSeq{ val theSeq = Seq( block ) }, position )
+        this( Seq( block ), position )
       
       def itemPrefix = "* "
       
       def + ( b : Block ) : ListItem =
-        new UnorderedItem( new GroupBlock( children ++ Seq(b) ), children.first.position )
+        new UnorderedItem( children ++ Seq(b), children.first.position )
     }
 
 #### `MarkdownList`
