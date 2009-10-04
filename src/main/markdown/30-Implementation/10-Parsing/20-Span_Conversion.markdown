@@ -439,7 +439,7 @@ So, things like:
         }
       }
       
-      private val automaticLinkRE = """<([^\s>]+)>""".r
+      private val automaticLinkRE = """<((http:|mailto:|https:)\S+)>""".r
       
       def findAutomaticMatch( source : String ) : Option[ SpanMatch ] = {
         automaticLinkRE.findFirstMatchIn( source ).map { aMatch =>

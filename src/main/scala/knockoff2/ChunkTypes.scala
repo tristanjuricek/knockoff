@@ -60,15 +60,13 @@ case class EmptySpace( val content : String ) extends Chunk {
     if ( remaining.isEmpty ) return
     list.last match {
       case lastCB : CodeBlock => remaining.first._1 match {
-        case ice : IndentedChunk => {
-          list.update(
-            list.length - 1,
-            elementFactory.codeBlock(
-              elementFactory.text( lastCB.text.content + "\n" ),
-              lastCB.position
-            )
+        case ice : IndentedChunk => list.update(
+          list.length - 1,
+          elementFactory.codeBlock(
+            elementFactory.text( lastCB.text.content + "\n" ),
+            lastCB.position
           )
-        }
+        )
         case _ => {}
       }
       case _ => {}
