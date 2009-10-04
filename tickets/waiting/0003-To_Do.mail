@@ -1,6 +1,7 @@
 Subject: Things I have To Do
 
-* I'm doing the case matching incorrectly for LinkDefinitionChunk. Fix.
+* Arg, an empty line between two code blocks is significant: should become an empty
+  line in the code.
 
 * Fix the smaller markdown tests.
 * Why are things being evaluated twice?

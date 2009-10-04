@@ -59,6 +59,7 @@ Otherwise...
 
         input.head._1.appendNewBlock(
           output,         // Adds block to the _end_
+          input.tail,
           input.head._2,  // The spanning sequence (may be ignored)
           input.head._3   // The position shoudl be passed through
         )( elementFactory, this )

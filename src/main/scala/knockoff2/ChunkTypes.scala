@@ -11,6 +11,7 @@ trait Chunk {
   /** Create the Block and append to the list. */
   def appendNewBlock(
     list     : ListBuffer[ Block ],
+    remaining : List[ (Chunk, SpanSeq, Position) ],
     spans    : SpanSeq,
     position : Position
   )( elementFactory : ElementFactory, discounter : Discounter )
@@ -21,6 +22,7 @@ case class TextChunk( val content : String ) extends Chunk {
 
   def appendNewBlock(
     list     : ListBuffer[ Block ],
+    remaining : List[ (Chunk, SpanSeq, Position) ],
     spans    : SpanSeq,
     position : Position
   )( elementFactory : ElementFactory, discounter : Discounter ) {
@@ -33,6 +35,7 @@ case object HorizontalRuleChunk extends Chunk {
   
   def appendNewBlock(
     list     : ListBuffer[ Block ],
+    remaining : List[ (Chunk, SpanSeq, Position) ],
     spans    : SpanSeq,
     position : Position
   )( elementFactory : ElementFactory, discounter : Discounter ) {
@@ -43,12 +46,33 @@ case object HorizontalRuleChunk extends Chunk {
 /** Note that this does not cover forced line breaks. */
 case class EmptySpace( val content : String ) extends Chunk {
 
+  /**
+    Empty space only matters in cases where the lines are indented, which is a
+    way of dealing with editors that like to do things like strip out whitespace
+    at the end of a line.
+  */
   def appendNewBlock(
-    list     : ListBuffer[ Block ],
-    spans    : SpanSeq,
-    position : Position
+    list      : ListBuffer[ Block ],
+    remaining : List[ (Chunk, SpanSeq, Position) ],
+    spans     : SpanSeq,
+    position  : Position
   )( elementFactory : ElementFactory, discounter : Discounter ) {
-    // This space for rent.
+    if ( remaining.isEmpty ) return
+    list.last match {
+      case lastCB : CodeBlock => remaining.first._1 match {
+        case ice : IndentedChunk => {
+          list.update(
+            list.length - 1,
+            elementFactory.codeBlock(
+              elementFactory.text( lastCB.text.content + "\n" ),
+              lastCB.position
+            )
+          )
+        }
+        case _ => {}
+      }
+      case _ => {}
+    }
   }
 }
 
@@ -56,6 +80,7 @@ case class BulletLineChunk( val content : String ) extends Chunk {
 
   def appendNewBlock(
     list     : ListBuffer[ Block ],
+    remaining : List[ (Chunk, SpanSeq, Position) ],
     spans    : SpanSeq,
     position : Position
   )( elementFactory : ElementFactory, discounter : Discounter ) {
@@ -81,6 +106,7 @@ case class NumberedLineChunk( val content : String ) extends Chunk {
 
   def appendNewBlock(
     list     : ListBuffer[ Block ],
+    remaining : List[ (Chunk, SpanSeq, Position) ],
     spans    : SpanSeq,
     position : Position
   )( elementFactory : ElementFactory, discounter : Discounter ) {
@@ -106,6 +132,7 @@ case class HeaderChunk( val level : Int, val content : String ) extends Chunk {
 
   def appendNewBlock(
     list     : ListBuffer[ Block ],
+    remaining : List[ (Chunk, SpanSeq, Position) ],
     spans    : SpanSeq,
     position : Position
   )( elementFactory : ElementFactory, discounter : Discounter ) {
@@ -127,6 +154,7 @@ case class IndentedChunk( val content : String ) extends Chunk {
   */
   def appendNewBlock(
     list     : ListBuffer[ Block ],
+    remaining : List[ (Chunk, SpanSeq, Position) ],
     spans    : SpanSeq,
     position : Position
   )( elementFactory : ElementFactory, discounter : Discounter ) {
@@ -135,6 +163,19 @@ case class IndentedChunk( val content : String ) extends Chunk {
         val bs = discounter.knockoff( content )
         val updated = ( ml /: bs )( (ml, block) => ml + block )
         list.update( list.length - 1, updated )
+      }
+      case cb : CodeBlock => {
+        spans.first match {
+          case text : Text => list.update( 
+            list.length - 1,
+            elementFactory.codeBlock( 
+              elementFactory.text( cb.text.content + text.content ),
+              cb.position // Note that code block positions are like lists...
+            )
+          )
+          case s : Span =>
+            error( "Expected Text(code) for code block append, not " + s )
+        }            
       }
       case _ => {
         spans.first match {
@@ -161,6 +202,7 @@ case class BlockquotedChunk( val content : String ) extends Chunk {
   */
   def appendNewBlock(
     list     : ListBuffer[ Block ],
+    remaining : List[ (Chunk, SpanSeq, Position) ],
     spans    : SpanSeq,
     position : Position
   )( elementFactory : ElementFactory, discounter : Discounter ) {
@@ -183,6 +225,7 @@ case class LinkDefinitionChunk(
   
   def appendNewBlock(
     list     : ListBuffer[ Block ],
+    remaining : List[ (Chunk, SpanSeq, Position) ],
     spans    : SpanSeq,
     position : Position
   )( elementFactory : ElementFactory, discounter : Discounter ) {

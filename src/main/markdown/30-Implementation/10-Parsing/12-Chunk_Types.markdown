@@ -16,6 +16,7 @@ This is more of a reference to the typing of chunks.
       /** Create the Block and append to the list. */
       def appendNewBlock(
         list     : ListBuffer[ Block ],
+        remaining : List[ (Chunk, SpanSeq, Position) ],
         spans    : SpanSeq,
         position : Position
       )( elementFactory : ElementFactory, discounter : Discounter )
@@ -26,6 +27,7 @@ This is more of a reference to the typing of chunks.
 
       def appendNewBlock(
         list     : ListBuffer[ Block ],
+        remaining : List[ (Chunk, SpanSeq, Position) ],
         spans    : SpanSeq,
         position : Position
       )( elementFactory : ElementFactory, discounter : Discounter ) {
@@ -38,6 +40,7 @@ This is more of a reference to the typing of chunks.
       
       def appendNewBlock(
         list     : ListBuffer[ Block ],
+        remaining : List[ (Chunk, SpanSeq, Position) ],
         spans    : SpanSeq,
         position : Position
       )( elementFactory : ElementFactory, discounter : Discounter ) {
@@ -48,12 +51,33 @@ This is more of a reference to the typing of chunks.
     /** Note that this does not cover forced line breaks. */
     case class EmptySpace( val content : String ) extends Chunk {
 
+      /**
+        Empty space only matters in cases where the lines are indented, which is a
+        way of dealing with editors that like to do things like strip out whitespace
+        at the end of a line.
+      */
       def appendNewBlock(
-        list     : ListBuffer[ Block ],
-        spans    : SpanSeq,
-        position : Position
+        list      : ListBuffer[ Block ],
+        remaining : List[ (Chunk, SpanSeq, Position) ],
+        spans     : SpanSeq,
+        position  : Position
       )( elementFactory : ElementFactory, discounter : Discounter ) {
-        // This space for rent.
+        if ( remaining.isEmpty ) return
+        list.last match {
+          case lastCB : CodeBlock => remaining.first._1 match {
+            case ice : IndentedChunk => {
+              list.update(
+                list.length - 1,
+                elementFactory.codeBlock(
+                  elementFactory.text( lastCB.text.content + "\n" ),
+                  lastCB.position
+                )
+              )
+            }
+            case _ => {}
+          }
+          case _ => {}
+        }
       }
     }
 
@@ -61,6 +85,7 @@ This is more of a reference to the typing of chunks.
 
       def appendNewBlock(
         list     : ListBuffer[ Block ],
+        remaining : List[ (Chunk, SpanSeq, Position) ],
         spans    : SpanSeq,
         position : Position
       )( elementFactory : ElementFactory, discounter : Discounter ) {
@@ -86,6 +111,7 @@ This is more of a reference to the typing of chunks.
 
       def appendNewBlock(
         list     : ListBuffer[ Block ],
+        remaining : List[ (Chunk, SpanSeq, Position) ],
         spans    : SpanSeq,
         position : Position
       )( elementFactory : ElementFactory, discounter : Discounter ) {
@@ -111,6 +137,7 @@ This is more of a reference to the typing of chunks.
 
       def appendNewBlock(
         list     : ListBuffer[ Block ],
+        remaining : List[ (Chunk, SpanSeq, Position) ],
         spans    : SpanSeq,
         position : Position
       )( elementFactory : ElementFactory, discounter : Discounter ) {
@@ -132,6 +159,7 @@ This is more of a reference to the typing of chunks.
       */
       def appendNewBlock(
         list     : ListBuffer[ Block ],
+        remaining : List[ (Chunk, SpanSeq, Position) ],
         spans    : SpanSeq,
         position : Position
       )( elementFactory : ElementFactory, discounter : Discounter ) {
@@ -140,6 +168,19 @@ This is more of a reference to the typing of chunks.
             val bs = discounter.knockoff( content )
             val updated = ( ml /: bs )( (ml, block) => ml + block )
             list.update( list.length - 1, updated )
+          }
+          case cb : CodeBlock => {
+            spans.first match {
+              case text : Text => list.update( 
+                list.length - 1,
+                elementFactory.codeBlock( 
+                  elementFactory.text( cb.text.content + text.content ),
+                  cb.position // Note that code block positions are like lists...
+                )
+              )
+              case s : Span =>
+                error( "Expected Text(code) for code block append, not " + s )
+            }            
           }
           case _ => {
             spans.first match {
@@ -166,6 +207,7 @@ This is more of a reference to the typing of chunks.
       */
       def appendNewBlock(
         list     : ListBuffer[ Block ],
+        remaining : List[ (Chunk, SpanSeq, Position) ],
         spans    : SpanSeq,
         position : Position
       )( elementFactory : ElementFactory, discounter : Discounter ) {
@@ -188,6 +230,7 @@ This is more of a reference to the typing of chunks.
       
       def appendNewBlock(
         list     : ListBuffer[ Block ],
+        remaining : List[ (Chunk, SpanSeq, Position) ],
         spans    : SpanSeq,
         position : Position
       )( elementFactory : ElementFactory, discounter : Discounter ) {
