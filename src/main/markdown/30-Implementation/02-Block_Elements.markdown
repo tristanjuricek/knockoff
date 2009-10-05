@@ -160,7 +160,18 @@ Otherwise the paragraph is a simple `Block` type (does not contain other
 
       def markdown = span.toMarkdown
 
-      def xml = <p>{ span.toXML }</p>
+      /**
+        If this paragraph only contains HTMLSpan elements, then just pass that
+        information through without a paragraph marker.
+      */
+      def xml =
+        if ( isHTML ) span.toXML else <p>{ span.toXML }</p>
+      
+      def isHTML : Boolean = ! span.exists( s => s match {
+        case html : HTMLSpan => false
+        case t:Text => ! t.content.trim.isEmpty
+        case _ => true
+      } )
       
       // See the Paragraph toString, equals, hashCode implementations
     }
@@ -267,26 +278,6 @@ A block quote is really another markdown document, quoted.
       // See the Blockquote toString, equals, hashCode implementations
     }
 
-
-## `HTMLBlock` ##
-
-We consider this to be already formatted HTML. The content here is specificed as a
-string - everything else is just basically passed directly back.
-
-    // In knockoff2/HTMLBlock.scala
-    // See the HTMLBlock package and imports
-    
-    class   HTMLBlock( val html : String, val position : Position )
-    extends SimpleBlock {
-        
-      val span = new HTMLSpan( html )
-      
-      def xml : Node = Unparsed( html )
-      
-      def markdown = html
-      
-      // See the HTMLBlock toString, equals, hashCode implementations
-    }
 
 ## `CodeBlock` ##
 
@@ -725,34 +716,6 @@ entire content; whitespace will be missing in complex cases.
       )
     }
 
-### `HTMLBlock`
-
-#### `HTMLBlock` - Package and Imports
-
-    // The HTMLBlock package and imports
-    package knockoff2
-
-    import scala.xml.{ Node, Unparsed }
-    import scala.util.parsing.input.Position
-
-#### `HTMLBlock` - `toString`, `equals`, `hashCode`
-
-    // The HTMLBlock toString, equals, hashCode implementations
-    override def toString = "HTMLBlock(" + html + ")"
-    
-    override def hashCode : Int = html.hashCode
-        
-    override def equals( rhs : Any ) : Boolean = rhs match {
-      case t : HTMLBlock => t.canEqual( this ) && ( this sameElements t )
-      case _ => false
-    }
-    
-    def sameElements( h : HTMLBlock ) : Boolean = {
-      ( h.html == html ) &&
-      ( h.position == position )
-    }
-    
-    def canEqual( t : HTMLBlock ) : Boolean = t.getClass == getClass
 
 ### `CodeBlock`
 

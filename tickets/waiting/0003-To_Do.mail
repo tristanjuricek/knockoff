@@ -1,7 +1,7 @@
 Subject: Things I have To Do
 
-* Arg, an empty line between two code blocks is significant: should become an empty
-  line in the code.
+* HTML pass-through is missing comment support, and for some reason, the <hr>'s are
+  also messed up.
 
 * Fix the smaller markdown tests.
 * Why are things being evaluated twice?

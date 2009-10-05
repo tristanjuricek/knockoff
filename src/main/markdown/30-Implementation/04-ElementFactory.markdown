@@ -65,9 +65,6 @@ customizing the `ElementFactory` is pretty simple. You create a subtype of
       def blockquote( c : BlockSeq, p : Position ) : Blockquote =
         new Blockquote( c, p )
       
-      def htmlBlock( h : String, p : Position ) : HTMLBlock =
-        new HTMLBlock( h, p )
-      
       def codeBlock( s : String, p : Position ) : CodeBlock =
         codeBlock( text(s), p )
       
