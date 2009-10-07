@@ -11,6 +11,8 @@ maven, or ivy configured. The project can be found at:
 
     http://tristanhunt.com:8081/content/groups/public
 
+(Note: One Of These Days I'll set up a subdomain proxy.)
+
 Including in sbt is like:
 
     val knockoff = "com.tristanhunt" % "knockoff" %% "0.5"
