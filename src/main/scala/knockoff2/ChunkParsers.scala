@@ -7,7 +7,7 @@ class ChunkParser extends RegexParsers with StringExtras {
   override def skipWhitespace = false
   
   def chunk : Parser[ Chunk ] = {
-    horizontalRule | bulletLead | numberedLead | indentedChunk | 
+    horizontalRule | bulletItem | numberedItem | indentedChunk |
     header | blockquote | linkDefinition | textBlock | emptyLines
   }
   
@@ -24,21 +24,36 @@ class ChunkParser extends RegexParsers with StringExtras {
   def textLine : Parser[ Chunk ] =
     """[\t ]*\S[^\n]*\n?""".r ^^ ( str => TextChunk( str ) )
   
+  def bulletItem : Parser[ Chunk ] = {
+    bulletLead ~ rep( not( bulletLead | numberedLead ) ~> prefixedLine ) ^^ { case ~(lead, texts) =>
+      BulletLineChunk( foldedString( lead :: texts ) )
+    }
+  }
+  
   /**
     Match a single line that is likely a bullet item.
   */
   def bulletLead : Parser[ Chunk ] = {
-    """[ ]{0,3}[*\-+][\t ]+""".r ~> textLine ^^ { textChunk =>
+    """[ ]{0,3}[*\-+](\t|[ ]{0,4})""".r ~> textLine ^^ { textChunk =>
       BulletLineChunk( textChunk.content )
     }
   }
   
-  def numberedLead : Parser[ Chunk ] = {
-    """[ ]{0,3}\d+\.[\t ]+""".r ~> textLine ^^ { textChunk =>
-      NumberedLineChunk( textChunk.content )
+  def numberedItem : Parser[ Chunk ] = {
+    numberedLead ~ rep( not( bulletLead | numberedLead ) ~> prefixedLine ) ^^ { case ~(lead, texts) =>
+      NumberedLineChunk( foldedString( lead :: texts ) )
     }
   }
   
+  def numberedLead : Parser[ Chunk ] = {
+    """[ ]{0,3}\d+\.(\t|[ ]{0,4})""".r ~> textLine ^^ { textChunk =>
+      NumberedLineChunk( textChunk.content )
+    }
+  }
+
+  def prefixedLine : Parser[ Chunk ] =
+    """(\t|[ ]{0,4})""".r ~> textLine
+
   def header : Parser[ Chunk ] =
     ( setextHeaderEquals | setextHeaderDashes | atxHeader )
 
@@ -64,7 +79,7 @@ class ChunkParser extends RegexParsers with StringExtras {
     }
   }
   
-  def indentedChunk : Parser[ Chunk ] = 
+  def indentedChunk : Parser[ Chunk ] =
     rep1( indentedLine ) ^^ ( lines => IndentedChunk( foldedString( lines ) ) )
   
   def indentedLine : Parser[ Chunk ] =

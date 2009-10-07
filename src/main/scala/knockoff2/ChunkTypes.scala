@@ -142,7 +142,7 @@ case class HeaderChunk( val level : Int, val content : String ) extends Chunk {
   This represents a group of lines that have at least 4 spaces/1 tab preceding
   the line.
 */
-case class IndentedChunk( val content : String ) extends Chunk {      
+case class IndentedChunk( val content : String ) extends Chunk {
   /**
     If the block before is a list, we append this to the end of that list.
     Otherwise, append it as a new code block. Two code blocks will get combined
@@ -164,16 +164,16 @@ case class IndentedChunk( val content : String ) extends Chunk {
       }
       case cb : CodeBlock => {
         spans.first match {
-          case text : Text => list.update( 
+          case text : Text => list.update(
             list.length - 1,
-            elementFactory.codeBlock( 
+            elementFactory.codeBlock(
               elementFactory.text( cb.text.content + text.content ),
               cb.position // Note that code block positions are like lists...
             )
           )
           case s : Span =>
             error( "Expected Text(code) for code block append, not " + s )
-        }            
+        }
       }
       case _ => {
         spans.first match {
