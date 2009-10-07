@@ -58,6 +58,7 @@ with    StringExtras {
     matchDoubleCodes,
     matchSingleCodes,
     matchLink,
+    matchHTMLComment,
     matchEntity,
     matchHTMLSpan,
     matchUnderscoreStrong,

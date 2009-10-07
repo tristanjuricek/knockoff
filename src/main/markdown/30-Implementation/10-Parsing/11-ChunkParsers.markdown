@@ -17,7 +17,7 @@ together. To group things together, the `foldedString` will combine
       override def skipWhitespace = false
       
       def chunk : Parser[ Chunk ] = {
-        horizontalRule | bulletLead | numberedLead | indentedChunk | 
+        horizontalRule | bulletLead | numberedLead | indentedChunk |
         header | blockquote | linkDefinition | textBlock | emptyLines
       }
       
@@ -74,7 +74,7 @@ together. To group things together, the `foldedString` will combine
         }
       }
       
-      def indentedChunk : Parser[ Chunk ] = 
+      def indentedChunk : Parser[ Chunk ] =
         rep1( indentedLine ) ^^ ( lines => IndentedChunk( foldedString( lines ) ) )
       
       def indentedLine : Parser[ Chunk ] =

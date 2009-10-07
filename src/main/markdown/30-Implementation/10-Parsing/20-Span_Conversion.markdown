@@ -104,6 +104,7 @@ of that span.
         matchDoubleCodes,
         matchSingleCodes,
         matchLink,
+        matchHTMLComment,
         matchEntity,
         matchHTMLSpan,
         matchUnderscoreStrong,
@@ -296,24 +297,27 @@ one span contains other spans - it's basically like parenthesis matching.
       def matchHTMLSpan( source : String ) : Option[ SpanMatch ] = {
         startElement.findFirstMatchIn( source ).map { open =>
           val hasEnd = open.group(2) == "/"
-          if ( hasEnd ) {
-            SpanMatch(
-              open.start,
-              open.before.toOption.map( elementFactory.text(_) ),
-              elementFactory.htmlSpan( open.matched ),
-              open.after.toOption
-            )
-          } else {
-            hasMatchedClose( source, open.group(1), open.end, 1 ).map {
-              closeAndAfter => SpanMatch(
+          val noEnd = SpanMatch(
+            open.start,
+            open.before.toOption.map( elementFactory.text(_) ),
+            elementFactory.htmlSpan( open.matched ),
+            open.after.toOption
+          )
+          if ( ! hasEnd ) {
+            hasMatchedClose( source, open.group(1), open.end, 1 ) match {
+              case Some((close, after)) => SpanMatch(
                 open.start,
                 open.before.toOption.map( elementFactory.text(_) ),
                 elementFactory.htmlSpan(
-                  source.substring( open.start, closeAndAfter._1 )
+                  source.substring( open.start, close )
                 ),
-                closeAndAfter._2.toOption
+                after.toOption
               )
-            }.getOrElse( return None )
+              // Let no html-like thing go unpunished.
+              case None => noEnd
+            }
+          } else {
+            noEnd
           }
         }
       }
@@ -352,6 +356,22 @@ one span contains other spans - it's basically like parenthesis matching.
             entityMatch.after.toOption
           )
         }
+      }
+
+      def matchHTMLComment( source : String ) :Option[ SpanMatch ] = {
+        val open = source.indexOf("<!--")
+        if ( open > -1 ) {
+          val close = source.indexOf( "-->", open )
+          if ( close > -1 ) {
+            return Some( SpanMatch(
+              open,
+              source.substring( 0, open ).toOption.map( elementFactory.text(_) ),
+              elementFactory.htmlSpan( source.substring( open, close + "-->".length ) ),
+              source.substring( close + "-->".length ).toOption
+            ) )
+          }
+        }
+        return None
       }
     }
 

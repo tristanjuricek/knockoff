@@ -36,6 +36,20 @@ The `Discounter` is the base object you can use to start to specialize how the
 document is parsed.
 
 
+## Variations off of Markdown ##
+
+This has a couple of _very_ subtle adjustments to the base Markdown script:
+
+1. Tabs are passed through. Though why you're using tabs is beyond me, this keeps
+like diff tools honest.
+
+2. List items (`<li>`) only have a sub-paragraph (`<p>`) if you have complex
+content. (In the core script, if you space them widely, you get the sub `<p>`
+element, which made no sense to me.)
+
+3. If you have a code line, followed by another indented line, even if that line's
+empty, the empty line is part of the code block.
+
 
 [1]: http://scala-lang.org
 [2]: http://tristanhunt.com/projects/literable
