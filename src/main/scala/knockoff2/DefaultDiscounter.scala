@@ -22,7 +22,6 @@ object DefaultDiscounter extends Discounter with ColoredLogger {
       println( knockoff( sb.toString ).toXML.toString )
     } else {
       args.filter( _ != "--html4tags" ).foreach { fileName =>
-        val group = knockoff( readText( fileName ) )
         println( knockoff( readText( fileName ) ).toXML.toString )
       }
     }

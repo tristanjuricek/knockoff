@@ -25,7 +25,7 @@ Otherwise...
       def knockoff( source : java.lang.CharSequence ) : BlockSeq = {
           
         val chunks = createChunkStream( new CharSequenceReader( source, 0 ) )
-
+        
         // These next lines are really ugly because I couldn't figure out a nice
         // way to match a tuple argument (thank you erasure!)
         val linkDefinitions = chunks.flatMap{ case ((chunk, pos)) =>
@@ -111,7 +111,6 @@ The `--html4tags` argument will just do nothing, but not be processed as a file.
           println( knockoff( sb.toString ).toXML.toString )
         } else {
           args.filter( _ != "--html4tags" ).foreach { fileName =>
-            val group = knockoff( readText( fileName ) )
             println( knockoff( readText( fileName ) ).toXML.toString )
           }
         }

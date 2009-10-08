@@ -17,7 +17,7 @@ together. To group things together, the `foldedString` will combine
       override def skipWhitespace = false
       
       def chunk : Parser[ Chunk ] = {
-        horizontalRule | bulletItem | numberedItem | indentedChunk |
+        horizontalRule | bulletLead | numberedLead | indentedChunk |
         header | blockquote | linkDefinition | textBlock | emptyLines
       }
       
@@ -35,7 +35,7 @@ together. To group things together, the `foldedString` will combine
         """[\t ]*\S[^\n]*\n?""".r ^^ ( str => TextChunk( str ) )
       
       def bulletItem : Parser[ Chunk ] = {
-        bulletLead ~ rep( not( bulletLead | numberedLead ) ~> prefixedLine ) ^^ { case ~(lead, texts) =>
+        bulletLead ~ rep( trailingLine ) ^^ { case ~(lead, texts) =>
           BulletLineChunk( foldedString( lead :: texts ) )
         }
       }
@@ -50,7 +50,7 @@ together. To group things together, the `foldedString` will combine
       }
       
       def numberedItem : Parser[ Chunk ] = {
-        numberedLead ~ rep( not( bulletLead | numberedLead ) ~> prefixedLine ) ^^ { case ~(lead, texts) =>
+        numberedLead ~ rep( trailingLine ) ^^ { case ~(lead, texts) =>
           NumberedLineChunk( foldedString( lead :: texts ) )
         }
       }
@@ -60,9 +60,9 @@ together. To group things together, the `foldedString` will combine
           NumberedLineChunk( textChunk.content )
         }
       }
-
-      def prefixedLine : Parser[ Chunk ] =
-        """(\t|[ ]{0,4})""".r ~> textLine
+      
+      def trailingLine : Parser[ Chunk ] =
+        """[ ]{0,3}[\S&&[^*\-+]&&[^\d]][^\n]*\n?""".r ^^ ( s => TextChunk(s) )
 
       
       def header : Parser[ Chunk ] =

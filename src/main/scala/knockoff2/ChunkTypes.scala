@@ -151,10 +151,10 @@ case class IndentedChunk( val content : String ) extends Chunk {
     indent and reparse things.
   */
   def appendNewBlock(
-    list     : ListBuffer[ Block ],
+    list      : ListBuffer[ Block ],
     remaining : List[ (Chunk, SpanSeq, Position) ],
-    spans    : SpanSeq,
-    position : Position
+    spans     : SpanSeq,
+    position  : Position
   )( elementFactory : ElementFactory, discounter : Discounter ) {
     list.last match {
       case ml : MarkdownList => {
