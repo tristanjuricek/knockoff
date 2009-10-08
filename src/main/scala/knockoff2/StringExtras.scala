@@ -66,26 +66,25 @@ trait StringExtras {
         Recursive method for paren matching that is initialized by findBalanced.
       */
       private def findBalancedClose(
-          count : Int,
-          open  : Char,
-          close : Char,
-          index : Int
-        ) : Option[Int] = {
-          
+        count : Int,
+        open  : Char,
+        close : Char,
+        index : Int
+      ) : Option[Int] = {
         if ( wrapped.length <= index ) return None
        
         val nextOpen  = wrapped.indexOf( open, index )
         val nextClose = wrapped.indexOf( close, index )
-        
+       
         if ( nextClose == -1 ) return None
         
         // We find another unbalanced open
         if ( (nextOpen != - 1) && (nextOpen < nextClose) )
-          return findBalancedClose( count + 1, open, close, index + 1 )
+          return findBalancedClose( count + 1, open, close, nextOpen + 1 )
         
         // We have a balanced close, but not everything is done
         if ( count > 1 )
-          return findBalancedClose( count - 1, open, close, index + 1 )
+          return findBalancedClose( count - 1, open, close, nextClose + 1 )
 
         // Everything is balanced
         Some( nextClose )

@@ -532,7 +532,10 @@ So, things like:
           secondPart.findBalanced( '[', ']', secondMatch.start(1) ).get
         if ( secondClose == -1 ) return None
 
-        val refID = secondPart.substring( secondMatch.start(1) + 1, secondClose )
+        val refID = {
+          val no2 = secondPart.substring( secondMatch.start(1) + 1, secondClose )
+          if ( no2.isEmpty ) source.substring( firstOpen + 1, firstClose ) else no2
+        }
         val precedingText = source.substring( 0, firstOpen ).toOption.map(
           elementFactory.text(_)
         )

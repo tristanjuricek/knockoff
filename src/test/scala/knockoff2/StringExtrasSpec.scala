@@ -41,4 +41,14 @@ class StringExtrasSpec extends Spec with ShouldMatchers with ColoredLogger
       )
     }
   }
+  
+  describe("StringExtras.findBalanced") {
+    it("should find balanced brackets") {
+      val src = "With [embedded [brackets]] [b]."
+      val firstSpan = src.indexOf('[')
+      src.findBalanced( '[', ']', firstSpan ).get should equal (
+        "With [embedded [brackets]".length
+      )
+    }
+  }
 }
