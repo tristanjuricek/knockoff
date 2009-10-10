@@ -2,7 +2,7 @@ package knockoff2
 
 trait HTMLMatchers { self : SpanConverter =>
   
-  private val startElement = """<[ ]*([a-zA-Z:_]+)[ \t]*[^>]*?(/?+)>""".r
+  private val startElement = """<[ ]*([a-zA-Z0-9:_]+)[ \t]*[^>]*?(/?+)>""".r
   
   def matchHTMLSpan( source : String ) : Option[ SpanMatch ] = {
     startElement.findFirstMatchIn( source ).map { open =>

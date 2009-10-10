@@ -319,7 +319,7 @@ one span contains other spans - it's basically like parenthesis matching.
     
     trait HTMLMatchers { self : SpanConverter =>
       
-      private val startElement = """<[ ]*([a-zA-Z:_]+)[ \t]*[^>]*?(/?+)>""".r
+      private val startElement = """<[ ]*([a-zA-Z0-9:_]+)[ \t]*[^>]*?(/?+)>""".r
       
       def matchHTMLSpan( source : String ) : Option[ SpanMatch ] = {
         startElement.findFirstMatchIn( source ).map { open =>
@@ -448,6 +448,15 @@ one span contains other spans - it's basically like parenthesis matching.
           t(" and an "),
           htmlSpan("&em;"),
           t(" are in here")
+        ) )
+      }
+      
+      it("should handle HTML headers defined in text") {
+        val converted = spanConverter(Nil)(
+            TextChunk("<h2 id=\"overview\">Overview</h2>")
+        )
+        converted.toList should equal( List(
+          htmlSpan("<h2 id=\"overview\">Overview</h2>")
         ) )
       }
     }

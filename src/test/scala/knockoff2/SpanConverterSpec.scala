@@ -112,6 +112,15 @@ with    ColoredLogger {
         t(" are in here")
       ) )
     }
+    
+    it("should handle HTML headers defined in text") {
+      val converted = spanConverter(Nil)(
+          TextChunk("<h2 id=\"overview\">Overview</h2>")
+      )
+      converted.toList should equal( List(
+        htmlSpan("<h2 id=\"overview\">Overview</h2>")
+      ) )
+    }
   }
   
   describe("LinkMatcher") {
