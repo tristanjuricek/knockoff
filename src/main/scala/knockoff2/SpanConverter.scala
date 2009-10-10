@@ -9,6 +9,7 @@ with    EqualDelimiterMatcher
 with    CodeMatchers
 with    EmphasisMatchers
 with    StrongMatchers
+with    StrongAndEmMatchers
 with    HTMLMatchers
 with    LinkMatcher
 with    StringExtras {
@@ -61,6 +62,8 @@ with    StringExtras {
     matchHTMLComment,
     matchEntity,
     matchHTMLSpan,
+    matchUnderscoreStrongAndEm,
+    matchAsterixStrongAndEm,
     matchUnderscoreStrong,
     matchAsterixStrong,
     matchUnderscoreEmphasis,

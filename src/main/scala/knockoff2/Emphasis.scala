@@ -2,7 +2,7 @@ package knockoff2
 
 import scala.xml.Node
 
-class Emphasis( val children : SpanSeq ) extends ComplexSpan {
+class Emphasis( val children : Seq[ Span ] ) extends ComplexSpan {
 
   def markdown = "_" + childrenMarkdown + "_"
 

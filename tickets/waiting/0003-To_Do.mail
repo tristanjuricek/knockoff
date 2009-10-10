@@ -1,4 +1,12 @@
 Subject: Things I have To Do
 
-* Fix the smaller markdown tests.
-* Why are things being evaluated twice?
+* I fucked up the containing relationship of the Spans. For some reason this works
+  with Blocks.
+    - Diagram the blocks
+    - Diagram the spans
+
+* The strong parser actually just needs to pick the 'last 2' ... hm.
+
+* Figure out a way to get the 'tabs' test to pass.
+* Get the 'markdown documentation' examples working.
+

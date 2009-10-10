@@ -8,7 +8,7 @@ trait SpanSeq extends Seq[ Span ] {
   override def elements = theSeq.elements
   override def apply( ii : Int ) = theSeq(ii)
   
-  def toXML = Group( theSeq.map( _.xml ) )
+  def toXML = Group( theSeq.flatMap( _.xml ) )
   
   def toMarkdown = theSeq.map( _.markdown ).mkString("")
 }

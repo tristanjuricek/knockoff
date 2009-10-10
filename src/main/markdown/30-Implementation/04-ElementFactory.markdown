@@ -97,10 +97,10 @@ customizing the `ElementFactory` is pretty simple. You create a subtype of
       /** A shorthand for text (popular with my tests) */
       def t( c : String ) = text( c )
       
-      def em( s : SpanSeq ) : Emphasis =
+      def em( s : Seq[ Span ] ) : Emphasis =
         new Emphasis( s )
       
-      def strong( s : SpanSeq ) : Strong =
+      def strong( s : Seq[ Span ] ) : Strong =
         new Strong( s )
       
       def link( c : SpanSeq, u : String, t : Option[ String ] ) : Link =

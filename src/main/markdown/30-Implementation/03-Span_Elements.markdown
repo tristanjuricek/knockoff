@@ -37,7 +37,7 @@ Each `Block` is composed of these.
       override def elements = theSeq.elements
       override def apply( ii : Int ) = theSeq(ii)
       
-      def toXML = Group( theSeq.map( _.xml ) )
+      def toXML = Group( theSeq.flatMap( _.xml ) )
       
       def toMarkdown = theSeq.map( _.markdown ).mkString("")
     }
@@ -58,10 +58,10 @@ The other, complex case is where a span contains a straight list of children.
     package knockoff2
     
     trait ComplexSpan extends Span {
-      val children : SpanSeq
+      val children : Seq[ Span ]
       def theSeq = children
       def childrenMarkdown = children.map( _.markdown ).mkString("")
-      def childrenXML = children.map( _.xml )
+      def childrenXML = toXML
     }
 
 And a workaround to cases where we need just a container of spans.
@@ -160,7 +160,7 @@ These emphasize other spans, usually with `<strong>` tags.
     
     import scala.xml.Node
 
-    class Strong( val children : SpanSeq ) extends ComplexSpan {
+    class Strong( val children : Seq[ Span ] ) extends ComplexSpan {
       
       def markdown = "**" + childrenMarkdown + "**"
       
@@ -178,7 +178,7 @@ Wraps other spans with `<em>` tags.
 
     import scala.xml.Node
 
-    class Emphasis( val children : SpanSeq ) extends ComplexSpan {
+    class Emphasis( val children : Seq[ Span ] ) extends ComplexSpan {
 
       def markdown = "_" + childrenMarkdown + "_"
 

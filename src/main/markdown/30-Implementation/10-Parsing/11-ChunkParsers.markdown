@@ -44,7 +44,7 @@ together. To group things together, the `foldedString` will combine
         Match a single line that is likely a bullet item.
       */
       def bulletLead : Parser[ Chunk ] = {
-        """[ ]{0,3}[*\-+](\t|[ ]{0,4})""".r ~> textLine ^^ { textChunk =>
+        """[ ]{0,3}[*\-+](\t|[ ]{0,4})""".r ~> not("[*\\-+]".r) ~> textLine ^^ { textChunk =>
           BulletLineChunk( textChunk.content )
         }
       }

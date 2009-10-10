@@ -2,7 +2,7 @@ package knockoff2
 
 import scala.xml.Node
 
-class Strong( val children : SpanSeq ) extends ComplexSpan {
+class Strong( val children : Seq[ Span ] ) extends ComplexSpan {
   
   def markdown = "**" + childrenMarkdown + "**"
   

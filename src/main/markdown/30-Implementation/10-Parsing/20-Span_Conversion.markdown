@@ -55,6 +55,7 @@ of that span.
     with    CodeMatchers
     with    EmphasisMatchers
     with    StrongMatchers
+    with    StrongAndEmMatchers
     with    HTMLMatchers
     with    LinkMatcher
     with    StringExtras {
@@ -107,6 +108,8 @@ of that span.
         matchHTMLComment,
         matchEntity,
         matchHTMLSpan,
+        matchUnderscoreStrongAndEm,
+        matchAsterixStrongAndEm,
         matchUnderscoreStrong,
         matchAsterixStrong,
         matchUnderscoreEmphasis,
@@ -216,6 +219,30 @@ Like `Emphasis` elements, `Strong` elements use two underscores `__` or asterixe
         ) }
       }
     }
+
+## Strong and `em` at the same time ##
+
+    // In knockoff2/StrongAndEmMatchers.scala
+    package knockoff2
+  
+    trait StrongAndEmMatchers { self : EqualDelimiterMatcher with SpanConverter =>
+      
+        def matchUnderscoreStrongAndEm( source : String ) = {
+          matchEqualDelimiters( source )( "___", createStrongAndEm, true )
+        }
+      
+        def matchAsterixStrongAndEm( source : String ) = {
+          matchEqualDelimiters( source )( "***", createStrongAndEm, true )
+        }
+      
+        def createStrongAndEm(
+          i : Int, b : Option[Text], span : Span, a : Option[ String ]
+        ) = {
+          import elementFactory.{ strong, em }
+          SpanMatch( i, b, strong( Seq( em( span ) ) ), a )
+        }
+    }
+
 
 ## `Code` Matching ##
 
