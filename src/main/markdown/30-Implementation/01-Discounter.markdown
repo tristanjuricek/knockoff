@@ -25,7 +25,7 @@ Otherwise...
       def knockoff( source : java.lang.CharSequence ) : BlockSeq = {
           
         val chunks = createChunkStream( new CharSequenceReader( source, 0 ) )
-        
+
         // These next lines are really ugly because I couldn't figure out a nice
         // way to match a tuple argument (thank you erasure!)
         val linkDefinitions = chunks.flatMap{ case ((chunk, pos)) =>

@@ -17,7 +17,7 @@ together. To group things together, the `foldedString` will combine
       override def skipWhitespace = false
       
       def chunk : Parser[ Chunk ] = {
-        horizontalRule | bulletLead | numberedLead | indentedChunk |
+        horizontalRule | bulletItem | numberedItem | indentedChunk |
         header | blockquote | linkDefinition | textBlock | emptyLines
       }
       
@@ -61,9 +61,11 @@ together. To group things together, the `foldedString` will combine
         }
       }
       
-      def trailingLine : Parser[ Chunk ] =
-        """[ ]{0,3}[\S&&[^*\-+]&&[^\d]][^\n]*\n?""".r ^^ ( s => TextChunk(s) )
-
+      def trailingLine : Parser[ Chunk ] = {
+        """\t|[ ]{0,4}""".r ~> """[\S&&[^*\-+]&&[^\d]][^\n]*\n?""".r ^^ (
+          s => TextChunk(s)
+        )
+      }
       
       def header : Parser[ Chunk ] =
         ( setextHeaderEquals | setextHeaderDashes | atxHeader )
@@ -137,4 +139,30 @@ together. To group things together, the `foldedString` will combine
       /** Take a series of very similar chunks and group them. */
       private def foldedString( texts : List[ Chunk ] ) : String =
         ( "" /: texts )( (current, text) => current + text.content )
+    }
+
+
+## `ChunkParsersSpec` ##
+
+    // In test knockoff2/ChunkParsersSpec.scala
+    package knockoff2
+    
+    import org.scalatest._
+    import org.scalatest.matchers._
+    
+    class ChunkParsersSpec extends ChunkParser with Spec with ShouldMatchers {
+        
+        describe("ChunkParser") {
+          it("should handle simple bullet items") {
+            val src = "* item 1\n* item 2\n"
+            parse( chunk, src ).get should equal ( BulletLineChunk("item 1\n") )
+          }
+
+          it("should group a second line that's not a bullet") {
+            val src = "*   item 1\n    more\n"
+            parse( chunk, src ).get should equal (
+              BulletLineChunk("item 1\nmore\n")
+            )
+          }
+        }
     }

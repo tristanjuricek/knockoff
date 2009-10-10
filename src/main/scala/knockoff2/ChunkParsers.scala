@@ -7,7 +7,7 @@ class ChunkParser extends RegexParsers with StringExtras {
   override def skipWhitespace = false
   
   def chunk : Parser[ Chunk ] = {
-    horizontalRule | bulletLead | numberedLead | indentedChunk |
+    horizontalRule | bulletItem | numberedItem | indentedChunk |
     header | blockquote | linkDefinition | textBlock | emptyLines
   }
   
@@ -51,9 +51,12 @@ class ChunkParser extends RegexParsers with StringExtras {
     }
   }
   
-  def trailingLine : Parser[ Chunk ] =
-    """[ ]{0,3}[\S&&[^*\-+]&&[^\d]][^\n]*\n?""".r ^^ ( s => TextChunk(s) )
-
+  def trailingLine : Parser[ Chunk ] = {
+    """\t|[ ]{0,4}""".r ~> """[\S&&[^*\-+]&&[^\d]][^\n]*\n?""".r ^^ (
+      s => TextChunk(s)
+    )
+  }
+  
   def header : Parser[ Chunk ] =
     ( setextHeaderEquals | setextHeaderDashes | atxHeader )
 
