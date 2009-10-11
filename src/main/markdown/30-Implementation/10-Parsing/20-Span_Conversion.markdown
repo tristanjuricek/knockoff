@@ -151,10 +151,10 @@ Both are configured by the `EmphasisMatchers`.
     trait EmphasisMatchers { self : EqualDelimiterMatcher with SpanConverter =>
      
       def matchUnderscoreEmphasis( source : String ) =
-        matchEqualDelimiters( source )( "_", createEmphasisSpanMatch, true )
+        matchEqualDelimiters( source )( "_", createEmphasisSpanMatch, true, Some('\\') )
 
       def matchAsterixEmphasis( source : String ) =
-        matchEqualDelimiters( source )( "*", createEmphasisSpanMatch, true )
+        matchEqualDelimiters( source )( "*", createEmphasisSpanMatch, true, Some('\\') )
 
       def createEmphasisSpanMatch(
         i : Int, b : Option[Text], span : Span, a : Option[ String ]
@@ -189,10 +189,10 @@ Like `Emphasis` elements, `Strong` elements use two underscores `__` or asterixe
     trait StrongMatchers { self : EqualDelimiterMatcher with SpanConverter =>
       
       def matchUnderscoreStrong( source : String ) =
-        matchEqualDelimiters( source )( "__", createStrongSpanMatch, true )
+        matchEqualDelimiters( source )( "__", createStrongSpanMatch, true, Some('\\') )
       
       def matchAsterixStrong( source : String ) =
-        matchEqualDelimiters( source )( "**", createStrongSpanMatch, true )
+        matchEqualDelimiters( source )( "**", createStrongSpanMatch, true, Some('\\') )
       
       def createStrongSpanMatch(
         i : Int, b : Option[Text], span : Span, a : Option[ String ]
@@ -228,11 +228,11 @@ Like `Emphasis` elements, `Strong` elements use two underscores `__` or asterixe
     trait StrongAndEmMatchers { self : EqualDelimiterMatcher with SpanConverter =>
       
         def matchUnderscoreStrongAndEm( source : String ) = {
-          matchEqualDelimiters( source )( "___", createStrongAndEm, true )
+          matchEqualDelimiters( source )( "___", createStrongAndEm, true, Some('\\') )
         }
       
         def matchAsterixStrongAndEm( source : String ) = {
-          matchEqualDelimiters( source )( "***", createStrongAndEm, true )
+          matchEqualDelimiters( source )( "***", createStrongAndEm, true, Some('\\') )
         }
       
         def createStrongAndEm(
@@ -259,10 +259,10 @@ This is all done by balanced code matching via the `EqualDelimiterMatcher`.
     trait CodeMatchers { self : EqualDelimiterMatcher with SpanConverter =>
      
       def matchDoubleCodes( source : String ) : Option[ SpanMatch ] =
-        matchEqualDelimiters( source )( "``", createCodeSpanMatch, false )
+        matchEqualDelimiters( source )( "``", createCodeSpanMatch, false, None )
 
       def matchSingleCodes( source : String ) : Option[ SpanMatch ] =
-        matchEqualDelimiters( source )( "`", createCodeSpanMatch, false )
+        matchEqualDelimiters( source )( "`", createCodeSpanMatch, false, None )
       
       def createCodeSpanMatch(
         i : Int, b : Option[Text], span : Span, a : Option[ String ]
@@ -631,7 +631,7 @@ character sequence may be.
     package knockoff2
 
     trait EqualDelimiterMatcher { self : SpanConverter with StringExtras =>
-
+      
       /**
         @param delim The delimiter string to match the next 2 sequences of.
         @param toSpanMatch Factory to create the actual SpanMatch.
@@ -640,9 +640,10 @@ character sequence may be.
       def matchEqualDelimiters( source : String )(
         delim       : String,
         toSpanMatch : ( Int, Option[ Text ], Span, Option[ String ] ) => SpanMatch,
-        recursive   : Boolean
+        recursive   : Boolean,
+        escape      : Option[ Char ]
       ) : Option[ SpanMatch ] = {
-        source.nextNIndicesOf( 2, delim ) match {
+        source.nextNIndicesOf( 2, delim, escape ) match {
           case List( start, end ) => {
             if ( start + delim.length >= end ) return None
             val contained = source.substring( start + delim.length, end )
@@ -663,7 +664,61 @@ character sequence may be.
         }
       }
     }
-    
+
+## Escaping ##
+
+The following characters should be escapable, which means that by putting a
+backslash `\` in front of the character, you should not see it in output:
+
+    \   backslash
+    `   backtick
+    *   asterisk
+    _   underscore
+    {}  curly braces
+    []  square brackets
+    ()  parentheses
+    #   hash mark
+    +   plus sign
+    -   minus sign (hyphen)
+    .   dot
+    !   exclamation mark
+
+This means that a normal backslash by itself should not be seen unless it's inside
+a code block.
+
+    // The Escaping specification
+    describe("Escaping system") {
+
+      it("should escape asterixes in content") {
+        val converted = spanConverter(Nil)(
+          TextChunk("""an \*escaped\* emphasis""")
+        )
+        converted.toList should equal( List(
+          text("""an \*escaped\* emphasis""")
+        ) )
+      }
+      
+      it("should escape backticks in content") {
+        val converted = spanConverter(Nil)(
+          TextChunk("""an escaped \' backtick""")
+        )
+        converted.toList should equal( List(
+          text("""an escaped \' backtick""")
+        ) )
+      }
+      
+      it("should ignore backslashes in code") {
+        val converted = spanConverter(Nil)(
+          TextChunk("""a backslash `\` in code""")
+        )
+        converted.toList should equal( List(
+          text("""a backslash """),
+          codeSpan("\\"),
+          text(""" in code""")
+        ) )
+      }
+    }
+
 
 ## Testing Specification via `SpanConverterSpec` ##
 
@@ -695,4 +750,6 @@ character sequence may be.
       // See the HTMLSpanMatcher specification
       
       // See the LinkMatcher specification
+      
+      // See the Escaping specification
     }

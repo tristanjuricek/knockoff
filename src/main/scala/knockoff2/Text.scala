@@ -6,7 +6,8 @@ class Text( val content : String ) extends SimpleSpan {
 
   def markdown = content
 
-  def xml : Node = XMLText( unescape( content ) )
+  def xml : Node =
+    XMLText( unescape( content ) )
   
   val escapeableChars = List(
       "\\", "`", "*", "_", "{", "}", "[", "]", "(", ")", "#", "+", "-", ".", "!", ">"

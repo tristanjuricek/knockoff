@@ -76,9 +76,9 @@ together. To group things together, the `foldedString` will combine
       def setextHeaderDashes : Parser[ Chunk ] =
         textLine <~ dashesLine ^^ ( s => HeaderChunk( 2, s.content ) )
 
-      def equalsLine : Parser[Any] = """=+\n?""".r
+      def equalsLine : Parser[Any] = """=+\n""".r
 
-      def dashesLine : Parser[Any] = """-+\n?""".r
+      def dashesLine : Parser[Any] = """-+\n""".r
 
       def atxHeader : Parser[ Chunk ] = {
         """#+ .*\n?""".r ^^ ( s =>
@@ -163,6 +163,6 @@ together. To group things together, the `foldedString` will combine
             parse( chunk, src ).get should equal (
               BulletLineChunk("item 1\nmore\n")
             )
-          }
+          }          
         }
     }

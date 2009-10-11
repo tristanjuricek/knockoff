@@ -16,6 +16,6 @@ class ChunkParsersSpec extends ChunkParser with Spec with ShouldMatchers {
         parse( chunk, src ).get should equal (
           BulletLineChunk("item 1\nmore\n")
         )
-      }
+      }          
     }
 }

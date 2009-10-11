@@ -9,11 +9,17 @@ class StringExtrasSpec extends Spec with ShouldMatchers with ColoredLogger
   describe("StringExtras.nextNIndices") {
 
     it( "should find two different groups of the same time" ) {
-      "a `foo` b `bar`".nextNIndicesOf(2,"`") should equal ( List( 2, 6 ) )
+      "a `foo` b `bar`".nextNIndicesOf(2,"`", None) should equal ( List( 2, 6 ) )
     }
 
     it( "should deal with only one index" ) {
-      "a `foo with nothin'".nextNIndicesOf(2, "`") should equal (Nil)
+      "a `foo with nothin'".nextNIndicesOf(2, "`", None) should equal (Nil)
+    }
+    
+    it("should ignore escaped sequences") {
+      val actual =
+        """a ** normal \**escaped ** normal""".nextNIndicesOf( 2, "**", Some('\\') )
+      actual should equal( List(2, 23) )
     }
   }
   

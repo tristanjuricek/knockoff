@@ -97,12 +97,12 @@ The most basic Span element that contains no other markup information.
 
       def markdown = content
 
-      def xml : Node = XMLText( unescape( content ) )
+      def xml : Node =
+        XMLText( unescape( content ) )
       
       val escapeableChars = List(
           "\\", "`", "*", "_", "{", "}", "[", "]", "(", ")", "#", "+", "-", ".", "!", ">"
       )
-
 
       def unescape(source:String):String = {
           var buf:String = source

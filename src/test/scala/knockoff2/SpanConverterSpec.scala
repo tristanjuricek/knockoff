@@ -148,4 +148,36 @@ with    ColoredLogger {
       ) }
     }
   }
+  
+  describe("Escaping system") {
+  
+    it("should escape asterixes in content") {
+      val converted = spanConverter(Nil)(
+        TextChunk("""an \*escaped\* emphasis""")
+      )
+      converted.toList should equal( List(
+        text("""an \*escaped\* emphasis""")
+      ) )
+    }
+    
+    it("should escape backticks in content") {
+      val converted = spanConverter(Nil)(
+        TextChunk("""an escaped \' backtick""")
+      )
+      converted.toList should equal( List(
+        text("""an escaped \' backtick""")
+      ) )
+    }
+    
+    it("should ignore backslashes in code") {
+      val converted = spanConverter(Nil)(
+        TextChunk("""a backslash `\` in code""")
+      )
+      converted.toList should equal( List(
+        text("""a backslash """),
+        codeSpan("\\"),
+        text(""" in code""")
+      ) )
+    }
+  }
 }

@@ -3,11 +3,11 @@ package knockoff2
 trait StrongAndEmMatchers { self : EqualDelimiterMatcher with SpanConverter =>
   
     def matchUnderscoreStrongAndEm( source : String ) = {
-      matchEqualDelimiters( source )( "___", createStrongAndEm, true )
+      matchEqualDelimiters( source )( "___", createStrongAndEm, true, Some('\\') )
     }
   
     def matchAsterixStrongAndEm( source : String ) = {
-      matchEqualDelimiters( source )( "***", createStrongAndEm, true )
+      matchEqualDelimiters( source )( "***", createStrongAndEm, true, Some('\\') )
     }
   
     def createStrongAndEm(

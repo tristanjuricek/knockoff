@@ -66,9 +66,9 @@ class ChunkParser extends RegexParsers with StringExtras {
   def setextHeaderDashes : Parser[ Chunk ] =
     textLine <~ dashesLine ^^ ( s => HeaderChunk( 2, s.content ) )
 
-  def equalsLine : Parser[Any] = """=+\n?""".r
+  def equalsLine : Parser[Any] = """=+\n""".r
 
-  def dashesLine : Parser[Any] = """-+\n?""".r
+  def dashesLine : Parser[Any] = """-+\n""".r
 
   def atxHeader : Parser[ Chunk ] = {
     """#+ .*\n?""".r ^^ ( s =>

@@ -20,8 +20,8 @@ within documents".
 ### A Bit Of History To Satisfy Myself ###
 
 In my first attempt, I tried building one big parser combinator, and then, slowly,
-some part of my brain fell down a well. What ended up happening, however, is that
-I created an intermediate representation, but a wacky one, that was kind of hacked
+some part of my brain fell down a well. What ended up happening, however, is that I
+created an intermediate representation, but a wacky one, that was kind of hacked
 together. It lacked consistency in how I represented whitespace. I ended up doing
 lots of things, like:
 

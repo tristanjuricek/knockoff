@@ -1,7 +1,7 @@
 package knockoff2
 
 trait EqualDelimiterMatcher { self : SpanConverter with StringExtras =>
-
+  
   /**
     @param delim The delimiter string to match the next 2 sequences of.
     @param toSpanMatch Factory to create the actual SpanMatch.
@@ -10,9 +10,10 @@ trait EqualDelimiterMatcher { self : SpanConverter with StringExtras =>
   def matchEqualDelimiters( source : String )(
     delim       : String,
     toSpanMatch : ( Int, Option[ Text ], Span, Option[ String ] ) => SpanMatch,
-    recursive   : Boolean
+    recursive   : Boolean,
+    escape      : Option[ Char ]
   ) : Option[ SpanMatch ] = {
-    source.nextNIndicesOf( 2, delim ) match {
+    source.nextNIndicesOf( 2, delim, escape ) match {
       case List( start, end ) => {
         if ( start + delim.length >= end ) return None
         val contained = source.substring( start + delim.length, end )
