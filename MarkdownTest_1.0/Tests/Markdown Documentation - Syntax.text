@@ -632,7 +632,7 @@ multiple words in the link text:
 	Visit [Daring Fireball][] for more information.
 
 And then define the link:
-	
+
 	[Daring Fireball]: http://daringfireball.net/
 
 Link definitions can be placed anywhere in your Markdown document. I
@@ -833,7 +833,7 @@ use regular HTML `<img>` tags.
 Markdown supports a shortcut style for creating "automatic" links for URLs and email addresses: simply surround the URL or email address with angle brackets. What this means is that if you want to show the actual text of a URL or email address, and also have it be a clickable link, you can do this:
 
     <http://example.com/>
-    
+
 Markdown will turn this into:
 
     <a href="http://example.com/">http://example.com/</a>
@@ -881,8 +881,7 @@ Markdown provides backslash escapes for the following characters:
     []  square brackets
     ()  parentheses
     #   hash mark
-	+	plus sign
-	-	minus sign (hyphen)
+	+   plus sign
+	-   minus sign (hyphen)
     .   dot
     !   exclamation mark
-

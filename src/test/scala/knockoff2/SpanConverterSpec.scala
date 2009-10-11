@@ -38,6 +38,15 @@ with    ColoredLogger {
         text(" is OK")
       ) }
     }
+    
+    it("double-tick code markers should preserve whitespace") {
+      val converted = spanConverter(Nil)( TextChunk("AA `` ` `` BB") )
+      converted.toList should equal { List(
+        text("AA "),
+        codeSpan(" ` "),
+        text(" BB")
+      ) }
+    }
   }
   
   describe( "EmphasisMatchers" ) {

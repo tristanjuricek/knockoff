@@ -299,6 +299,15 @@ This is all done by balanced code matching via the `EqualDelimiterMatcher`.
           text(" is OK")
         ) }
       }
+      
+      it("double-tick code markers should preserve whitespace") {
+        val converted = spanConverter(Nil)( TextChunk("AA `` ` `` BB") )
+        converted.toList should equal { List(
+          text("AA "),
+          codeSpan(" ` "),
+          text(" BB")
+        ) }
+      }
     }
 
 ## HTML Matching ##
