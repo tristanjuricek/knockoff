@@ -21,9 +21,10 @@ Include the direct dependency:
 Definitely possible, it will require a downloaded [scala][] version, after which you
 include the `lib/scala-library.jar` file in your classpath along with the [file][1] at
 
-	http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/knockoff/
-		[SCALA_VERSION]-[KNOCKOFF_VERSION]/
-		knockoff-[SCALA_VERSION]-[KNOCKOFF_VERSION].jar
+	http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/
+		knockoff_[SCALA_VERSION]/
+		[KNOCKOFF_VERSION]/
+		knockoff_[SCALA_VERSION]-[KNOCKOFF_VERSION].jar
 
 Yes, it's a long URL. So here's the [link][1] again.
 
@@ -39,6 +40,6 @@ processing step. From the base directory, you call:
     sbt update literate package
 
 
-[1]: http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/knockoff/2.7.6-0.5.0-1/knockoff_2.7.6-0.5.0-1.jar
+[1]: http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/knockoff_2.7.6/0.5.0-1/knockoff_2.7.6-0.5.0-1.jar
 [sbt]: http://code.google.com/p/simple-build-tool/
 [scala]: http://www.scala-lang.org

@@ -30,6 +30,6 @@ cp -r target/scala_$SCALA_VERSION/doc/main target/doc
 echo Publishing
 sbt +publish
 
-git push origin remotes/$VERSION_NUMBER
+git push origin $VERSION_NUMBER
 
 echo You should update target/doc now
