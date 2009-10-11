@@ -1,6 +1,5 @@
 Subject: Things I have To Do
 
-* Build an escape spec suite ... somewhere.
 * I'd like a "release" script that prepares a nice tag in git and then pushes things
   out for my website.
 * Call this release 0.5.0-1

@@ -11,7 +11,7 @@ that there will be more and more problems, well. Hm.
 
 Notably, this remembers the position of each chunk in the input.
 
-    // In knockoff2/ChunkStreamFactory.scala
+    // In knockoff/ChunkStreamFactory.scala
     // See the ChunkStreamFactory package and imports
     
     trait ChunkStreamFactory extends Logged {
@@ -50,7 +50,7 @@ Notably, this remembers the position of each chunk in the input.
 #### Package And Imports
 
     // The ChunkStreamFactory package and imports
-    package knockoff2
+    package knockoff
 
     import scala.util.parsing.combinator.Parsers
     import scala.util.parsing.input.{ CharSequenceReader, Position, Reader }

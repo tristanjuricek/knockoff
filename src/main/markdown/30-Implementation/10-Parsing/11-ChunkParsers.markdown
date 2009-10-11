@@ -7,8 +7,8 @@ part separately from the expressions here.
 All of the methods return a `Chunk` parser type, even when grouping the parsers
 together. To group things together, the `foldedString` will combine
 
-    // In knockoff2/ChunkParsers.scala
-    package knockoff2
+    // In knockoff/ChunkParsers.scala
+    package knockoff
     
     import scala.util.parsing.combinator.RegexParsers
 
@@ -144,8 +144,8 @@ together. To group things together, the `foldedString` will combine
 
 ## `ChunkParsersSpec` ##
 
-    // In test knockoff2/ChunkParsersSpec.scala
-    package knockoff2
+    // In test knockoff/ChunkParsersSpec.scala
+    package knockoff
     
     import org.scalatest._
     import org.scalatest.matchers._

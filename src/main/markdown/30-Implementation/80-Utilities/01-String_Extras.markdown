@@ -3,8 +3,8 @@
 Adds utilities to String for doing things like finding the next N indexes of a
 recurrence.
 
-    // In knockoff2/StringExtras.scala
-    package knockoff2
+    // In knockoff/StringExtras.scala
+    package knockoff
     
     import scala.collection.mutable.ListBuffer
     
@@ -121,8 +121,8 @@ recurrence.
 
 ### `StringExtrasSpec`
 
-    // In test knockoff2/StringExtrasSpec.scala
-    package knockoff2
+    // In test knockoff/StringExtrasSpec.scala
+    package knockoff
     
     import org.scalatest._
     import org.scalatest.matchers._

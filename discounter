@@ -1,3 +1,6 @@
 #!/bin/bash
-
-scala -cp /Users/tristan/dev/knockoff/lib/testng-5.8-jdk15.jar:/Users/tristan/dev/knockoff/target/test-classes:/Users/tristan/dev/knockoff/target/classes:/Users/tristan/dev/knockoff/target/test-resources:/Users/tristan/dev/knockoff/target/resources:/Users/tristan/dev/knockoff/lib_managed/compile/scalatest-0.9.5.jar knockoff2.DefaultDiscounter "$@"
+SCALA_VERSION=2.7.6
+PROJECT_DIR=/Users/tristan/dev/knockoff
+CLASSPATH=$PROJECT_DIR/project/boot/scala-$SCALA_VERSION/lib/scala-library.jar
+CLASSPATH=$CLASSPATH:$PROJECT_DIR/target/scala_$SCALA_VERSION/knockoff_2.7.6-0.5.0-SNAPSHOT.jar
+java -cp $CLASSPATH knockoff.DefaultDiscounter "$@"

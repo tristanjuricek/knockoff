@@ -25,8 +25,8 @@ pretty simple mapping function.
 Conversion itself is a pretty brute-force approach encapsulated in the
 `SpanConverter` class.
 
-    // In knockoff2/SpanConverterFactory.scala
-    package knockoff2
+    // In knockoff/SpanConverterFactory.scala
+    package knockoff
     
     trait SpanConverterFactory extends HasElementFactory {
      
@@ -43,8 +43,8 @@ string. But on certain elements, the element itself contains a Span, so this
 converter configures that matcher to kick off another parsing run on the substring
 of that span.
 
-    // In knockoff2/SpanConverter.scala
-    package knockoff2
+    // In knockoff/SpanConverter.scala
+    package knockoff
     
     class SpanConverter(
       val definitions    : Seq[ LinkDefinitionChunk ],
@@ -123,8 +123,8 @@ of that span.
 The primary result returned by a `SpanMatcher`. It's `index` will become an ordering
 attribute for determining the "best" match.
 
-    // In knockoff2/SpanMatch.scala
-    package knockoff2
+    // In knockoff/SpanMatch.scala
+    package knockoff
     
     case class SpanMatch(
       val index   : Int,
@@ -145,8 +145,8 @@ elements. Examples:
 
 Both are configured by the `EmphasisMatchers`.
 
-    // In knockoff2/EmphasisMatchers.scala
-    package knockoff2
+    // In knockoff/EmphasisMatchers.scala
+    package knockoff
     
     trait EmphasisMatchers { self : EqualDelimiterMatcher with SpanConverter =>
      
@@ -183,8 +183,8 @@ Both are configured by the `EmphasisMatchers`.
 Like `Emphasis` elements, `Strong` elements use two underscores `__` or asterixes
 `**` to figure themselves out.
 
-    // In knockoff2/StrongMatchers.scala
-    package knockoff2
+    // In knockoff/StrongMatchers.scala
+    package knockoff
     
     trait StrongMatchers { self : EqualDelimiterMatcher with SpanConverter =>
       
@@ -222,8 +222,8 @@ Like `Emphasis` elements, `Strong` elements use two underscores `__` or asterixe
 
 ## Strong and `em` at the same time ##
 
-    // In knockoff2/StrongAndEmMatchers.scala
-    package knockoff2
+    // In knockoff/StrongAndEmMatchers.scala
+    package knockoff
   
     trait StrongAndEmMatchers { self : EqualDelimiterMatcher with SpanConverter =>
       
@@ -253,8 +253,8 @@ Two varations of code blocks:
 
 This is all done by balanced code matching via the `EqualDelimiterMatcher`.
 
-    // In knockoff2/CodeMatchers.scala
-    package knockoff2
+    // In knockoff/CodeMatchers.scala
+    package knockoff
     
     trait CodeMatchers { self : EqualDelimiterMatcher with SpanConverter =>
      
@@ -323,8 +323,8 @@ Any sequences of HTML in content are matched by the `InlineHTMLMatcher`. Note th
 this uses a recursive method `hasMatchedClose` to deal with the situations where
 one span contains other spans - it's basically like parenthesis matching.
 
-    // In knockoff2/HTMLSpanMatcher.scala
-    package knockoff2
+    // In knockoff/HTMLSpanMatcher.scala
+    package knockoff
     
     trait HTMLMatchers { self : SpanConverter =>
       
@@ -488,8 +488,8 @@ So, things like:
 
 ### `LinkMatcher`
 
-    // In knockoff2/LinkMatcher.scala
-    package knockoff2
+    // In knockoff/LinkMatcher.scala
+    package knockoff
     
     import scala.util.matching.Regex.Match
     
@@ -636,8 +636,8 @@ Many of the elements are delimited by the identical character sequence on either
 side of the text. This does the dirty work of finding those matches, whatever that
 character sequence may be.
 
-    // In knockoff2/EqualDelimiterMatcher.scala
-    package knockoff2
+    // In knockoff/EqualDelimiterMatcher.scala
+    package knockoff
 
     trait EqualDelimiterMatcher { self : SpanConverter with StringExtras =>
       
@@ -731,8 +731,8 @@ a code block.
 
 ## Testing Specification via `SpanConverterSpec` ##
 
-    // In test knockoff2/SpanConverterSpec.scala
-    package knockoff2
+    // In test knockoff/SpanConverterSpec.scala
+    package knockoff
 
     import org.scalatest._
     import org.scalatest.matchers._

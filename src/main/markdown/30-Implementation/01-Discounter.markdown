@@ -10,7 +10,7 @@ fancy customization, you use the DefaultDiscounter.
 
 Otherwise...
 
-    // In knockoff2/Discounter.scala
+    // In knockoff/Discounter.scala
     // See the Discounter package and imports
     
     trait   Discounter
@@ -71,7 +71,7 @@ Otherwise...
 #### Package And Imports
 
     // The Discounter package and imports
-    package knockoff2
+    package knockoff
     
     import scala.collection.mutable.ListBuffer
     import scala.util.parsing.input.Position
@@ -86,8 +86,8 @@ discounter is to mimic the usage of `Markdown.pl`.
 
 The `--html4tags` argument will just do nothing, but not be processed as a file.
 
-    // In knockoff2/DefaultDiscounter.scala
-    package knockoff2
+    // In knockoff/DefaultDiscounter.scala
+    package knockoff
     
     import scala.util.logging.ConsoleLogger
     
@@ -123,3 +123,18 @@ The `--html4tags` argument will just do nothing, but not be processed as a file.
       private def readText( fileName : String ) : String =
         io.Source.fromFile( fileName ).mkString("")
     }
+
+
+## Variations off of Markdown ##
+
+This has a couple of _very_ subtle adjustments to the base Markdown script:
+
+1. Tabs are passed through. Though why you're using tabs is beyond me, this keeps
+like diff tools honest.
+
+2. List items (`<li>`) only have a sub-paragraph (`<p>`) if you have complex
+content. (In the core script, if you space them widely, you get the sub `<p>`
+element, which made no sense to me.)
+
+3. If you have a code line, followed by another indented line, even if that line's
+empty, the empty line is part of the code block.

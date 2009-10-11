@@ -23,13 +23,14 @@ trait Literable extends ScalaProject {
          generator = new Generator {
              override def headerContent( doc : WebDocument ) : Node = Group(
                  <style> {"""
-                 .header ul { list-style-type: none; margin: 0; padding: 0 }
-                 .header ul li { display: inline; }
+                 .header ul { list-style-type: none; margin: 0; padding: 0; margin-bottom: 1em}
+                 .header ul li { display: inline; padding-right: 2em; }
                  """} </style>
                  <ul style="list-style-type: none">
                      <li><a href={ doc.relativePathTo( "../.." ) }>tristanhunt.com</a></li>
                      <li><a href="http://github.com/tristanjuricek/knockoff">GitHub</a></li>
                      <li><a href={ doc.relativePathTo("main/api/index.html") }>API</a></li>
+                     <li><a href={ doc.relativePathTo( "../literable" ) }>Literable</a></li>
                  </ul>
              )
          }

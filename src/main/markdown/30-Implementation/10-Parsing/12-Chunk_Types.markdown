@@ -2,8 +2,8 @@
 
 This is more of a reference to the typing of chunks.
 
-    // In knockoff2/ChunkTypes.scala
-    package knockoff2
+    // In knockoff/ChunkTypes.scala
+    package knockoff
     
     import scala.collection.mutable.ListBuffer
     import scala.util.parsing.input.Position

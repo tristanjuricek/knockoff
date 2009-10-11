@@ -11,8 +11,8 @@ For any `Discounter`, there should really only be one, configurable,
 `ElementFactory` instance. And for the things that need to fetch that instance,
 there is the `HasElementFactory` trait.
 
-    // In knockoff2/HasElementFactory.scala
-    package knockoff2
+    // In knockoff/HasElementFactory.scala
+    package knockoff
     
     trait HasElementFactory {
     
@@ -43,7 +43,7 @@ customizing the `ElementFactory` is pretty simple. You create a subtype of
 
 ### `ElementFactory`
 
-    // In knockoff2/ElementFactory.scala
+    // In knockoff/ElementFactory.scala
     // See the ElementFactory package and imports
     
     class ElementFactory {
@@ -137,7 +137,7 @@ I used heavy abbreviation in this class in order to draw focus to the types.
 #### `ElementFactory` - Package and Imports
 
     // The ElementFactory package and imports
-    package knockoff2
+    package knockoff
     
     import scala.io.Source
     import scala.util.parsing.input.Position

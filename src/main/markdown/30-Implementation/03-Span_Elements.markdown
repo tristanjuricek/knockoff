@@ -8,8 +8,8 @@ Marks a string to become the basic building block of the Markdown tree.
 Each Span is also a sequence of other Spans - some elements, like a link definition,
 can have part of it's description be code.
 
-    // In knockoff2/Span.scala
-    package knockoff2
+    // In knockoff/Span.scala
+    package knockoff
     
     import scala.xml.Node
     
@@ -26,8 +26,8 @@ can have part of it's description be code.
 
 Each `Block` is composed of these.
 
-    // In knockoff2/SpanSeq.scala
-    package knockoff2
+    // In knockoff/SpanSeq.scala
+    package knockoff
     
     import scala.xml.Group
     
@@ -45,8 +45,8 @@ Each `Block` is composed of these.
 A simpler version is for the common case, where the span does not actually contain
 other spans.
 
-    // In knockoff2/SimpleSpan.scala
-    package knockoff2
+    // In knockoff/SimpleSpan.scala
+    package knockoff
     
     trait SimpleSpan extends Span {
       def theSeq = List( this )
@@ -54,8 +54,8 @@ other spans.
 
 The other, complex case is where a span contains a straight list of children.
 
-    // In knockoff2/ComplexSpan.scala
-    package knockoff2
+    // In knockoff/ComplexSpan.scala
+    package knockoff
     
     trait ComplexSpan extends Span {
       val children : Seq[ Span ]
@@ -66,8 +66,8 @@ The other, complex case is where a span contains a straight list of children.
 
 And a workaround to cases where we need just a container of spans.
 
-    // In knockoff2/GroupSpan.scala
-    package knockoff2
+    // In knockoff/GroupSpan.scala
+    package knockoff
     
     import scala.xml.Group
     
@@ -88,8 +88,8 @@ And a workaround to cases where we need just a container of spans.
 
 The most basic Span element that contains no other markup information.
 
-    // In knockoff2/Text.scala
-    package knockoff2
+    // In knockoff/Text.scala
+    package knockoff
     
     import scala.xml.{ Node, Text => XMLText }
     
@@ -118,8 +118,8 @@ The most basic Span element that contains no other markup information.
 
 These sequences are found inside of blocks, but still mean "just pass it on".
 
-    // In knockoff2/HTMLSpan.scala
-    package knockoff2
+    // In knockoff/HTMLSpan.scala
+    package knockoff
     
     import scala.xml.{ Node, Unparsed }
     
@@ -137,8 +137,8 @@ These sequences are found inside of blocks, but still mean "just pass it on".
 These are usually represented by inline `<code>` blocks in paragraph text. This is
 not to be confused with `CodeBlock` - a `CodeBlock` does not contain a `CodeSpan`.
 
-    // In knockoff2/CodeSpan.scala
-    package knockoff2
+    // In knockoff/CodeSpan.scala
+    package knockoff
     
     import scala.xml.Node
     
@@ -155,8 +155,8 @@ not to be confused with `CodeBlock` - a `CodeBlock` does not contain a `CodeSpan
 
 These emphasize other spans, usually with `<strong>` tags.
 
-    // In knockoff2/Strong.scala
-    package knockoff2
+    // In knockoff/Strong.scala
+    package knockoff
     
     import scala.xml.Node
 
@@ -173,8 +173,8 @@ These emphasize other spans, usually with `<strong>` tags.
 
 Wraps other spans with `<em>` tags.
 
-    // In knockoff2/Emphasis.scala
-    package knockoff2
+    // In knockoff/Emphasis.scala
+    package knockoff
 
     import scala.xml.Node
 
@@ -199,8 +199,8 @@ Links are kind of special spanning elements, because there are
 
 The direct link is is simply called a `Link`.
 
-    // In knockoff2/Link.scala
-    package knockoff2
+    // In knockoff/Link.scala
+    package knockoff
 
     import scala.xml.Node
 
@@ -232,8 +232,8 @@ The direct link is is simply called a `Link`.
 Indirect links are tied to `LinkDefinition` elements, which are a special `Block`
 type. (The link definitions can't be found in the middle of a paragraph.)
 
-    // In knockoff2/IndirectLink.scala
-    package knockoff2
+    // In knockoff/IndirectLink.scala
+    package knockoff
     
     class IndirectLink(
       children        : SpanSeq,
@@ -252,8 +252,8 @@ type. (The link definitions can't be found in the middle of a paragraph.)
 Image links are standard link references prefixed with an exclamation mark `!`. The
 image aspect is done via this trait:
 
-    // In knockoff2/ImageSpan.scala
-    package knockoff2
+    // In knockoff/ImageSpan.scala
+    package knockoff
     
     import scala.xml.Node
     
@@ -271,8 +271,8 @@ We then the actual classes using a mixin.
 
 #### `ImageLink`
 
-    // In knockoff2/ImageLink.scala
-    package knockoff2
+    // In knockoff/ImageLink.scala
+    package knockoff
     
     import scala.xml.Node
     
@@ -288,8 +288,8 @@ We then the actual classes using a mixin.
 
 #### `IndirectImageLink`
 
-    // In knockoff2/IndirectImageLink.scala
-    package knockoff2
+    // In knockoff/IndirectImageLink.scala
+    package knockoff
 
     import scala.xml.Node
     

@@ -2,8 +2,8 @@
 
 Useful for testing, not racism.
 
-    // In knockoff2/ColoredLogger.scala
-    package knockoff2
+    // In knockoff/ColoredLogger.scala
+    package knockoff
     
     import scala.util.logging.Logged
     

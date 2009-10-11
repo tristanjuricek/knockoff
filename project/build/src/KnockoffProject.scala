@@ -4,6 +4,8 @@ class KnockoffProject( info : ProjectInfo )
 extends DefaultProject( info )
 with    knockoff.Literable {
   
+  override def crossScalaVersions = Set("2.7.2", "2.7.3", "2.7.4", "2.7.5", "2.7.6")
+  
   override def compileOptions = {
     List( MaxCompileErrors( 5 ), CompileOption("-unchecked") ) :::
     super.compileOptions.toList

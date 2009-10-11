@@ -7,7 +7,7 @@ Block Elements
 inside of `Blocks`: namely `Span`s, but also, other blocks. In the markdown, blocks
 are usually seen as separated by whitespace lines.
 
-    // In knockoff2/Block.scala
+    // In knockoff/Block.scala
     // See the Block package and imports
 
     trait Block extends BlockSeq {
@@ -36,8 +36,8 @@ are usually seen as separated by whitespace lines.
 
 In many cases, the Block can not contain other blocks.
 
-    // In knockoff2/SimpleBlock.scala
-    package knockoff2
+    // In knockoff/SimpleBlock.scala
+    package knockoff
     
     trait SimpleBlock extends Block {
         override def theSeq : Seq[ Block ] = List( this )
@@ -45,8 +45,8 @@ In many cases, the Block can not contain other blocks.
 
 In some other cases, the block is a pretty complex thing:
 
-    // In knockoff2/ComplexBlock.scala
-    package knockoff2
+    // In knockoff/ComplexBlock.scala
+    package knockoff
     
     trait ComplexBlock extends Block {
         val children : Seq[ Block ]
@@ -59,8 +59,8 @@ In some other cases, the block is a pretty complex thing:
 There are moments when we need to capture a series of blocks as a `ComplexBlock`
 without any other real information.
 
-    // In knockoff2/GroupBlock.scala
-    package knockoff2
+    // In knockoff/GroupBlock.scala
+    package knockoff
     
     import scala.xml.{ Node, Group }
     import scala.util.parsing.input.{ NoPosition, Position }
@@ -88,8 +88,8 @@ main return type of the `KnockOff.parse` method.
 
 One of the shorthand filter expressions allows for you to indicate the "BlockType".
 
-    // In knockoff2/BlockType.scala
-    package knockoff2
+    // In knockoff/BlockType.scala
+    package knockoff
     
     /**
      * Used to indicate the type of blocks you are interested in when filtering via
@@ -105,7 +105,7 @@ One of the shorthand filter expressions allows for you to indicate the "BlockTyp
 
 This is used only as a short hand for query expressions.
 
-    // In knockoff2/BlockSeq.scala
+    // In knockoff/BlockSeq.scala
     // See the BlockSeq package and imports
     
     trait BlockSeq extends Seq[ Block ] {
@@ -149,7 +149,7 @@ contain any other useful metadata.
 Otherwise the paragraph is a simple `Block` type (does not contain other
 `Block`s).
 
-    // In knockoff2/Paragraph.scala
+    // In knockoff/Paragraph.scala
     // See the Paragraph package and imports
 
     class Paragraph(
@@ -187,7 +187,7 @@ The header element is a simple `Block` type, but can contain any kind of
 The `markdown` representation of the Header should always be the ATX-style
 headers - `# Header #`.
 
-    // In knockoff2/Header.scala
+    // In knockoff/Header.scala
     // See the Header package and imports
     
     class Header(
@@ -224,7 +224,7 @@ headers - `# Header #`.
 When a link is created with the definition like `[something][id]`, that `id` can
 be defined later on a string like `[id]: url "optional title"`.
 
-    // In knockoff2/LinkDefinition.scala
+    // In knockoff/LinkDefinition.scala
     // See the LinkDefinition package and imports
     
     class LinkDefinition(
@@ -259,7 +259,7 @@ be defined later on a string like `[id]: url "optional title"`.
 
 A block quote is really another markdown document, quoted.
 
-    // In knockoff2/Blockquote.scala
+    // In knockoff/Blockquote.scala
     // See the Blockquote package and imports
 
     class Blockquote(
@@ -294,7 +294,7 @@ This means that in order to inject actual HTML inside the final code, you'll hav
 write up an HTML code element. This could be seen as a later transformation, say,
 if you want to inject a series of line numbers via `<span>` elements.
 
-    // In knockoff2/CodeBlock.scala
+    // In knockoff/CodeBlock.scala
     // See the CodeBlock package and imports
     
     class   CodeBlock( val text : Text, val position : Position )
@@ -327,7 +327,7 @@ if you want to inject a series of line numbers via `<span>` elements.
 Represents a `<hr/>` injected into content. Note that this does not happen to do
 anything but replace a line of asterixes, underscores, or hyphens.
 
-    // In knockoff2/HorizontalRule.scala
+    // In knockoff/HorizontalRule.scala
     // See the HorizontalRule package and imports
     
     class HorizontalRule( val position : Position ) extends SimpleBlock {
@@ -382,8 +382,8 @@ In implementation terms, we don't have a single list.
 
 #### `ListItem`
 
-    // In knockoff2/ListItem.scala
-    package knockoff2
+    // In knockoff/ListItem.scala
+    package knockoff
     
     import scala.util.parsing.input.Position
     import scala.xml.Node
@@ -425,8 +425,8 @@ In implementation terms, we don't have a single list.
       
 ### `OrderedItem`
 
-    // In knockoff2/OrderedItem.scala
-    package knockoff2
+    // In knockoff/OrderedItem.scala
+    package knockoff
 
     import scala.util.parsing.input.Position
     
@@ -444,8 +444,8 @@ In implementation terms, we don't have a single list.
 
 ### `UnorderedItem`
 
-    // In knockoff2/UnorderedItem.scala
-    package knockoff2
+    // In knockoff/UnorderedItem.scala
+    package knockoff
     
     import scala.util.parsing.input.Position
         
@@ -469,8 +469,8 @@ The position of a list is a little spurious: the start of the list should be
 the position of the first item, however, it's elements may not contain the
 entire content; whitespace will be missing in complex cases.
 
-    // In knockoff2/MarkdownList.scala
-    package knockoff2
+    // In knockoff/MarkdownList.scala
+    package knockoff
     
     import scala.io.Source
     import scala.util.parsing.input.{ NoPosition, Position }
@@ -528,8 +528,8 @@ entire content; whitespace will be missing in complex cases.
 
 ## Block Specification ##
 
-    // In test knockoff2/BlockSuite.scala
-    package knockoff2
+    // In test knockoff/BlockSuite.scala
+    package knockoff
 
     import scala.util.parsing.input.NoPosition
     import org.scalatest._
@@ -575,7 +575,7 @@ entire content; whitespace will be missing in complex cases.
 #### Block - Package And Imports
 
     // The Block package and imports
-    package knockoff2
+    package knockoff
     
     import scala.xml.Node
     import scala.util.parsing.input.Position
@@ -583,7 +583,7 @@ entire content; whitespace will be missing in complex cases.
 #### BlockSeq - Package And Imports
 
     // The BlockSeq package and imports
-    package knockoff2
+    package knockoff
 
     import scala.xml.{ Node, Elem, Group }
 
@@ -592,7 +592,7 @@ entire content; whitespace will be missing in complex cases.
 #### `Paragraph` - Package And Imports
 
     // The Paragraph package and imports
-    package knockoff2
+    package knockoff
 
     import scala.xml.Elem
     import scala.util.parsing.input.Position
@@ -621,7 +621,7 @@ entire content; whitespace will be missing in complex cases.
 #### `Header` - Package And Imports
 
     // The Header package and imports
-    package knockoff2
+    package knockoff
 
     import scala.xml.Elem
     import scala.util.parsing.input.Position
@@ -653,7 +653,7 @@ entire content; whitespace will be missing in complex cases.
 #### `LinkDefinition` - Package And Imports
 
     // The LinkDefinition package and imports
-    package knockoff2
+    package knockoff
 
     import scala.xml.{ Node, Group }
     import scala.util.parsing.input.Position
@@ -685,7 +685,7 @@ entire content; whitespace will be missing in complex cases.
 #### `Blockquote` - Package And Imports
 
     // The Blockquote package and imports
-    package knockoff2
+    package knockoff
     
     import scala.io.Source
     import scala.xml.Elem
@@ -722,7 +722,7 @@ entire content; whitespace will be missing in complex cases.
 #### `CodeBlock` - Package and Imports
 
     // The CodeBlock package and imports
-    package knockoff2
+    package knockoff
 
     import scala.xml.{ Node, Unparsed }
     import scala.io.Source
@@ -752,7 +752,7 @@ entire content; whitespace will be missing in complex cases.
 #### `HorizontalRule` - Package and Imports
 
     // The HorizontalRule package and imports
-    package knockoff2
+    package knockoff
 
     import scala.xml.{ Node, Unparsed }
     import scala.io.Source
@@ -804,7 +804,7 @@ entire content; whitespace will be missing in complex cases.
 #### `MarkdownList` - Package and Imports
 
     // The MarkdownList package and imports
-    package knockoff2
+    package knockoff
 
     import scala.xml.{ Node, Unparsed }
     import scala.io.Source
