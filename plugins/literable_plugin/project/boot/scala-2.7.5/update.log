@@ -1,0 +1,436 @@
+setting 'ivy.default.settings.dir' to 'jar:file:/Users/tristan/Applications/bin/sbt-launcher-0.5.2.jar!/org/apache/ivy/core/settings'
+setting 'ivy.basedir' to '/Users/tristan/Dropbox/dev/knockoff/literable_plugin/.'
+setting 'ivy.default.conf.dir' to 'jar:file:/Users/tristan/Applications/bin/sbt-launcher-0.5.2.jar!/org/apache/ivy/core/settings'
+impossible to define new type: class not found: org.apache.ivy.plugins.trigger.LogTrigger in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.resolver.VsftpResolver in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.conflict.RegexpConflictManager in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.resolver.SshResolver in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.resolver.VfsResolver in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.resolver.SFTPResolver in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.resolver.packager.PackagerResolver in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.ant.AntCallTrigger in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.resolver.IvyRepResolver in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.ant.AntBuildTrigger in [] nor Ivy classloader
+impossible to define glob matcher: org.apache.ivy.plugins.matcher.GlobPatternMatcher was not found.
+setting 'java.runtime.name' to 'Java(TM) SE Runtime Environment'
+setting 'sun.boot.library.path' to '/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Libraries'
+setting 'java.vm.version' to '14.1-b02-90'
+setting 'awt.nativeDoubleBuffering' to 'true'
+setting 'gopherProxySet' to 'false'
+setting 'java.vm.vendor' to 'Apple Inc.'
+setting 'java.vendor.url' to 'http://www.apple.com/'
+setting 'path.separator' to ':'
+setting 'java.vm.name' to 'Java HotSpot(TM) 64-Bit Server VM'
+setting 'file.encoding.pkg' to 'sun.io'
+setting 'sun.java.launcher' to 'SUN_STANDARD'
+setting 'user.country' to 'US'
+setting 'sun.os.patch.level' to 'unknown'
+setting 'java.vm.specification.name' to 'Java Virtual Machine Specification'
+setting 'user.dir' to '/Users/tristan/Dropbox/dev/knockoff/literable_plugin'
+setting 'java.runtime.version' to '1.6.0_15-b03-219'
+setting 'java.awt.graphicsenv' to 'apple.awt.CGraphicsEnvironment'
+setting 'java.endorsed.dirs' to '/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home/lib/endorsed'
+setting 'os.arch' to 'x86_64'
+setting 'java.io.tmpdir' to '/var/folders/dZ/dZ98C7WpF3yWcEH-U1JcRk+++TI/-Tmp-/'
+setting 'line.separator' to '
+'
+setting 'java.vm.specification.vendor' to 'Sun Microsystems Inc.'
+setting 'os.name' to 'Mac OS X'
+setting 'sun.jnu.encoding' to 'MacRoman'
+setting 'java.library.path' to '.:/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java'
+setting 'sbt.boot' to 'true'
+setting 'java.specification.name' to 'Java Platform API Specification'
+setting 'java.class.version' to '50.0'
+setting 'sun.management.compiler' to 'HotSpot 64-Bit Server Compiler'
+setting 'os.version' to '10.6'
+setting 'user.home' to '/Users/tristan'
+setting 'user.timezone' to 'Europe/Vienna'
+setting 'scala.home' to '/Users/tristan/Dropbox/dev/knockoff/literable_plugin/project/boot/scala-2.7.5'
+setting 'java.awt.printerjob' to 'apple.awt.CPrinterJob'
+setting 'file.encoding' to 'MacRoman'
+setting 'java.specification.version' to '1.6'
+setting 'java.class.path' to '/Users/tristan/Applications/bin/sbt-launcher.jar'
+setting 'user.name' to 'tristan'
+setting 'java.vm.specification.version' to '1.0'
+setting 'java.home' to '/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home'
+setting 'sun.arch.data.model' to '64'
+setting 'user.language' to 'en'
+setting 'java.specification.vendor' to 'Sun Microsystems Inc.'
+setting 'awt.toolkit' to 'apple.awt.CToolkit'
+setting 'java.vm.info' to 'mixed mode'
+setting 'java.version' to '1.6.0_15'
+setting 'java.ext.dirs' to '/Library/Java/Extensions:/System/Library/Java/Extensions:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home/lib/ext'
+setting 'sun.boot.class.path' to '/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/jsfd.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/classes.jar:/System/Library/Frameworks/JavaVM.framework/Frameworks/JavaRuntimeSupport.framework/Resources/Java/JavaRuntimeSupport.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/ui.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/laf.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/sunrsasign.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/jsse.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/jce.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/charsets.jar'
+setting 'java.vendor' to 'Apple Inc.'
+setting 'file.separator' to '/'
+setting 'java.vendor.url.bug' to 'http://bugreport.apple.com/'
+setting 'sun.io.unicode.encoding' to 'UnicodeLittle'
+setting 'sun.cpu.endian' to 'little'
+setting 'mrj.version' to '1060.1.6.0_15-219'
+setting 'sun.cpu.isalist' to ''
+:: loading settings :: url = jar:file:/Users/tristan/Applications/bin/sbt-launcher-0.5.2.jar!/org/apache/ivy/core/settings/ivysettings.xml
+setting 'ivy.settings.url' to 'jar:file:/Users/tristan/Applications/bin/sbt-launcher-0.5.2.jar!/org/apache/ivy/core/settings/ivysettings.xml'
+setting 'ivy.conf.url' to 'jar:file:/Users/tristan/Applications/bin/sbt-launcher-0.5.2.jar!/org/apache/ivy/core/settings/ivysettings.xml'
+setting 'ivy.settings.dir' to 'jar:file:/Users/tristan/Applications/bin/sbt-launcher-0.5.2.jar!/org/apache/ivy/core/settings'
+setting 'ivy.conf.dir' to 'jar:file:/Users/tristan/Applications/bin/sbt-launcher-0.5.2.jar!/org/apache/ivy/core/settings'
+setting 'ivy.default.ivy.user.dir' to '/Users/tristan/.ivy2'
+setting 'ivy.home' to '/Users/tristan/.ivy2'
+no default ivy user dir defined: set to /Users/tristan/.ivy2
+setting 'ivy.log.modules.in.use' to 'false'
+setting 'ivy.resolver.default.check.modified' to 'false'
+setting 'ivy.default.always.check.exact.revision' to 'false'
+setting 'ivy.retrieve.pattern' to '${ivy.lib.dir}/[artifact]-[revision](-[classifier]).[ext]'
+setting 'ivy.configurations' to '*'
+setting 'ivy.buildlist.ivyfilepath' to 'ivy.xml'
+setting 'ivy.status' to 'integration'
+setting 'ivy.resolve.default.type.filter' to '*'
+setting 'ivy.project.dir' to '${basedir}'
+setting 'ivy.dep.file' to 'ivy.xml'
+setting 'ivy.settings.file' to 'ivysettings.xml'
+setting 'ivy.report.output.pattern' to '[organisation]-[module]-[conf].[ext]'
+setting 'ivy.cache.ttl.default' to '10s'
+setting 'ivy.publish.src.artifacts.pattern' to '${ivy.distrib.dir}/[type]s/[artifact]-[revision](-[classifier]).[ext]'
+setting 'ivy.deliver.ivy.pattern' to '${ivy.distrib.dir}/[type]s/[artifact]-[revision](-[classifier]).[ext]'
+setting 'ivy.build.artifacts.dir' to '${ivy.project.dir}/build/artifacts'
+setting 'ivy.checksums' to 'sha1,md5'
+setting 'ivy.distrib.dir' to '${ivy.project.dir}/distrib'
+setting 'ivy.lib.dir' to '${ivy.project.dir}/lib'
+installing class org.apache.ivy.util.url.IvyAuthenticator
+including url: jar:file:/Users/tristan/Applications/bin/sbt-launcher-0.5.2.jar!/org/apache/ivy/core/settings/ivysettings-public.xml
+setting 'ivy.default.settings.dir' to 'jar:file:/Users/tristan/Applications/bin/sbt-launcher-0.5.2.jar!/org/apache/ivy/core/settings'
+setting 'ivy.basedir' to '/Users/tristan/Dropbox/dev/knockoff/literable_plugin/.'
+setting 'ivy.default.conf.dir' to 'jar:file:/Users/tristan/Applications/bin/sbt-launcher-0.5.2.jar!/org/apache/ivy/core/settings'
+impossible to define new type: class not found: org.apache.ivy.plugins.trigger.LogTrigger in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.resolver.VsftpResolver in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.conflict.RegexpConflictManager in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.resolver.SshResolver in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.resolver.VfsResolver in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.resolver.SFTPResolver in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.resolver.packager.PackagerResolver in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.ant.AntCallTrigger in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.resolver.IvyRepResolver in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.ant.AntBuildTrigger in [] nor Ivy classloader
+impossible to define glob matcher: org.apache.ivy.plugins.matcher.GlobPatternMatcher was not found.
+setting 'java.runtime.name' to 'Java(TM) SE Runtime Environment'
+setting 'sun.boot.library.path' to '/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Libraries'
+setting 'java.vm.version' to '14.1-b02-90'
+setting 'awt.nativeDoubleBuffering' to 'true'
+setting 'gopherProxySet' to 'false'
+setting 'java.vm.vendor' to 'Apple Inc.'
+setting 'java.vendor.url' to 'http://www.apple.com/'
+setting 'path.separator' to ':'
+setting 'java.vm.name' to 'Java HotSpot(TM) 64-Bit Server VM'
+setting 'file.encoding.pkg' to 'sun.io'
+setting 'sun.java.launcher' to 'SUN_STANDARD'
+setting 'user.country' to 'US'
+setting 'sun.os.patch.level' to 'unknown'
+setting 'java.vm.specification.name' to 'Java Virtual Machine Specification'
+setting 'user.dir' to '/Users/tristan/Dropbox/dev/knockoff/literable_plugin'
+setting 'java.runtime.version' to '1.6.0_15-b03-219'
+setting 'java.awt.graphicsenv' to 'apple.awt.CGraphicsEnvironment'
+setting 'java.endorsed.dirs' to '/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home/lib/endorsed'
+setting 'os.arch' to 'x86_64'
+setting 'java.io.tmpdir' to '/var/folders/dZ/dZ98C7WpF3yWcEH-U1JcRk+++TI/-Tmp-/'
+setting 'line.separator' to '
+'
+setting 'java.vm.specification.vendor' to 'Sun Microsystems Inc.'
+setting 'os.name' to 'Mac OS X'
+setting 'sun.jnu.encoding' to 'MacRoman'
+setting 'java.library.path' to '.:/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java'
+setting 'sbt.boot' to 'true'
+setting 'java.specification.name' to 'Java Platform API Specification'
+setting 'java.class.version' to '50.0'
+setting 'sun.management.compiler' to 'HotSpot 64-Bit Server Compiler'
+setting 'os.version' to '10.6'
+setting 'user.home' to '/Users/tristan'
+setting 'user.timezone' to 'Europe/Vienna'
+setting 'scala.home' to '/Users/tristan/Dropbox/dev/knockoff/literable_plugin/project/boot/scala-2.7.5'
+setting 'java.awt.printerjob' to 'apple.awt.CPrinterJob'
+setting 'file.encoding' to 'MacRoman'
+setting 'java.specification.version' to '1.6'
+setting 'java.class.path' to '/Users/tristan/Applications/bin/sbt-launcher.jar'
+setting 'user.name' to 'tristan'
+setting 'java.vm.specification.version' to '1.0'
+setting 'java.home' to '/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home'
+setting 'sun.arch.data.model' to '64'
+setting 'user.language' to 'en'
+setting 'java.specification.vendor' to 'Sun Microsystems Inc.'
+setting 'awt.toolkit' to 'apple.awt.CToolkit'
+setting 'java.vm.info' to 'mixed mode'
+setting 'java.version' to '1.6.0_15'
+setting 'java.ext.dirs' to '/Library/Java/Extensions:/System/Library/Java/Extensions:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home/lib/ext'
+setting 'sun.boot.class.path' to '/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/jsfd.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/classes.jar:/System/Library/Frameworks/JavaVM.framework/Frameworks/JavaRuntimeSupport.framework/Resources/Java/JavaRuntimeSupport.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/ui.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/laf.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/sunrsasign.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/jsse.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/jce.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/charsets.jar'
+setting 'java.vendor' to 'Apple Inc.'
+setting 'file.separator' to '/'
+setting 'java.vendor.url.bug' to 'http://bugreport.apple.com/'
+setting 'sun.io.unicode.encoding' to 'UnicodeLittle'
+setting 'sun.cpu.endian' to 'little'
+setting 'mrj.version' to '1060.1.6.0_15-219'
+setting 'sun.cpu.isalist' to ''
+setting 'ivy.default.ivy.user.dir' to '/Users/tristan/.ivy2'
+setting 'ivy.home' to '/Users/tristan/.ivy2'
+no default ivy user dir defined: set to /Users/tristan/.ivy2
+setting 'ivy.cache.dir' to '/Users/tristan/.ivy2/cache'
+no default cache defined: set to /Users/tristan/.ivy2/cache
+setting 'ivy.basedir' to '/Users/tristan/Dropbox/dev/knockoff/literable_plugin/project/boot/scala-2.7.5'
+setting 'basedir' to '/Users/tristan/Dropbox/dev/knockoff/literable_plugin/project/boot/scala-2.7.5'
+:: resolving dependencies :: sbt#boot;1.0
+	confs: [default]
+	validate = true
+	refresh = false
+resolving dependencies for configuration 'default'
+== resolving dependencies for sbt#boot;1.0 [default]
+loadData of sbt#boot;1.0 of rootConf=default
+== resolving dependencies sbt#boot;1.0->org.scala-lang#scala-compiler;2.7.5 [default->default]
+loadData of org.scala-lang#scala-compiler;2.7.5 of rootConf=default
+	using redefined-public to resolve org.scala-lang#scala-compiler;2.7.5
+redefined-public: Checking cache for: dependency: org.scala-lang#scala-compiler;2.7.5 {default=[default]}
+redefined-public: no namespace defined: using system
+No entry is found in the ModuleDescriptorCache : /Users/tristan/.ivy2/cache/org.scala-lang/scala-compiler/ivy-2.7.5.xml
+pre 1.3 ivy file: using exactOrRegexp as default matcher
+	found ivy file in cache for org.scala-lang#scala-compiler;2.7.5 (resolved by Scala-Tools Maven2 Repository): /Users/tristan/.ivy2/cache/org.scala-lang/scala-compiler/ivy-2.7.5.xml
+redefined-public: module revision found in cache: org.scala-lang#scala-compiler;2.7.5
+redefined-public: no latest strategy defined: using default
+	found org.scala-lang#scala-compiler;2.7.5 in Scala-Tools Maven2 Repository
+== resolving dependencies sbt#boot;1.0->org.scala-lang#scala-compiler;2.7.5 [default->runtime]
+loadData of org.scala-lang#scala-compiler;2.7.5 of rootConf=default
+== resolving dependencies sbt#boot;1.0->org.scala-lang#scala-compiler;2.7.5 [default->compile]
+loadData of org.scala-lang#scala-compiler;2.7.5 of rootConf=default
+== resolving dependencies org.scala-lang#scala-compiler;2.7.5->org.scala-lang#scala-library;2.7.5 [compile->master(*)]
+loadData of org.scala-lang#scala-library;2.7.5 of rootConf=default
+	using redefined-public to resolve org.scala-lang#scala-library;2.7.5
+redefined-public: Checking cache for: dependency: org.scala-lang#scala-library;2.7.5 {compile=[compile(*), master(*)], runtime=[runtime(*)]}
+No entry is found in the ModuleDescriptorCache : /Users/tristan/.ivy2/cache/org.scala-lang/scala-library/ivy-2.7.5.xml
+pre 1.3 ivy file: using exactOrRegexp as default matcher
+	found ivy file in cache for org.scala-lang#scala-library;2.7.5 (resolved by Scala-Tools Maven2 Repository): /Users/tristan/.ivy2/cache/org.scala-lang/scala-library/ivy-2.7.5.xml
+redefined-public: module revision found in cache: org.scala-lang#scala-library;2.7.5
+	found org.scala-lang#scala-library;2.7.5 in Scala-Tools Maven2 Repository
+== resolving dependencies org.scala-lang#scala-compiler;2.7.5->org.scala-lang#scala-library;2.7.5 [compile->compile(*)]
+loadData of org.scala-lang#scala-library;2.7.5 of rootConf=default
+== resolving dependencies org.scala-lang#scala-compiler;2.7.5->org.scala-lang#scala-library;2.7.5 [compile->default]
+loadData of org.scala-lang#scala-library;2.7.5 of rootConf=default
+== resolving dependencies org.scala-lang#scala-compiler;2.7.5->org.scala-lang#scala-library;2.7.5 [compile->runtime]
+loadData of org.scala-lang#scala-library;2.7.5 of rootConf=default
+== resolving dependencies org.scala-lang#scala-compiler;2.7.5->org.scala-lang#scala-library;2.7.5 [compile->compile]
+loadData of org.scala-lang#scala-library;2.7.5 of rootConf=default
+== resolving dependencies org.scala-lang#scala-compiler;2.7.5->org.scala-lang#scala-library;2.7.5 [compile->master]
+loadData of org.scala-lang#scala-library;2.7.5 of rootConf=default
+== resolving dependencies org.scala-lang#scala-compiler;2.7.5->org.scala-lang#scala-library;2.7.5 [runtime->runtime(*)]
+loadData of org.scala-lang#scala-library;2.7.5 of rootConf=default
+== resolving dependencies org.scala-lang#scala-compiler;2.7.5->org.scala-lang#scala-library;2.7.5 [runtime->compile]
+loadData of org.scala-lang#scala-library;2.7.5 of rootConf=default
+default is loaded and no conf to load.  Skip loading
+== resolving dependencies sbt#boot;1.0->org.scala-lang#scala-compiler;2.7.5 [default->master]
+loadData of org.scala-lang#scala-compiler;2.7.5 of rootConf=default
+== resolving dependencies sbt#boot;1.0->org.scala-lang#scala-library;2.7.5 [default->default]
+loadData of org.scala-lang#scala-library;2.7.5 of rootConf=default
+default is loaded and no conf to load.  Skip loading
+== resolving dependencies sbt#boot;1.0->org.scala-lang#scala-library;2.7.5 [default->runtime]
+loadData of org.scala-lang#scala-library;2.7.5 of rootConf=default
+default is loaded and no conf to load.  Skip loading
+== resolving dependencies sbt#boot;1.0->org.scala-lang#scala-library;2.7.5 [default->compile]
+loadData of org.scala-lang#scala-library;2.7.5 of rootConf=default
+default is loaded and no conf to load.  Skip loading
+== resolving dependencies sbt#boot;1.0->org.scala-lang#scala-library;2.7.5 [default->master]
+loadData of org.scala-lang#scala-library;2.7.5 of rootConf=default
+default is loaded and no conf to load.  Skip loading
+Nbr of module to sort : 2
+Sort dependencies of : org.scala-lang#scala-compiler;2.7.5 / Number of dependencies = 1
+Sort dependencies of : org.scala-lang#scala-library;2.7.5 / Number of dependencies = 0
+Sort done for : org.scala-lang#scala-library;2.7.5
+Sort done for : org.scala-lang#scala-compiler;2.7.5
+Module descriptor is processed : org.scala-lang#scala-library;2.7.5
+	resolved ivy file produced in /Users/tristan/.ivy2/cache/resolved-sbt-boot-1.0.xml
+:: downloading artifacts ::
+	[NOT REQUIRED] org.scala-lang#scala-compiler;2.7.5!scala-compiler.jar
+	[NOT REQUIRED] org.scala-lang#scala-library;2.7.5!scala-library.jar
+:: resolution report :: resolve 516ms :: artifacts dl 23ms
+Nbr of module to sort : 2
+Sort dependencies of : org.scala-lang#scala-compiler;2.7.5 / Number of dependencies = 1
+Sort dependencies of : org.scala-lang#scala-library;2.7.5 / Number of dependencies = 0
+Sort done for : org.scala-lang#scala-library;2.7.5
+Sort done for : org.scala-lang#scala-compiler;2.7.5
+Module descriptor is processed : org.scala-lang#scala-library;2.7.5
+	report for sbt#boot;1.0 default produced in /Users/tristan/.ivy2/cache/sbt-boot-default.xml
+	resolve done (516ms resolve - 23ms download)
+:: retrieving :: sbt#boot
+	checkUpToDate=true
+no explicit confs given for retrieve, using ivy file: /Users/tristan/.ivy2/cache/resolved-sbt-boot-1.0.xml
+using ivy parser to parse /Users/tristan/.ivy2/cache/resolved-sbt-boot-1.0.xml
+pre 1.3 ivy file: using exactOrRegexp as default matcher
+	confs: [default]
+	retrieving /Users/tristan/.ivy2/cache/org.scala-lang/scala-compiler/jars/scala-compiler-2.7.5.jar
+		to /Users/tristan/Dropbox/dev/knockoff/literable_plugin/project/boot/scala-2.7.5/lib/scala-compiler.jar
+	retrieving /Users/tristan/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.7.5.jar
+		to /Users/tristan/Dropbox/dev/knockoff/literable_plugin/project/boot/scala-2.7.5/lib/scala-library.jar
+	2 artifacts copied, 0 already retrieved (9831kB/448ms)
+	retrieve done (448ms)
+setting 'ivy.default.settings.dir' to 'jar:file:/Users/tristan/Applications/bin/sbt-launcher-0.5.2.jar!/org/apache/ivy/core/settings'
+setting 'ivy.basedir' to '/Users/tristan/Dropbox/dev/knockoff/literable_plugin/.'
+setting 'ivy.default.conf.dir' to 'jar:file:/Users/tristan/Applications/bin/sbt-launcher-0.5.2.jar!/org/apache/ivy/core/settings'
+impossible to define new type: class not found: org.apache.ivy.plugins.trigger.LogTrigger in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.resolver.VsftpResolver in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.conflict.RegexpConflictManager in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.resolver.SshResolver in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.resolver.VfsResolver in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.resolver.SFTPResolver in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.resolver.packager.PackagerResolver in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.ant.AntCallTrigger in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.plugins.resolver.IvyRepResolver in [] nor Ivy classloader
+impossible to define new type: class not found: org.apache.ivy.ant.AntBuildTrigger in [] nor Ivy classloader
+impossible to define glob matcher: org.apache.ivy.plugins.matcher.GlobPatternMatcher was not found.
+setting 'java.runtime.name' to 'Java(TM) SE Runtime Environment'
+setting 'sun.boot.library.path' to '/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Libraries'
+setting 'java.vm.version' to '14.1-b02-90'
+setting 'awt.nativeDoubleBuffering' to 'true'
+setting 'gopherProxySet' to 'false'
+setting 'java.vm.vendor' to 'Apple Inc.'
+setting 'java.vendor.url' to 'http://www.apple.com/'
+setting 'path.separator' to ':'
+setting 'java.vm.name' to 'Java HotSpot(TM) 64-Bit Server VM'
+setting 'file.encoding.pkg' to 'sun.io'
+setting 'sun.java.launcher' to 'SUN_STANDARD'
+setting 'user.country' to 'US'
+setting 'sun.os.patch.level' to 'unknown'
+setting 'java.vm.specification.name' to 'Java Virtual Machine Specification'
+setting 'user.dir' to '/Users/tristan/Dropbox/dev/knockoff/literable_plugin'
+setting 'java.runtime.version' to '1.6.0_15-b03-219'
+setting 'java.awt.graphicsenv' to 'apple.awt.CGraphicsEnvironment'
+setting 'java.endorsed.dirs' to '/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home/lib/endorsed'
+setting 'os.arch' to 'x86_64'
+setting 'java.io.tmpdir' to '/var/folders/dZ/dZ98C7WpF3yWcEH-U1JcRk+++TI/-Tmp-/'
+setting 'line.separator' to '
+'
+setting 'java.vm.specification.vendor' to 'Sun Microsystems Inc.'
+setting 'os.name' to 'Mac OS X'
+setting 'sun.jnu.encoding' to 'MacRoman'
+setting 'java.library.path' to '.:/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java'
+setting 'sbt.boot' to 'true'
+setting 'java.specification.name' to 'Java Platform API Specification'
+setting 'java.class.version' to '50.0'
+setting 'sun.management.compiler' to 'HotSpot 64-Bit Server Compiler'
+setting 'os.version' to '10.6'
+setting 'user.home' to '/Users/tristan'
+setting 'user.timezone' to 'Europe/Vienna'
+setting 'scala.home' to '/Users/tristan/Dropbox/dev/knockoff/literable_plugin/project/boot/scala-2.7.5'
+setting 'java.awt.printerjob' to 'apple.awt.CPrinterJob'
+setting 'file.encoding' to 'MacRoman'
+setting 'java.specification.version' to '1.6'
+setting 'java.class.path' to '/Users/tristan/Applications/bin/sbt-launcher.jar'
+setting 'user.name' to 'tristan'
+setting 'java.vm.specification.version' to '1.0'
+setting 'java.home' to '/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home'
+setting 'sun.arch.data.model' to '64'
+setting 'user.language' to 'en'
+setting 'java.specification.vendor' to 'Sun Microsystems Inc.'
+setting 'awt.toolkit' to 'apple.awt.CToolkit'
+setting 'java.vm.info' to 'mixed mode'
+setting 'java.version' to '1.6.0_15'
+setting 'java.ext.dirs' to '/Library/Java/Extensions:/System/Library/Java/Extensions:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home/lib/ext'
+setting 'sun.boot.class.path' to '/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/jsfd.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/classes.jar:/System/Library/Frameworks/JavaVM.framework/Frameworks/JavaRuntimeSupport.framework/Resources/Java/JavaRuntimeSupport.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/ui.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/laf.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/sunrsasign.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/jsse.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/jce.jar:/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Classes/charsets.jar'
+setting 'java.vendor' to 'Apple Inc.'
+setting 'file.separator' to '/'
+setting 'java.vendor.url.bug' to 'http://bugreport.apple.com/'
+setting 'sun.io.unicode.encoding' to 'UnicodeLittle'
+setting 'sun.cpu.endian' to 'little'
+setting 'mrj.version' to '1060.1.6.0_15-219'
+setting 'sun.cpu.isalist' to ''
+setting 'ivy.default.ivy.user.dir' to '/Users/tristan/.ivy2'
+setting 'ivy.home' to '/Users/tristan/.ivy2'
+no default ivy user dir defined: set to /Users/tristan/.ivy2
+setting 'ivy.cache.dir' to '/Users/tristan/.ivy2/cache'
+no default cache defined: set to /Users/tristan/.ivy2/cache
+setting 'ivy.basedir' to '/Users/tristan/Dropbox/dev/knockoff/literable_plugin/project/boot/scala-2.7.5'
+setting 'basedir' to '/Users/tristan/Dropbox/dev/knockoff/literable_plugin/project/boot/scala-2.7.5'
+:: resolving dependencies :: sbt#boot;1.0
+	confs: [default]
+	validate = true
+	refresh = false
+resolving dependencies for configuration 'default'
+== resolving dependencies for sbt#boot;1.0 [default]
+loadData of sbt#boot;1.0 of rootConf=default
+== resolving dependencies sbt#boot;1.0->sbt#simple-build-tool;0.5.2 [default->2.7.5]
+loadData of sbt#simple-build-tool;0.5.2 of rootConf=default
+	using redefined-public to resolve sbt#simple-build-tool;0.5.2
+redefined-public: Checking cache for: dependency: sbt#simple-build-tool;0.5.2 {default=[2.7.5]}
+redefined-public: no namespace defined: using system
+No entry is found in the ModuleDescriptorCache : /Users/tristan/.ivy2/cache/sbt/simple-build-tool/ivy-0.5.2.xml
+pre 1.3 ivy file: using exactOrRegexp as default matcher
+	found ivy file in cache for sbt#simple-build-tool;0.5.2 (resolved by Sbt Repository): /Users/tristan/.ivy2/cache/sbt/simple-build-tool/ivy-0.5.2.xml
+redefined-public: module revision found in cache: sbt#simple-build-tool;0.5.2
+redefined-public: no latest strategy defined: using default
+	found sbt#simple-build-tool;0.5.2 in Sbt Repository
+== resolving dependencies sbt#boot;1.0->sbt#simple-build-tool;0.5.2 [default->base]
+loadData of sbt#simple-build-tool;0.5.2 of rootConf=default
+== resolving dependencies sbt#simple-build-tool;0.5.2->org.apache.ivy#ivy;2.0.0 [base->default]
+loadData of org.apache.ivy#ivy;2.0.0 of rootConf=default
+	using redefined-public to resolve org.apache.ivy#ivy;2.0.0
+redefined-public: Checking cache for: dependency: org.apache.ivy#ivy;2.0.0 {base=[default]}
+No entry is found in the ModuleDescriptorCache : /Users/tristan/.ivy2/cache/org.apache.ivy/ivy/ivy-2.0.0.xml
+pre 1.3 ivy file: using exactOrRegexp as default matcher
+	found ivy file in cache for org.apache.ivy#ivy;2.0.0 (resolved by Maven Central): /Users/tristan/.ivy2/cache/org.apache.ivy/ivy/ivy-2.0.0.xml
+redefined-public: module revision found in cache: org.apache.ivy#ivy;2.0.0
+	found org.apache.ivy#ivy;2.0.0 in Maven Central
+== resolving dependencies sbt#simple-build-tool;0.5.2->org.apache.ivy#ivy;2.0.0 [base->runtime]
+loadData of org.apache.ivy#ivy;2.0.0 of rootConf=default
+== resolving dependencies sbt#simple-build-tool;0.5.2->org.apache.ivy#ivy;2.0.0 [base->compile]
+loadData of org.apache.ivy#ivy;2.0.0 of rootConf=default
+== resolving dependencies sbt#simple-build-tool;0.5.2->org.apache.ivy#ivy;2.0.0 [base->master]
+loadData of org.apache.ivy#ivy;2.0.0 of rootConf=default
+== resolving dependencies sbt#simple-build-tool;0.5.2->com.jcraft#jsch;0.1.31 [base->default]
+loadData of com.jcraft#jsch;0.1.31 of rootConf=default
+	using redefined-public to resolve com.jcraft#jsch;0.1.31
+redefined-public: Checking cache for: dependency: com.jcraft#jsch;0.1.31 {base=[default]}
+No entry is found in the ModuleDescriptorCache : /Users/tristan/.ivy2/cache/com.jcraft/jsch/ivy-0.1.31.xml
+pre 1.3 ivy file: using exactOrRegexp as default matcher
+	found ivy file in cache for com.jcraft#jsch;0.1.31 (resolved by Maven Central): /Users/tristan/.ivy2/cache/com.jcraft/jsch/ivy-0.1.31.xml
+redefined-public: module revision found in cache: com.jcraft#jsch;0.1.31
+	found com.jcraft#jsch;0.1.31 in Maven Central
+== resolving dependencies sbt#simple-build-tool;0.5.2->com.jcraft#jsch;0.1.31 [base->runtime]
+loadData of com.jcraft#jsch;0.1.31 of rootConf=default
+== resolving dependencies sbt#simple-build-tool;0.5.2->com.jcraft#jsch;0.1.31 [base->compile]
+loadData of com.jcraft#jsch;0.1.31 of rootConf=default
+== resolving dependencies sbt#simple-build-tool;0.5.2->com.jcraft#jsch;0.1.31 [base->master]
+loadData of com.jcraft#jsch;0.1.31 of rootConf=default
+Nbr of module to sort : 3
+Sort dependencies of : sbt#simple-build-tool;0.5.2 / Number of dependencies = 2
+Sort dependencies of : org.apache.ivy#ivy;2.0.0 / Number of dependencies = 13
+Sort dependencies of : com.jcraft#jsch;0.1.31 / Number of dependencies = 1
+Sort done for : com.jcraft#jsch;0.1.31
+Sort done for : org.apache.ivy#ivy;2.0.0
+Module descriptor is processed : com.jcraft#jsch;0.1.31
+Sort done for : sbt#simple-build-tool;0.5.2
+Module descriptor is processed : org.apache.ivy#ivy;2.0.0
+Module descriptor is processed : com.jcraft#jsch;0.1.31
+	resolved ivy file produced in /Users/tristan/.ivy2/cache/resolved-sbt-boot-1.0.xml
+:: downloading artifacts ::
+	[NOT REQUIRED] sbt#simple-build-tool;0.5.2!sbt_2.7.5.jar
+	[NOT REQUIRED] org.apache.ivy#ivy;2.0.0!ivy.jar
+	[NOT REQUIRED] com.jcraft#jsch;0.1.31!jsch.jar
+:: resolution report :: resolve 222ms :: artifacts dl 4ms
+Nbr of module to sort : 3
+Sort dependencies of : sbt#simple-build-tool;0.5.2 / Number of dependencies = 2
+Sort dependencies of : org.apache.ivy#ivy;2.0.0 / Number of dependencies = 13
+Sort dependencies of : com.jcraft#jsch;0.1.31 / Number of dependencies = 1
+Sort done for : com.jcraft#jsch;0.1.31
+Sort done for : org.apache.ivy#ivy;2.0.0
+Module descriptor is processed : com.jcraft#jsch;0.1.31
+Sort done for : sbt#simple-build-tool;0.5.2
+Module descriptor is processed : org.apache.ivy#ivy;2.0.0
+Module descriptor is processed : com.jcraft#jsch;0.1.31
+	report for sbt#boot;1.0 default produced in /Users/tristan/.ivy2/cache/sbt-boot-default.xml
+	resolve done (222ms resolve - 4ms download)
+:: retrieving :: sbt#boot
+	checkUpToDate=true
+no explicit confs given for retrieve, using ivy file: /Users/tristan/.ivy2/cache/resolved-sbt-boot-1.0.xml
+using ivy parser to parse /Users/tristan/.ivy2/cache/resolved-sbt-boot-1.0.xml
+pre 1.3 ivy file: using exactOrRegexp as default matcher
+	confs: [default]
+	retrieving /Users/tristan/.ivy2/cache/org.apache.ivy/ivy/jars/ivy-2.0.0.jar
+		to /Users/tristan/Dropbox/dev/knockoff/literable_plugin/project/boot/scala-2.7.5/sbt-0.5.2/ivy-2.0.0.jar
+	retrieving /Users/tristan/.ivy2/cache/com.jcraft/jsch/jars/jsch-0.1.31.jar
+		to /Users/tristan/Dropbox/dev/knockoff/literable_plugin/project/boot/scala-2.7.5/sbt-0.5.2/jsch-0.1.31.jar
+	retrieving /Users/tristan/.ivy2/cache/sbt/simple-build-tool/jars/sbt_2.7.5-0.5.2.jar
+		to /Users/tristan/Dropbox/dev/knockoff/literable_plugin/project/boot/scala-2.7.5/sbt-0.5.2/sbt_2.7.5-0.5.2.jar
+	3 artifacts copied, 0 already retrieved (3293kB/251ms)
+	retrieve done (251ms)
