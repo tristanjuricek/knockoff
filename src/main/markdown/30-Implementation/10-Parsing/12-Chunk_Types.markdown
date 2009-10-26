@@ -63,6 +63,7 @@ This is more of a reference to the typing of chunks.
         position  : Position
       )( elementFactory : ElementFactory, discounter : Discounter ) {
         if ( remaining.isEmpty ) return
+        if ( list.isEmpty ) return
         list.last match {
           case lastCB : CodeBlock => remaining.first._1 match {
             case ice : IndentedChunk => list.update(
@@ -161,31 +162,41 @@ This is more of a reference to the typing of chunks.
         spans     : SpanSeq,
         position  : Position
       )( elementFactory : ElementFactory, discounter : Discounter ) {
-        list.last match {
-          case ml : MarkdownList => {
-            val bs = discounter.knockoff( content )
-            val updated = ( ml /: bs )( (ml, block) => ml + block )
-            list.update( list.length - 1, updated )
+
+        if ( list.isEmpty ) {
+
+          spans.first match {
+            case text : Text => list += elementFactory.codeBlock( text, position )
           }
-          case cb : CodeBlock => {
-            spans.first match {
-              case text : Text => list.update(
-                list.length - 1,
-                elementFactory.codeBlock(
-                  elementFactory.text( cb.text.content + text.content ),
-                  cb.position // Note that code block positions are like lists...
-                )
-              )
-              case s : Span =>
-                error( "Expected Text(code) for code block append, not " + s )
+
+        } else {
+
+          list.last match {
+            case ml : MarkdownList => {
+              val bs = discounter.knockoff( content )
+              val updated = ( ml /: bs )( (ml, block) => ml + block )
+              list.update( list.length - 1, updated )
             }
-          }
-          case _ => {
-            spans.first match {
-              case text : Text =>
-                list += elementFactory.codeBlock( text, position )
-              case s : Span =>
-                error( "Expected Text(code) for code block addition, not " + s )
+            case cb : CodeBlock => {
+              spans.first match {
+                case text : Text => list.update(
+                  list.length - 1,
+                  elementFactory.codeBlock(
+                    elementFactory.text( cb.text.content + text.content ),
+                    cb.position // Note that code block positions are like lists...
+                  )
+                )
+                case s : Span =>
+                  error( "Expected Text(code) for code block append, not " + s )
+              }
+            }
+            case _ => {
+              spans.first match {
+                case text : Text =>
+                  list += elementFactory.codeBlock( text, position )
+                case s : Span =>
+                  error( "Expected Text(code) for code block addition, not " + s )
+              }
             }
           }
         }
