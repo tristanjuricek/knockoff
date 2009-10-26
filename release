@@ -1,6 +1,6 @@
 #!/bin/sh
 
-BUILD_NUMBER=1
+BUILD_NUMBER=2
 VERSION_BASE=`grep project.version project/build.properties | sed -e 's/project.version=//'`
 VERSION_NUMBER=`echo $VERSION_BASE | sed -e "s/SNAPSHOT/$BUILD_NUMBER/"`
 
