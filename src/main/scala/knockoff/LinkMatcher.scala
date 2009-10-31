@@ -94,17 +94,18 @@ trait LinkMatcher { self : SpanConverter =>
       elementFactory.text(_)
     )
     
-    definitions.find( _.id == refID ).map { definition : LinkDefinitionChunk =>
-      SpanMatch(
-        firstOpen,
-        precedingText,
-        elementFactory.link(
-          elementFactory.text( source.substring( firstOpen + 1, firstClose ) ),
-          definition.url,
-          definition.title
-        ),
-        source.substring( firstClose + secondClose + 2 ).toOption
-      )
+    definitions.find( _.id equalsIgnoreCase refID ).map {
+      definition : LinkDefinitionChunk =>
+        SpanMatch(
+          firstOpen,
+          precedingText,
+          elementFactory.link(
+            elementFactory.text( source.substring( firstOpen + 1, firstClose ) ),
+            definition.url,
+            definition.title
+          ),
+          source.substring( firstClose + secondClose + 2 ).toOption
+        )
     }
   }
 }

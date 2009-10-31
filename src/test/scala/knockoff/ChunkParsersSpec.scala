@@ -16,6 +16,11 @@ class ChunkParsersSpec extends ChunkParser with Spec with ShouldMatchers {
         parse( chunk, src ).get should equal (
           BulletLineChunk("item 1\nmore\n")
         )
-      }          
+      }
+      
+      it("should ignore whitespace around headers") {
+        val src = "# Header 1 #"
+        parse( chunk, src ).get should equal { HeaderChunk(1, "Header 1") }
+      }
     }
 }

@@ -71,10 +71,10 @@ together. To group things together, the `foldedString` will combine
         ( setextHeaderEquals | setextHeaderDashes | atxHeader )
 
       def setextHeaderEquals : Parser[ Chunk ] =
-        textLine <~ equalsLine ^^ ( s => HeaderChunk( 1, s.content ) )
+        textLine <~ equalsLine ^^ ( s => HeaderChunk( 1, s.content.trim ) )
 
       def setextHeaderDashes : Parser[ Chunk ] =
-        textLine <~ dashesLine ^^ ( s => HeaderChunk( 2, s.content ) )
+        textLine <~ dashesLine ^^ ( s => HeaderChunk( 2, s.content.trim ) )
 
       def equalsLine : Parser[Any] = """=+\n""".r
 
@@ -82,7 +82,7 @@ together. To group things together, the `foldedString` will combine
 
       def atxHeader : Parser[ Chunk ] = {
         """#+ .*\n?""".r ^^ ( s =>
-          HeaderChunk( s.countLeading('#'), s.trim('#') )
+          HeaderChunk( s.countLeading('#'), s.trim('#').trim )
         )
       }
       
@@ -163,6 +163,11 @@ together. To group things together, the `foldedString` will combine
             parse( chunk, src ).get should equal (
               BulletLineChunk("item 1\nmore\n")
             )
-          }          
+          }
+          
+          it("should ignore whitespace around headers") {
+            val src = "# Header 1 #"
+            parse( chunk, src ).get should equal { HeaderChunk(1, "Header 1") }
+          }
         }
     }

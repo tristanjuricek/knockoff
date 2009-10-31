@@ -1,6 +1,7 @@
 package knockoff
 
-import scala.xml.Node
+import scala.util.Random
+import scala.xml._
 
 class Link(
   val children  : SpanSeq,
@@ -20,7 +21,20 @@ extends ComplexSpan {
   }
   
   def xml : Node =
-    <a href={ url } title={ title.getOrElse(null) }>{ childrenXML }</a>
+    <a href={ escapedOrPlainURL } title={ title.getOrElse(null) }>{ childrenXML }</a>
+  
+  def escapedOrPlainURL =
+    if ( url startsWith "mailto:" ) Unparsed( escapedURL ) else Text( url )
+  
+  def escapedURL = {
+    val rand = new Random
+    url.map { ch =>
+      rand.nextInt(2) match {
+        case 0 => java.lang.String.format( "&#%d;", int2Integer( ch.toInt ) )
+        case 1 => java.lang.String.format( "&#x%s;", ch.toInt.toHexString )
+      }
+    }.mkString("")
+  }
   
   override def toString = "Link(" + markdown + ")"
   

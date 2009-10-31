@@ -156,6 +156,19 @@ with    ColoredLogger {
         link( t("reference link"), "http://example.com", Some("title") )
       ) }
     }
+    
+    it("should hande link references in different case") {
+      val convert = spanConverter( Seq(
+        new LinkDefinitionChunk("link 1", "http://example.com/1", None),
+        new LinkDefinitionChunk("link 2", "http://example.com/2", None)
+      ) )
+      val converted = convert( TextChunk("[Link 1][] and [link 2][]") )
+      converted.toList should equal { List(
+        link( t("Link 1"), "http://example.com/1" ),
+        text(" and "),
+        link( t("link 2"), "http://example.com/2" )
+      ) }
+    }
   }
   
   describe("Escaping system") {
