@@ -38,6 +38,11 @@ document is parsed.
 
 ## Recent Updates ##
 
+### `0.6.0-5` Nov 28, 2009
+
+* Small alteration to the `CodeBlock` that doesn't force a newline at the end of
+  every code block. I have no idea what I was thinking here.
+
 ### `0.6.0-4` Nov 28, 2009
 
 * Set package name as `com.tristanhunt.knockoff`. [Let's try being standard!]

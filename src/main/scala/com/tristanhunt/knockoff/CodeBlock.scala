@@ -12,10 +12,7 @@ extends SimpleBlock {
 
   val span = text
 
-  val preformatted = {
-    val src = text.markdown
-    if ( src.endsWith("\n") ) src else src + "\n"
-  }
+  val preformatted = text.markdown
   
   lazy val preformattedLines =
     Source.fromString( preformatted ).getLines

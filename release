@@ -4,8 +4,8 @@ BUILD_NUMBER=5
 VERSION_BASE=`grep project.version project/build.properties | sed -e 's/project.version=//'`
 VERSION_NUMBER=`echo $VERSION_BASE | sed -e "s/SNAPSHOT/$BUILD_NUMBER/"`
 
-echo Checking out $VERSION_BASE
-git checkout -b $VERSION_BASE
+echo Checking out $VERSION_NUMBER-build
+git checkout -b $VERSION_NUMBER-build
 
 echo Changing $VERSION_BASE to $VERSION_NUMBER in project/build.properties
 cat project/build.properties | sed -e "s/$VERSION_BASE/$VERSION_NUMBER/" > project/build.properties.tmp
@@ -26,7 +26,8 @@ SCALA_VERSION=`grep scala.version project/build.properties | sed -e s'/scala.ver
 echo Publishing
 sbt +publish
 
-git push origin $VERSION_BASE
+git tag $VERSION_NUMBER
+
 git push --tags
 
 echo You should update target/doc now

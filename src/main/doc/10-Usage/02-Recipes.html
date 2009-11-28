@@ -135,8 +135,20 @@ val blocks = DefaultDiscounter.knockoff( markdownString )
   case Some( header ) =&gt; header.text
   case None =&gt; &quot;no header!&quot;
 }
-</code></pre><h3>Tweak The HTML Output For Something Like Prettify</h3><pre><code class="prettyprint">trait PrettyDiscounter extends {
-  
+</code></pre><h3>Tweak The HTML Output For Something Like Prettify</h3><p>First, extend the <code>CodeBlock</code> to write the extra <code>class</code> attribute.
+</p><pre><code class="prettyprint">class   PrettifiedCodeBlock( text : Text, pos : Position )
+extends CodeBlock( text, pos ) {
+
+  override def xml : Node =
+    &lt;pre&gt;&lt;code class=&quot;prettyprint&quot;&gt;{ preformatted }&lt;/code&gt;&lt;/pre&gt;
+}
+</code></pre><p>Then setup the factory to create your <code>PrettifiedCodeBlock</code> instead.
+</p><pre><code class="prettyprint">
+trait PrettyDiscounter extends Discounter {
+  override def elementFactory = new ElementFactory {
+    override def codeBlock( t : Text, p : Position ) : CodeBlock =
+      new PrettifiedCodeBlock( t, p )
+  }
 }
 </code></pre></div>
       <div class="footer span-22 prepend-1 append-1 last">

@@ -305,10 +305,7 @@ if you want to inject a series of line numbers via `<span>` elements.
 
       val span = text
    
-      val preformatted = {
-        val src = text.markdown
-        if ( src.endsWith("\n") ) src else src + "\n"
-      }
+      val preformatted = text.markdown
       
       lazy val preformattedLines =
         Source.fromString( preformatted ).getLines
