@@ -1,6 +1,11 @@
 #!/bin/bash
-SCALA_VERSION=2.7.6
+SCALA_VERSION=2.7.7
 PROJECT_DIR=/Users/tristan/dev/knockoff
+# The local project's scala version is part of the target directory we'll search for
+PROJECT_VERSION=`grep project.version $PROJECT_DIR/project/build.properties | sed -e s'/project.version=//'`
+# The local project's scala version is part of the target directory we'll search for
+SCALA_VERSION=`grep scala.version $PROJECT_DIR/project/build.properties | sed -e s'/scala.version=//'`
+
 CLASSPATH=$PROJECT_DIR/project/boot/scala-$SCALA_VERSION/lib/scala-library.jar
-CLASSPATH=$CLASSPATH:$PROJECT_DIR/target/scala_$SCALA_VERSION/knockoff_2.7.6-0.5.0-SNAPSHOT.jar
-java -cp $CLASSPATH knockoff.DefaultDiscounter "$@"
+CLASSPATH=$CLASSPATH:$PROJECT_DIR/target/scala_$SCALA_VERSION/knockoff_$SCALA_VERSION-$PROJECT_VERSION.jar
+java -cp $CLASSPATH com.tristanhunt.knockoff.DefaultDiscounter "$@"

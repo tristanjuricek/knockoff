@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+        <head>
+          <title>StringExtras</title>
+          <link rel="stylesheet" href="../../screen.css" type="text/css" media="screen, projection"></link><link rel="stylesheet" href="../../print.css" type="text/css" media="print"></link><!--[if lt IE 8]><link rel="stylesheet" href="../../ie.css" type="text/css" media="screen, projection"><![endif]-->
+          <link href="../../prettify.css" rel="stylesheet" type="text/css"></link><script type="text/javascript" src="../../prettify.js"></script>
+          <style> 
+          /* Overriding a few defaults from blueprint. */
+          body {font-size:100%;color:#222;background:#f2e5ca;font-family: Georgia, Times, serif;}
+          h1, h2, h3, h4, h5, h6 {font-weight:normal;color:#111;font-family: Georgia, Times, serif;text-transform:uppercase;}
+          a:focus, a:hover {color: #222;}
+          a {color:#7f2f18;text-decoration:none;}
+          code { text-transform: none; }
+          
+          /* Style the code blocks */
+          pre {
+            background: #333;
+            color: #f2e5ca;
+            border: solid #444 1px;
+            border-left-width: 1em;
+          }
+          .str { color:rgb( 237, 239, 125 ); font-style:italic }
+          .kwd { color:rgb( 152, 129, 85 ); }
+          .com { color:#999 }
+          .typ { color:rgb( 255, 101, 33 ); }
+          .lit { color:rgb( 112, 83, 147 ); }
+          .pun { color:#aaa; font-weight:bold  }
+          .pln { color:#f2e5ca }
+          .tag { color:rgb( 137, 150, 168 ); font-weight:bold  }
+          .atn { color:#939; font-weight:bold  }
+          .atv { color:#181 }
+          .dec { color:#606 }
+          
+          /* Custom styling */
+          .header { background: #7f2f18; color: #f2e5ca; text-transform:uppercase; margin-bottom: 2em; vertical-align: center; }
+          .header a { color: #f2e5ca }
+          .header a:focus, a:hover {color: #222; background: #7f2f18 }
+          .header ul { list-style-type: none; margin: 0; padding: 0; }
+          .header ul li { display: inline; padding-right: 2em; }
+           </style>
+        </head>
+        <body onload="prettyPrint()" class="container"><div class="section">
+      <div class="header span-22 prepend-1 append-1 last">
+      <ul style="list-style-type: none">
+            <li><a href="../../../..">tristanhunt.com</a></li>
+            <li><a href="http://github.com/tristanjuricek/knockoff">GitHub</a></li>
+            <li><a href="../../../literable">Literable</a></li>
+        </ul>
+    </div>
+      <div class="nav small span-7 prepend-1"><ul><li>
+            <a href="../../01-Introduction.html">
+              Introduction to Knockoff
+            </a>
+          </li><li>
+            <span class="group">Usage</span>
+            <ul>
+              <li>
+            <a href="../../10-Usage/01-Getting_Started.html">
+              Getting Started
+            </a>
+          </li><li>
+            <a href="../../10-Usage/02-Recipes.html">
+              Recipes
+            </a>
+          </li>
+            </ul>
+          </li><li>
+            <span class="group">Implementation</span>
+            <ul>
+              <li>
+            <a href="../../30-Implementation/01-Discounter.html">
+              Discounter - The One Trait
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/02-Block_Elements.html">
+              Block Elements
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/03-Span_Elements.html">
+              Spanning Elements
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/04-ElementFactory.html">
+              ElementFactory
+            </a>
+          </li><li>
+            <span class="group">Parsing</span>
+            <ul>
+              <li>
+            <a href="../../30-Implementation/10-Parsing/01-Parsing.html">
+              Parsing Overview
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/10-Parsing/10-ChunkStreamFactory.html">
+              ChunkStreamFactory
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/10-Parsing/11-ChunkParsers.html">
+              ChunkParsers
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/10-Parsing/12-Chunk_Types.html">
+              Chunk Types
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/10-Parsing/20-Span_Conversion.html">
+              Span Conversion
+            </a>
+          </li>
+            </ul>
+          </li><li>
+            <a href="../../30-Implementation/50-Official_Markdown_Tests.html">
+              The Official Tests
+            </a>
+          </li><li>
+            <span class="group">Utilities</span>
+            <ul>
+              <li>
+            <a href="../../30-Implementation/80-Utilities/01-String_Extras.html">
+              StringExtras
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/80-Utilities/02-ColoredLogger.html">
+              ColoredLogger
+            </a>
+          </li>
+            </ul>
+          </li>
+            </ul>
+          </li></ul></div>
+      <div class="article span-15 append-1 last"><h1><code>StringExtras</code></h1><p>Adds utilities to String for doing things like finding the next N indexes of a
+recurrence.
+</p><pre><code class="prettyprint">// In com/tristanhunt/knockoff/StringExtras.scala
+package com.tristanhunt.knockoff
+
+import scala.collection.mutable.ListBuffer
+
+trait StringExtras {
+    
+    class   KnockoffCharSequence( val seq : CharSequence )
+    extends KnockoffString( seq.toString )
+    
+    class KnockoffString( val wrapped : String ) {
+   
+      def substringOption( start : Int, finish : Int ) : Option[ String ] = {
+        if ( start &lt; finish )
+          Some( wrapped.substring( start, finish ) )
+        else
+          None
+      }
+      
+      def toOption : Option[ String ] =
+        if ( wrapped.isEmpty ) None else Some( wrapped )
+   
+      /**
+       * Return the next N indices of a string where the sequence is found.
+       * @return A list of size n if found, otherwise Nil
+       */
+      def nextNIndicesOf( n : Int, str : String, escape : Option[ Char ] ) : List[Int] = {
+        val found = nextIndexOfN( n, str, -1, new ListBuffer, escape )
+        if ( found.length == n ) found else Nil
+      }
+
+      /**
+        Recursive implementation that builds up the list of indices. Note that
+        this is specialized for knockoff: it allows backslash escapes.
+
+        @param left The number of indexes remaining to be found.
+        @param str The source string.
+        @param index Where we start our search.
+        @param current The indexes we've found so far.
+        @param escape If set, ignore sequences that have this character preceding it.
+      */
+      private def nextIndexOfN(
+          left    : Int,
+          str     : String,
+          index   : Int,
+          current : ListBuffer[Int],
+          escape  : Option[ Char ]
+        ) : List[Int] = {
+
+        if ( left &lt;= 0 || index &gt;= wrapped.length ) return current.toList
+        val next = wrapped.indexOf( str, index )
+        if ( next &gt; 0 &amp;&amp; escape.isDefined &amp;&amp; wrapped.charAt( next - 1 ) == escape.get )
+          return nextIndexOfN( left, str, next + str.length, current, escape )
+        if ( next &gt;= 0 ) current += next
+        nextIndexOfN( left - 1, str, next + str.length, current, escape )
+      }
+      
+      /**
+        Locates proper parenthetical sequences in a string.
+      */
+      def findBalanced(
+          open  : Char,
+          close : Char,
+          start : Int
+        ) : Option[Int] = {
+      
+        val nextOpen = wrapped.indexOf( open, start )
+        if ( (nextOpen == -1) || (wrapped.length == nextOpen + 1) ) return None
+        findBalancedClose( 1, open, close, start + 1 )
+      }
+      
+      /**
+        Recursive method for paren matching that is initialized by findBalanced.
+      */
+      private def findBalancedClose(
+        count : Int,
+        open  : Char,
+        close : Char,
+        index : Int
+      ) : Option[Int] = {
+        if ( wrapped.length &lt;= index ) return None
+       
+        val nextOpen  = wrapped.indexOf( open, index )
+        val nextClose = wrapped.indexOf( close, index )
+       
+        if ( nextClose == -1 ) return None
+        
+        // We find another unbalanced open
+        if ( (nextOpen != - 1) &amp;&amp; (nextOpen &lt; nextClose) )
+          return findBalancedClose( count + 1, open, close, nextOpen + 1 )
+        
+        // We have a balanced close, but not everything is done
+        if ( count &gt; 1 )
+          return findBalancedClose( count - 1, open, close, nextClose + 1 )
+
+        // Everything is balanced
+        Some( nextClose )
+      }
+      
+      def countLeading( ch : Char ) : Int = {
+        ( 0 /: wrapped ){ (total, next) =&gt;
+          if ( next != ch ) return total
+          total + 1
+        }
+      }
+      
+      def trim( ch : Char ) : String =
+        (&quot;^&quot; + ch + &quot;+(.*?\\s?)&quot; + ch + &quot;*+$&quot;).r.replaceFirstIn( wrapped, &quot;$1&quot; )
+    }
+
+    implicit def KnockoffCharSequence( s : CharSequence ) =
+      new KnockoffCharSequence( s )
+    
+    implicit def KnockoffString( s : String ) = new KnockoffString( s )
+}
+</code></pre><h3><code>StringExtrasSpec</code></h3><pre><code class="prettyprint">// In test com/tristanhunt/knockoff/StringExtrasSpec.scala
+package com.tristanhunt.knockoff
+
+import org.scalatest._
+import org.scalatest.matchers._
+
+class StringExtrasSpec extends Spec with ShouldMatchers with ColoredLogger
+  with StringExtras {
+    
+  describe(&quot;StringExtras.nextNIndices&quot;) {
+
+    it( &quot;should find two different groups of the same time&quot; ) {
+      &quot;a `foo` b `bar`&quot;.nextNIndicesOf(2,&quot;`&quot;, None) should equal ( List( 2, 6 ) )
+    }
+
+    it( &quot;should deal with only one index&quot; ) {
+      &quot;a `foo with nothin'&quot;.nextNIndicesOf(2, &quot;`&quot;, None) should equal (Nil)
+    }
+    
+    it(&quot;should ignore escaped sequences&quot;) {
+      val actual =
+        &quot;&quot;&quot;a ** normal \**escaped ** normal&quot;&quot;&quot;.nextNIndicesOf( 2, &quot;**&quot;, Some('\\') )
+      actual should equal( List(2, 23) )
+    }
+  }
+  
+  describe(&quot;StringExtras.countLeading&quot;) {
+
+    it(&quot;should be ok with nothing to match&quot;) {
+      &quot;no leading&quot;.countLeading('#') should equal (0)
+      &quot;&quot;.countLeading('#') should equal (0)
+    }
+    
+    it(&quot;should be fine with only these characters&quot;) {
+      &quot;###&quot;.countLeading('#') should equal (3)
+    }
+    
+    it(&quot;should handle only the characters up front&quot;) {
+      &quot;## unbalanced #&quot;.countLeading('#') should equal (2)
+    }
+  }
+  
+  describe(&quot;StringExtras.trim(ch)&quot;) {
+   
+    it(&quot;should remove likely headers with the match char inside&quot;) {
+      &quot;## Who does #2 work for? #&quot;.trim('#').trim should equal (
+        &quot;Who does #2 work for?&quot;
+      )
+    }
+  }
+  
+  describe(&quot;StringExtras.findBalanced&quot;) {
+    it(&quot;should find balanced brackets&quot;) {
+      val src = &quot;With [embedded [brackets]] [b].&quot;
+      val firstSpan = src.indexOf('[')
+      src.findBalanced( '[', ']', firstSpan ).get should equal (
+        &quot;With [embedded [brackets]&quot;.length
+      )
+    }
+  }
+}
+</code></pre></div>
+      <div class="footer span-22 prepend-1 append-1 last">
+      
+    </div>
+    </div></body>
+      </html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+        <head>
+          <title>Parsing Overview</title>
+          <link rel="stylesheet" href="../../screen.css" type="text/css" media="screen, projection"></link><link rel="stylesheet" href="../../print.css" type="text/css" media="print"></link><!--[if lt IE 8]><link rel="stylesheet" href="../../ie.css" type="text/css" media="screen, projection"><![endif]-->
+          <link href="../../prettify.css" rel="stylesheet" type="text/css"></link><script type="text/javascript" src="../../prettify.js"></script>
+          <style> 
+          /* Overriding a few defaults from blueprint. */
+          body {font-size:100%;color:#222;background:#f2e5ca;font-family: Georgia, Times, serif;}
+          h1, h2, h3, h4, h5, h6 {font-weight:normal;color:#111;font-family: Georgia, Times, serif;text-transform:uppercase;}
+          a:focus, a:hover {color: #222;}
+          a {color:#7f2f18;text-decoration:none;}
+          code { text-transform: none; }
+          
+          /* Style the code blocks */
+          pre {
+            background: #333;
+            color: #f2e5ca;
+            border: solid #444 1px;
+            border-left-width: 1em;
+          }
+          .str { color:rgb( 237, 239, 125 ); font-style:italic }
+          .kwd { color:rgb( 152, 129, 85 ); }
+          .com { color:#999 }
+          .typ { color:rgb( 255, 101, 33 ); }
+          .lit { color:rgb( 112, 83, 147 ); }
+          .pun { color:#aaa; font-weight:bold  }
+          .pln { color:#f2e5ca }
+          .tag { color:rgb( 137, 150, 168 ); font-weight:bold  }
+          .atn { color:#939; font-weight:bold  }
+          .atv { color:#181 }
+          .dec { color:#606 }
+          
+          /* Custom styling */
+          .header { background: #7f2f18; color: #f2e5ca; text-transform:uppercase; margin-bottom: 2em; vertical-align: center; }
+          .header a { color: #f2e5ca }
+          .header a:focus, a:hover {color: #222; background: #7f2f18 }
+          .header ul { list-style-type: none; margin: 0; padding: 0; }
+          .header ul li { display: inline; padding-right: 2em; }
+           </style>
+        </head>
+        <body onload="prettyPrint()" class="container"><div class="section">
+      <div class="header span-22 prepend-1 append-1 last">
+      <ul style="list-style-type: none">
+            <li><a href="../../../..">tristanhunt.com</a></li>
+            <li><a href="http://github.com/tristanjuricek/knockoff">GitHub</a></li>
+            <li><a href="../../../literable">Literable</a></li>
+        </ul>
+    </div>
+      <div class="nav small span-7 prepend-1"><ul><li>
+            <a href="../../01-Introduction.html">
+              Introduction to Knockoff
+            </a>
+          </li><li>
+            <span class="group">Usage</span>
+            <ul>
+              <li>
+            <a href="../../10-Usage/01-Getting_Started.html">
+              Getting Started
+            </a>
+          </li><li>
+            <a href="../../10-Usage/02-Recipes.html">
+              Recipes
+            </a>
+          </li>
+            </ul>
+          </li><li>
+            <span class="group">Implementation</span>
+            <ul>
+              <li>
+            <a href="../../30-Implementation/01-Discounter.html">
+              Discounter - The One Trait
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/02-Block_Elements.html">
+              Block Elements
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/03-Span_Elements.html">
+              Spanning Elements
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/04-ElementFactory.html">
+              ElementFactory
+            </a>
+          </li><li>
+            <span class="group">Parsing</span>
+            <ul>
+              <li>
+            <a href="../../30-Implementation/10-Parsing/01-Parsing.html">
+              Parsing Overview
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/10-Parsing/10-ChunkStreamFactory.html">
+              ChunkStreamFactory
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/10-Parsing/11-ChunkParsers.html">
+              ChunkParsers
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/10-Parsing/12-Chunk_Types.html">
+              Chunk Types
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/10-Parsing/20-Span_Conversion.html">
+              Span Conversion
+            </a>
+          </li>
+            </ul>
+          </li><li>
+            <a href="../../30-Implementation/50-Official_Markdown_Tests.html">
+              The Official Tests
+            </a>
+          </li><li>
+            <span class="group">Utilities</span>
+            <ul>
+              <li>
+            <a href="../../30-Implementation/80-Utilities/01-String_Extras.html">
+              StringExtras
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/80-Utilities/02-ColoredLogger.html">
+              ColoredLogger
+            </a>
+          </li>
+            </ul>
+          </li>
+            </ul>
+          </li></ul></div>
+      <div class="article span-15 append-1 last"><h1>Parsing Overview</h1><p>Parsing is done in three steps:
+</p><ol><li>Chunk Parsing - The document is converted to a series of Chunk objects, each
+eventually mapping to a block. This is kicked off by the <code>ChunkStreamFactory</code>. A
+<code>Chunk</code> is generally a &quot;block-level&quot; element, but the final determination of what
+is a block level element isn't complete until step 3.
+</li><li>Span Parsing - The spans of each chunk are identified.
+</li><li>Object model creation.
+</li></ol><p>Note that things like block quotes and more complex lists turn into &quot;documents
+within documents&quot;.
+</p><h3>A Bit Of History To Satisfy Myself</h3><p>In my first attempt, I tried building one big parser combinator, and then, slowly,
+some part of my brain fell down a well. What ended up happening, however, is that I
+created an intermediate representation, but a wacky one, that was kind of hacked
+together. It lacked consistency in how I represented whitespace. I ended up doing
+lots of things, like:
+</p><ul><li>Preprocessing the text to switch tabs to spaces
+</li><li>Injecting extra whitespace to make regular expression matching easier
+</li></ul><p>Ug-ly.
+</p></div>
+      <div class="footer span-22 prepend-1 append-1 last">
+      
+    </div>
+    </div></body>
+      </html>

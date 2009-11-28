@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+        <head>
+          <title>ChunkParsers</title>
+          <link rel="stylesheet" href="../../screen.css" type="text/css" media="screen, projection"></link><link rel="stylesheet" href="../../print.css" type="text/css" media="print"></link><!--[if lt IE 8]><link rel="stylesheet" href="../../ie.css" type="text/css" media="screen, projection"><![endif]-->
+          <link href="../../prettify.css" rel="stylesheet" type="text/css"></link><script type="text/javascript" src="../../prettify.js"></script>
+          <style> 
+          /* Overriding a few defaults from blueprint. */
+          body {font-size:100%;color:#222;background:#f2e5ca;font-family: Georgia, Times, serif;}
+          h1, h2, h3, h4, h5, h6 {font-weight:normal;color:#111;font-family: Georgia, Times, serif;text-transform:uppercase;}
+          a:focus, a:hover {color: #222;}
+          a {color:#7f2f18;text-decoration:none;}
+          code { text-transform: none; }
+          
+          /* Style the code blocks */
+          pre {
+            background: #333;
+            color: #f2e5ca;
+            border: solid #444 1px;
+            border-left-width: 1em;
+          }
+          .str { color:rgb( 237, 239, 125 ); font-style:italic }
+          .kwd { color:rgb( 152, 129, 85 ); }
+          .com { color:#999 }
+          .typ { color:rgb( 255, 101, 33 ); }
+          .lit { color:rgb( 112, 83, 147 ); }
+          .pun { color:#aaa; font-weight:bold  }
+          .pln { color:#f2e5ca }
+          .tag { color:rgb( 137, 150, 168 ); font-weight:bold  }
+          .atn { color:#939; font-weight:bold  }
+          .atv { color:#181 }
+          .dec { color:#606 }
+          
+          /* Custom styling */
+          .header { background: #7f2f18; color: #f2e5ca; text-transform:uppercase; margin-bottom: 2em; vertical-align: center; }
+          .header a { color: #f2e5ca }
+          .header a:focus, a:hover {color: #222; background: #7f2f18 }
+          .header ul { list-style-type: none; margin: 0; padding: 0; }
+          .header ul li { display: inline; padding-right: 2em; }
+           </style>
+        </head>
+        <body onload="prettyPrint()" class="container"><div class="section">
+      <div class="header span-22 prepend-1 append-1 last">
+      <ul style="list-style-type: none">
+            <li><a href="../../../..">tristanhunt.com</a></li>
+            <li><a href="http://github.com/tristanjuricek/knockoff">GitHub</a></li>
+            <li><a href="../../../literable">Literable</a></li>
+        </ul>
+    </div>
+      <div class="nav small span-7 prepend-1"><ul><li>
+            <a href="../../01-Introduction.html">
+              Introduction to Knockoff
+            </a>
+          </li><li>
+            <span class="group">Usage</span>
+            <ul>
+              <li>
+            <a href="../../10-Usage/01-Getting_Started.html">
+              Getting Started
+            </a>
+          </li><li>
+            <a href="../../10-Usage/02-Recipes.html">
+              Recipes
+            </a>
+          </li>
+            </ul>
+          </li><li>
+            <span class="group">Implementation</span>
+            <ul>
+              <li>
+            <a href="../../30-Implementation/01-Discounter.html">
+              Discounter - The One Trait
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/02-Block_Elements.html">
+              Block Elements
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/03-Span_Elements.html">
+              Spanning Elements
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/04-ElementFactory.html">
+              ElementFactory
+            </a>
+          </li><li>
+            <span class="group">Parsing</span>
+            <ul>
+              <li>
+            <a href="../../30-Implementation/10-Parsing/01-Parsing.html">
+              Parsing Overview
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/10-Parsing/10-ChunkStreamFactory.html">
+              ChunkStreamFactory
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/10-Parsing/11-ChunkParsers.html">
+              ChunkParsers
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/10-Parsing/12-Chunk_Types.html">
+              Chunk Types
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/10-Parsing/20-Span_Conversion.html">
+              Span Conversion
+            </a>
+          </li>
+            </ul>
+          </li><li>
+            <a href="../../30-Implementation/50-Official_Markdown_Tests.html">
+              The Official Tests
+            </a>
+          </li><li>
+            <span class="group">Utilities</span>
+            <ul>
+              <li>
+            <a href="../../30-Implementation/80-Utilities/01-String_Extras.html">
+              StringExtras
+            </a>
+          </li><li>
+            <a href="../../30-Implementation/80-Utilities/02-ColoredLogger.html">
+              ColoredLogger
+            </a>
+          </li>
+            </ul>
+          </li>
+            </ul>
+          </li></ul></div>
+      <div class="article span-15 append-1 last"><h2><code>ChunkParsers</code></h2><p>Mostly, this is a series of regular expressions built to find the next chunk in a
+markdown document. Some expressions, like headings, will determine the &quot;real span&quot;
+part separately from the expressions here.
+</p><p>All of the methods return a <code>Chunk</code> parser type, even when grouping the parsers
+together. To group things together, the <code>foldedString</code> will combine
+</p><pre><code class="prettyprint">// In com/tristanhunt/knockoff/ChunkParsers.scala
+package com.tristanhunt.knockoff
+
+import scala.util.parsing.combinator.RegexParsers
+
+class ChunkParser extends RegexParsers with StringExtras {
+    
+  override def skipWhitespace = false
+  
+  def chunk : Parser[ Chunk ] = {
+    horizontalRule | bulletItem | numberedItem | indentedChunk |
+    header | blockquote | linkDefinition | textBlock | emptyLines
+  }
+  
+  def emptyLines : Parser[ Chunk ] =
+    rep1( emptyLine ) ^^ ( str =&gt; EmptySpace( foldedString( str ) ) )
+  
+  def emptyLine : Parser[ Chunk ] =
+    &quot;&quot;&quot;[\t ]*\n&quot;&quot;&quot;.r ^^ ( str =&gt; EmptySpace( str ) )
+
+  def textBlock : Parser[ Chunk ] =
+    rep1( textLine ) ^^ ( str =&gt; TextChunk( foldedString( str ) ) )
+
+  /** Match any line up until it ends with a newline. */
+  def textLine : Parser[ Chunk ] =
+    &quot;&quot;&quot;[\t ]*\S[^\n]*\n?&quot;&quot;&quot;.r ^^ ( str =&gt; TextChunk( str ) )
+  
+  def bulletItem : Parser[ Chunk ] = {
+    bulletLead ~ rep( trailingLine ) ^^ { case ~(lead, texts) =&gt;
+      BulletLineChunk( foldedString( lead :: texts ) )
+    }
+  }
+  
+  /**
+    Match a single line that is likely a bullet item.
+  */
+  def bulletLead : Parser[ Chunk ] = {
+    &quot;&quot;&quot;[ ]{0,3}[*\-+](\t|[ ]{0,4})&quot;&quot;&quot;.r ~&gt; not(&quot;[*\\-+]&quot;.r) ~&gt; textLine ^^ { textChunk =&gt;
+      BulletLineChunk( textChunk.content )
+    }
+  }
+  
+  def numberedItem : Parser[ Chunk ] = {
+    numberedLead ~ rep( trailingLine ) ^^ { case ~(lead, texts) =&gt;
+      NumberedLineChunk( foldedString( lead :: texts ) )
+    }
+  }
+  
+  def numberedLead : Parser[ Chunk ] = {
+    &quot;&quot;&quot;[ ]{0,3}\d+\.(\t|[ ]{0,4})&quot;&quot;&quot;.r ~&gt; textLine ^^ { textChunk =&gt;
+      NumberedLineChunk( textChunk.content )
+    }
+  }
+  
+  def trailingLine : Parser[ Chunk ] = {
+    &quot;&quot;&quot;\t|[ ]{0,4}&quot;&quot;&quot;.r ~&gt; &quot;&quot;&quot;[\S&amp;&amp;[^*\-+]&amp;&amp;[^\d]][^\n]*\n?&quot;&quot;&quot;.r ^^ (
+      s =&gt; TextChunk(s)
+    )
+  }
+  
+  def header : Parser[ Chunk ] =
+    ( setextHeaderEquals | setextHeaderDashes | atxHeader )
+
+  def setextHeaderEquals : Parser[ Chunk ] =
+    textLine &lt;~ equalsLine ^^ ( s =&gt; HeaderChunk( 1, s.content.trim ) )
+
+  def setextHeaderDashes : Parser[ Chunk ] =
+    textLine &lt;~ dashesLine ^^ ( s =&gt; HeaderChunk( 2, s.content.trim ) )
+
+  def equalsLine : Parser[Any] = &quot;&quot;&quot;=+\n&quot;&quot;&quot;.r
+
+  def dashesLine : Parser[Any] = &quot;&quot;&quot;-+\n&quot;&quot;&quot;.r
+
+  def atxHeader : Parser[ Chunk ] = {
+    &quot;&quot;&quot;#+ .*\n?&quot;&quot;&quot;.r ^^ ( s =&gt;
+      HeaderChunk( s.countLeading('#'), s.trim('#').trim )
+    )
+  }
+  
+  def horizontalRule : Parser[ Chunk ] = {
+    &quot;&quot;&quot;[ ]{0,3}[*\-_][\t ]?[*\-_][\t ]?[*\-_][\t *\-_]*\n&quot;&quot;&quot;.r ^^ {
+      s =&gt; HorizontalRuleChunk
+    }
+  }
+  
+  def indentedChunk : Parser[ Chunk ] =
+    rep1( indentedLine ) ^^ ( lines =&gt; IndentedChunk( foldedString( lines ) ) )
+  
+  def indentedLine : Parser[ Chunk ] =
+    &quot;&quot;&quot;\t|[ ]{4}&quot;&quot;&quot;.r ~&gt; ( textLine | emptyLine | emptyString )
+
+  def emptyString : Parser[ Chunk ] = &quot;&quot;.r ^^ ( s =&gt; EmptySpace(s) )
+  
+  def blockquote : Parser[ Chunk ] = {
+    blockquotedLine ~ rep( blockquotedLine | textLine ) ^^ {
+      case ~(lead, trailing) =&gt; BlockquotedChunk( foldedString( lead :: trailing ) )
+    }
+  }
+  
+  def blockquotedLine : Parser[ Chunk ] =
+    &quot;&quot;&quot;^&gt;[\t ]?&quot;&quot;&quot;.r ~&gt; ( textLine | emptyLine )
+
+  def linkDefinition : Parser[ Chunk ] = {
+    linkIDAndURL ~ opt( linkTitle ) &lt;~ &quot;&quot;&quot;[ ]*\n?&quot;&quot;&quot;.r ^^ {
+      case ~( idAndURL, titleOpt ) =&gt;
+        LinkDefinitionChunk( idAndURL._1, idAndURL._2, titleOpt )
+    }
+  }
+
+  private def linkIDAndURL : Parser[ (String, String) ] = {
+    &quot;&quot;&quot;[ ]{0,3}\[[^\[\]]*\]:[ ]+&lt;?[\w\p{Punct}]+&gt;?&quot;&quot;&quot;.r ^^ (
+      linkString =&gt; {
+        val linkMatch = {
+          &quot;&quot;&quot;^\[([^\[\]]+)\]:[ ]+&lt;?([\w\p{Punct}]+)&gt;?$&quot;&quot;&quot;.r.findFirstMatchIn(
+            linkString.trim
+          ).get
+        }
+        ( linkMatch.group(1), linkMatch.group(2) )
+      }
+    )
+  }
+
+  private def linkTitle : Parser[ String ] = {
+    &quot;&quot;&quot;\s*&quot;&quot;&quot;.r ~&gt; &quot;&quot;&quot;[&quot;'(].*[&quot;')]&quot;&quot;&quot;.r ^^ ( str =&gt;
+      str.substring( 1, str.length - 1 )
+    )
+  }
+  
+  
+  // Utility Methods
+  
+  /** Take a series of very similar chunks and group them. */
+  private def foldedString( texts : List[ Chunk ] ) : String =
+    ( &quot;&quot; /: texts )( (current, text) =&gt; current + text.content )
+}
+</code></pre><h2><code>ChunkParsersSpec</code></h2><pre><code class="prettyprint">// In test com/tristanhunt/knockoff/ChunkParsersSpec.scala
+package com.tristanhunt.knockoff
+
+import org.scalatest._
+import org.scalatest.matchers._
+
+class ChunkParsersSpec extends ChunkParser with Spec with ShouldMatchers {
+
+  describe(&quot;ChunkParser&quot;) {
+    it(&quot;should handle simple bullet items&quot;) {
+      val src = &quot;* item 1\n* item 2\n&quot;
+      parse( chunk, src ).get should equal ( BulletLineChunk(&quot;item 1\n&quot;) )
+    }
+    
+    it(&quot;should group a second line that's not a bullet&quot;) {
+      val src = &quot;*   item 1\n    more\n&quot;
+      parse( chunk, src ).get should equal (
+        BulletLineChunk(&quot;item 1\nmore\n&quot;)
+      )
+    }
+    
+    it(&quot;should ignore whitespace around headers&quot;) {
+      val src = &quot;# Header 1 #&quot;
+      parse( chunk, src ).get should equal { HeaderChunk(1, &quot;Header 1&quot;) }
+    }
+    
+    it(&quot;should be ok with empty code blocks&quot;) {
+      val src = &quot;    &quot;
+      parse( chunk, src ).get should equal { IndentedChunk(&quot;&quot;) }
+    }
+    
+    it(&quot;should not explode on a code block with a trailing line&quot;) {
+      val line = &quot;    line\n    &quot;
+      parse( chunk, line ).get should equal { IndentedChunk(&quot;line\n&quot;) }
+    }
+    
+    it(&quot;should handle nothin' but code&quot;) {
+      val src = &quot;    This is just a code block.\n&quot; +
+                &quot;    \n&quot; +
+                &quot;    And it has a trailing whitespace line... that's also indented.\n&quot; +
+                &quot;    &quot;
+      parse( chunk, src ).get should equal { IndentedChunk(
+        &quot;This is just a code block.\n&quot; +
+        &quot;\n&quot; +
+        &quot;And it has a trailing whitespace line... that's also indented.\n&quot;
+      ) }
+    }
+  }
+}
+</code></pre></div>
+      <div class="footer span-22 prepend-1 append-1 last">
+      
+    </div>
+    </div></body>
+      </html>
