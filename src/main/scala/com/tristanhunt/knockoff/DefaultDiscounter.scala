@@ -8,7 +8,7 @@ object DefaultDiscounter extends Discounter with ColoredLogger {
       Console.err.print( "DefaultDiscounter " )
     }
     if ( args.contains("--version") || args.contains("-shortversion") ) {
-      Console.err.println( "0.6.1-SNAPSHOT" )
+      Console.err.println( "0.6.1-6" )
       return 0
     }
     

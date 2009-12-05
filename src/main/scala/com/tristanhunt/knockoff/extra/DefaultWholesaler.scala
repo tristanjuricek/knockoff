@@ -8,7 +8,7 @@ object DefaultWholesaler extends Wholesaler with ColoredLogger {
       Console.err.print( "DefaultWholesaler " )
     }
     if ( args.contains("--version") || args.contains("-shortversion") ) {
-      Console.err.println( "0.6.1-SNAPSHOT" )
+      Console.err.println( "0.6.1-6" )
       return 0
     }
     
