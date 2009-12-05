@@ -16,7 +16,7 @@ Right now knockoff is easiest to use via [sbt][].
 
 Include the direct dependency:
 
-    val knockoff = "com.tristanhunt" % "knockoff" %% "0.6.1-SNAPSHOT"
+    val knockoff = "com.tristanhunt" % "knockoff" %% "0.6.1-7"
 
 You can grab it off of my repository:
 
@@ -49,7 +49,7 @@ documentation. Add the `lit` sub command.
     sbt update lit package
 
 
-[1]: http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/knockoff_2.7.7/0.6.1-SNAPSHOT/knockoff_2.7.7-0.6.1-SNAPSHOT.jar
+[1]: http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/knockoff_2.7.7/0.6.1-7/knockoff_2.7.7-0.6.1-7.jar
 [literable]: http://tristanhunt.com/projects/literable
 [sbt]: http://code.google.com/p/simple-build-tool/
 [scala]: http://www.scala-lang.org
