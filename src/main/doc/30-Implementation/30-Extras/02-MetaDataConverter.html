@@ -255,7 +255,14 @@ class MetaDataConverterSpec extends Spec with ShouldMatchers with Wholesaler {
 
 import org.scalatest.Spec
 import org.scalatest.matchers.ShouldMatchers
-import scala.util.parsing.input.NoPosition</code></pre></div>
+import scala.util.parsing.input.NoPosition
+</code></pre><h2><code>MetaDatas</code></h2><p>This enables the <code>filterType</code> method to work to find the <code>MetaData</code>.
+</p><pre><code class="prettyprint">// In com/tristanhunt/knockoff/extra/MetaDatas.scala
+package com.tristanhunt.knockoff.extra
+
+case object MetaDatas
+extends BlockType[ MetaData ] { def wrappedClass = classOf[ MetaData ] }
+</code></pre></div>
       <div class="footer span-22 prepend-1 append-1 last">
       
     </div>

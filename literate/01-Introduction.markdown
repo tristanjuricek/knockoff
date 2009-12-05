@@ -42,6 +42,10 @@ document is parsed.
 
 ## Recent Updates ##
 
+### `0.6.1-6` Dec 6, 2009
+
+* Added the `MetaDatas` object for `filterType` filtering.
+
 ### `0.6.1-5` Dec 5, 2009
 
 * Created the `MetaData` extension, which allows for extra document-related info.
