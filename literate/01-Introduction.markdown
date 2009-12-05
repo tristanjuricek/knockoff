@@ -42,12 +42,9 @@ document is parsed.
 
 ## Recent Updates ##
 
-### `0.6.1-7` Dec 6, 2009
+### `0.6.1-8` Dec 6, 2009
 
-* Added the `MetaDatas` object for `filterType` filtering.
-
-### `0.6.1-5` Dec 5, 2009
-
+* Changed the output from `GroupSeq` to `BlockSeq` of `Wholesaler`.
 * Created the `MetaData` extension, which allows for extra document-related info.
 * Added `Wholesaler` class to `com.tristanhunt.knockoff.extra` namespace, which
   is the container for Markdown extensions.

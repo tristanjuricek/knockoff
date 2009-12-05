@@ -167,11 +167,31 @@ extends SimpleBlock {
   
   val markdown : String =
     data.map{ case ((k,v)) =&gt; k + &quot;: &quot; + v }.mkString(&quot;\n&quot;)
+  
+  // See the MetaData toString, equals, hashCode methods
 }
 // The MetaData imports
 
 import scala.util.parsing.input.Position
 import scala.xml.{ Group, Node, NodeBuffer }
+
+// The MetaData toString, equals, hashCode methods
+override def toString : String = &quot;MetaData(&quot; +
+  Seq( data, position ).mkString(&quot;/&quot;) +
+&quot;)&quot;
+
+override def equals( rhs : Any ) : Boolean = rhs match {
+  case oth : MetaData =&gt;
+    ( oth.canEqual( this ) ) &amp;&amp;
+    ( data sameElements oth.data ) &amp;&amp;
+    ( position == oth.position )
+  case _ =&gt; false
+}
+
+def canEqual( rhs : MetaData ) : Boolean =
+  rhs.isInstanceOf[ MetaData ]
+
+override def hashCode : Int = 41 * ( data.hashCode + 41 * position.hashCode )
 </code></pre><h2><code>MetaDataConverter</code></h2><pre><code class="prettyprint">// In com/tristanhunt/knockoff/extra/MetaDataConverter.scala
 package com.tristanhunt.knockoff.extra
 // See the MetaDataConverter imports

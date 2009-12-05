@@ -6,7 +6,7 @@ import scala.util.parsing.input.Position
 
 
 class Blockquote(
-  val children : BlockSeq,
+  val children : Seq[ Block ],
   val position : Position
 )
 extends ComplexBlock {

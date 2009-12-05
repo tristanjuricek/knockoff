@@ -157,11 +157,14 @@ extends ChunkStreamFactory
 with    SpanConverterFactory
 with    HasElementFactory {
 
+  def toXML( blocks : Seq[ Block ]  ) : Node =
+    Group( blocks.map( _.xml ) )
+
   /**
     Parses and returns our best guess at the sequence of blocks. It will
     never fail, just log all suspicious things.
   */
-  def knockoff( source : java.lang.CharSequence ) : BlockSeq = {
+  def knockoff( source : java.lang.CharSequence ) : Seq[ Block ] = {
       
     val chunks = createChunkStream( new CharSequenceReader( source, 0 ) )
 
@@ -190,8 +193,8 @@ with    HasElementFactory {
   */
   private def combine( input : List[ (Chunk, SpanSeq, Position) ],
                        output  : ListBuffer[ Block ] )
-                     : BlockSeq = {
-    if ( input.isEmpty ) return new GroupBlock( output.toSeq )
+                     : Seq[ Block ] = {
+    if ( input.isEmpty ) return output
     input.head._1.appendNewBlock( output, input.tail, input.head._2,
                                   input.head._3 )( elementFactory, this )
     combine( input.tail, output )
@@ -203,6 +206,7 @@ with    HasElementFactory {
 import scala.collection.mutable.ListBuffer
 import scala.util.parsing.input.Position
 import scala.util.parsing.input.CharSequenceReader
+import scala.xml.{ Group, Node }
 </code></pre><h3><code>DefaultDiscounter</code></h3><p>For many applications the default is &quot;good enough&quot;. Note that a major aim of this
 discounter is to mimic the usage of <code>Markdown.pl</code>.
 </p><pre><code class="prettyprint">Markdown.pl [ ??html4tags ] [ ??version ] [ ?shortversion ] [ file ... ]
@@ -229,10 +233,10 @@ object DefaultDiscounter extends Discounter with ColoredLogger {
         line = Console.readLine
         if ( line != null ) sb.append( line )
       } while ( line != null )
-      println( knockoff( sb.toString ).toXML.toString )
+      println( toXML( knockoff( sb.toString ) ).toString )
     } else {
       args.filter( _ != &quot;--html4tags&quot; ).foreach { fileName =&gt;
-        println( knockoff( readText( fileName ) ).toXML.toString )
+        println( toXML( knockoff( readText( fileName ) ) ).toString )
       }
     }
   } catch {
@@ -254,14 +258,14 @@ package com.tristanhunt.knockoff.extra
 
 trait Wholesaler extends Discounter with MetaDataConverter {
   
-  override def knockoff( source : java.lang.CharSequence ) : BlockSeq = {
+  override def knockoff( source : java.lang.CharSequence ) : Seq[ Block ] = {
     var blocks = super.knockoff( source )
     
     if ( ! blocks.isEmpty ) {
       blocks.first match {
         case p : Paragraph =&gt;
           toMetaData( p ).foreach { metaData =&gt;
-            blocks = new GroupBlock( metaData :: blocks.toList.tail ) }
+            blocks = Seq( metaData ) ++ blocks.drop(1) }
         case _ =&gt; {}
       }
     }
@@ -292,10 +296,10 @@ object DefaultWholesaler extends Wholesaler with ColoredLogger {
         line = Console.readLine
         if ( line != null ) sb.append( line )
       } while ( line != null )
-      println( knockoff( sb.toString ).toXML.toString )
+      println( toXML( knockoff( sb.toString ) ).toString )
     } else {
       args.filter( _ != &quot;--html4tags&quot; ).foreach { fileName =&gt;
-        println( knockoff( readText( fileName ) ).toXML.toString )
+        println( toXML( knockoff( readText( fileName ) ) ).toString )
       }
     }
   } catch {

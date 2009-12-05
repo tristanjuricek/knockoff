@@ -19,11 +19,14 @@ Otherwise...
     with    SpanConverterFactory
     with    HasElementFactory {
   
+      def toXML( blocks : Seq[ Block ]  ) : Node =
+        Group( blocks.map( _.xml ) )
+  
       /**
         Parses and returns our best guess at the sequence of blocks. It will
         never fail, just log all suspicious things.
       */
-      def knockoff( source : java.lang.CharSequence ) : BlockSeq = {
+      def knockoff( source : java.lang.CharSequence ) : Seq[ Block ] = {
           
         val chunks = createChunkStream( new CharSequenceReader( source, 0 ) )
 
@@ -52,8 +55,8 @@ Otherwise...
       */
       private def combine( input : List[ (Chunk, SpanSeq, Position) ],
                            output  : ListBuffer[ Block ] )
-                         : BlockSeq = {
-        if ( input.isEmpty ) return new GroupBlock( output.toSeq )
+                         : Seq[ Block ] = {
+        if ( input.isEmpty ) return output
         input.head._1.appendNewBlock( output, input.tail, input.head._2,
                                       input.head._3 )( elementFactory, this )
         combine( input.tail, output )
@@ -65,6 +68,7 @@ Otherwise...
     import scala.collection.mutable.ListBuffer
     import scala.util.parsing.input.Position
     import scala.util.parsing.input.CharSequenceReader
+    import scala.xml.{ Group, Node }
 
 
 ### `DefaultDiscounter` ###
@@ -98,10 +102,10 @@ The `--html4tags` argument will just do nothing, but not be processed as a file.
             line = Console.readLine
             if ( line != null ) sb.append( line )
           } while ( line != null )
-          println( knockoff( sb.toString ).toXML.toString )
+          println( toXML( knockoff( sb.toString ) ).toString )
         } else {
           args.filter( _ != "--html4tags" ).foreach { fileName =>
-            println( knockoff( readText( fileName ) ).toXML.toString )
+            println( toXML( knockoff( readText( fileName ) ) ).toString )
           }
         }
       } catch {
@@ -131,14 +135,14 @@ like a block.
 
     trait Wholesaler extends Discounter with MetaDataConverter {
       
-      override def knockoff( source : java.lang.CharSequence ) : BlockSeq = {
+      override def knockoff( source : java.lang.CharSequence ) : Seq[ Block ] = {
         var blocks = super.knockoff( source )
         
         if ( ! blocks.isEmpty ) {
           blocks.first match {
             case p : Paragraph =>
               toMetaData( p ).foreach { metaData =>
-                blocks = new GroupBlock( metaData :: blocks.toList.tail ) }
+                blocks = Seq( metaData ) ++ blocks.drop(1) }
             case _ => {}
           }
         }
@@ -174,10 +178,10 @@ Another console wrapping application. This one has to be called explicitly.
             line = Console.readLine
             if ( line != null ) sb.append( line )
           } while ( line != null )
-          println( knockoff( sb.toString ).toXML.toString )
+          println( toXML( knockoff( sb.toString ) ).toString )
         } else {
           args.filter( _ != "--html4tags" ).foreach { fileName =>
-            println( knockoff( readText( fileName ) ).toXML.toString )
+            println( toXML( knockoff( readText( fileName ) ) ).toString )
           }
         }
       } catch {

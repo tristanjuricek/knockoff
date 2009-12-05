@@ -37,11 +37,31 @@ left to your program to interpret.
       
       val markdown : String =
         data.map{ case ((k,v)) => k + ": " + v }.mkString("\n")
+      
+      // See the MetaData toString, equals, hashCode methods
     }
     // The MetaData imports
     
     import scala.util.parsing.input.Position
     import scala.xml.{ Group, Node, NodeBuffer }
+    
+    // The MetaData toString, equals, hashCode methods
+    override def toString : String = "MetaData(" +
+      Seq( data, position ).mkString("/") +
+    ")"
+  
+    override def equals( rhs : Any ) : Boolean = rhs match {
+      case oth : MetaData =>
+        ( oth.canEqual( this ) ) &&
+        ( data sameElements oth.data ) &&
+        ( position == oth.position )
+      case _ => false
+    }
+    
+    def canEqual( rhs : MetaData ) : Boolean =
+      rhs.isInstanceOf[ MetaData ]
+    
+    override def hashCode : Int = 41 * ( data.hashCode + 41 * position.hashCode )
 
 ## `MetaDataConverter` ##
 

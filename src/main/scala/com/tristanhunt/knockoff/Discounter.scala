@@ -3,17 +3,21 @@ package com.tristanhunt.knockoff
 import scala.collection.mutable.ListBuffer
 import scala.util.parsing.input.Position
 import scala.util.parsing.input.CharSequenceReader
+import scala.xml.{ Group, Node }
 
 trait   Discounter
 extends ChunkStreamFactory
 with    SpanConverterFactory
 with    HasElementFactory {
 
+  def toXML( blocks : Seq[ Block ]  ) : Node =
+    Group( blocks.map( _.xml ) )
+
   /**
     Parses and returns our best guess at the sequence of blocks. It will
     never fail, just log all suspicious things.
   */
-  def knockoff( source : java.lang.CharSequence ) : BlockSeq = {
+  def knockoff( source : java.lang.CharSequence ) : Seq[ Block ] = {
       
     val chunks = createChunkStream( new CharSequenceReader( source, 0 ) )
 
@@ -42,8 +46,8 @@ with    HasElementFactory {
   */
   private def combine( input : List[ (Chunk, SpanSeq, Position) ],
                        output  : ListBuffer[ Block ] )
-                     : BlockSeq = {
-    if ( input.isEmpty ) return new GroupBlock( output.toSeq )
+                     : Seq[ Block ] = {
+    if ( input.isEmpty ) return output
     input.head._1.appendNewBlock( output, input.tail, input.head._2,
                                   input.head._3 )( elementFactory, this )
     combine( input.tail, output )

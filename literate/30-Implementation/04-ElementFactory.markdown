@@ -62,7 +62,7 @@ customizing the `ElementFactory` is pretty simple. You create a subtype of
       def linkdef( i : String, u : String, t : Option[ String ], p : Position ) =
         new LinkDefinition( i, u, t, p )
       
-      def blockquote( c : BlockSeq, p : Position ) : Blockquote =
+      def blockquote( c : Seq[ Block ], p : Position ) : Blockquote =
         new Blockquote( c, p )
       
       def codeBlock( s : String, p : Position ) : CodeBlock =

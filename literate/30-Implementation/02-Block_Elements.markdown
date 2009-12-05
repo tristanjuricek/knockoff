@@ -291,7 +291,7 @@ A block quote is really another markdown document, quoted.
     // See the Blockquote package and imports
 
     class Blockquote(
-      val children : BlockSeq,
+      val children : Seq[ Block ],
       val position : Position
     )
     extends ComplexBlock {

@@ -19,10 +19,10 @@ object DefaultWholesaler extends Wholesaler with ColoredLogger {
         line = Console.readLine
         if ( line != null ) sb.append( line )
       } while ( line != null )
-      println( knockoff( sb.toString ).toXML.toString )
+      println( toXML( knockoff( sb.toString ) ).toString )
     } else {
       args.filter( _ != "--html4tags" ).foreach { fileName =>
-        println( knockoff( readText( fileName ) ).toXML.toString )
+        println( toXML( knockoff( readText( fileName ) ) ).toString )
       }
     }
   } catch {

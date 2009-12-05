@@ -2,7 +2,7 @@
 #
 # A stupid release script, until I figure out what I want to do with this later.
 
-BUILD_NUMBER=7
+BUILD_NUMBER=8
 VERSION_BASE=`grep project.version project/build.properties | sed -e 's/project.version=//'`
 VERSION_NUMBER=`echo $VERSION_BASE | sed -e "s/SNAPSHOT/$BUILD_NUMBER/"`
 
