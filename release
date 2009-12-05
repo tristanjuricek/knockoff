@@ -17,11 +17,11 @@ do
   mv $file.tmp $file
 done
 
-echo Committing
-git commit -m "$VERSION_NUMBER release" -a
-
 echo Build preparation
 sbt clean clean-lib update lit
+
+echo Committing
+git commit -m "$VERSION_NUMBER release" -a
 
 echo Cross-compiling
 sbt +package
