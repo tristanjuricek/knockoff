@@ -2,7 +2,7 @@
 #
 # A stupid release script, until I figure out what I want to do with this later.
 
-BUILD_NUMBER=5
+BUILD_NUMBER=6
 VERSION_BASE=`grep project.version project/build.properties | sed -e 's/project.version=//'`
 VERSION_NUMBER=`echo $VERSION_BASE | sed -e "s/SNAPSHOT/$BUILD_NUMBER/"`
 
@@ -12,7 +12,7 @@ git checkout -b $VERSION_NUMBER-build
 echo Changing $VERSION_BASE to $VERSION_NUMBER in project/build.properties
 for file in project/build.properties `find . -name '*.markdown'`
 do
-  cat $file | sed -e "s/$VERSION_BASE/$VERSION_NUMBER/" > $file.tmp
+  cat $file | sed -e "s/$VERSION_BASE/$VERSION_NUMBER/g" > $file.tmp
   rm $file
   mv $file.tmp $file
 done
