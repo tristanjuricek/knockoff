@@ -149,17 +149,17 @@ knockoff( markdownTextString ).toXML
 </code></pre><p>You need to have the knockoff build.
 </p><h2>Using Knockoff with the Simple Build Tool</h2><p>Right now knockoff is easiest to use via <a href="http://code.google.com/p/simple-build-tool/" >sbt</a>.
 </p><p>Include the direct dependency:
-</p><pre><code class="prettyprint">val knockoff = &quot;com.tristanhunt&quot; % &quot;knockoff&quot; %% &quot;0.6.1-SNAPSHOT&quot;
+</p><pre><code class="prettyprint">val knockoff = &quot;com.tristanhunt&quot; % &quot;knockoff&quot; %% &quot;0.6.1-8&quot;
 </code></pre><p>You can grab it off of my repository:
 </p><pre><code class="prettyprint">val tristanhunt =
   &quot;tristanhunt&quot; at &quot;http://tristanhunt.com:8081/content/groups/public/&quot;
 </code></pre><h2>Using Knockoff outside the Simple Build Tool</h2><p>Definitely possible, it will require a downloaded <a href="http://www.scala-lang.org" >scala</a> version, after which you
-include the <code>lib/scala-library.jar</code> file in your classpath along with the <a href="http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/knockoff_2.7.7/0.6.1-SNAPSHOT/knockoff_2.7.7-0.6.1-SNAPSHOT.jar" >file</a> at
+include the <code>lib/scala-library.jar</code> file in your classpath along with the <a href="http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/knockoff_2.7.7/0.6.1-8/knockoff_2.7.7-0.6.1-8.jar" >file</a> at
 </p><pre><code class="prettyprint">  http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/
 	  knockoff_[SCALA_VERSION]/
 	  [KNOCKOFF_VERSION]/
 	  knockoff_[SCALA_VERSION]-[KNOCKOFF_VERSION].jar
-</code></pre><p>Yes, it's a long URL. So here's a <a href="http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/knockoff_2.7.7/0.6.1-SNAPSHOT/knockoff_2.7.7-0.6.1-SNAPSHOT.jar" >link</a> to one of the latest releases.
+</code></pre><p>Yes, it's a long URL. So here's a <a href="http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/knockoff_2.7.7/0.6.1-8/knockoff_2.7.7-0.6.1-8.jar" >link</a> to one of the latest releases.
 </p><h2>Building knockoff source</h2><p>It uses <a href="http://code.google.com/p/simple-build-tool/" >sbt</a>:
 </p><pre><code class="prettyprint">sbt update package
 </code></pre><p>It also uses <a href="http://tristanhunt.com/projects/literable" >literable</a>, which is what generates both the source code and
