@@ -42,7 +42,7 @@ document is parsed.
 
 ## Recent Updates ##
 
-### `0.6.1-SNAPSHOT`
+### `0.6.1-5`
 
 * Created the `MetaData` extension, which allows for extra document-related info.
 * Added `Wholesaler` class to `com.tristanhunt.knockoff.extra` namespace, which
