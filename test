@@ -1,4 +1,11 @@
 #!/bin/bash
 
 cd MarkdownTest_1.0
+echo "Core Markdown Features"
+echo "----------------------"
 ./MarkdownTest.pl --script ../discounter --tidy
+
+echo ""
+echo "Extra Markdown Features"
+echo "-----------------------"
+./MarkdownTest.pl --script ../wholesaler --tidy --testdir=Extra

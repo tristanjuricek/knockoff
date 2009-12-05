@@ -62,14 +62,18 @@
             <a href="10-Usage/02-Recipes.html">
               Recipes
             </a>
+          </li><li>
+            <a href="10-Usage/50-Variations.html">
+              Where Knockoff is not like Markdown
+            </a>
           </li>
             </ul>
           </li><li>
             <span class="group">Implementation</span>
             <ul>
               <li>
-            <a href="30-Implementation/01-Discounter.html">
-              Discounter - The One Trait
+            <a href="30-Implementation/01-Discounter_DefaultDiscounter_Wholesaler.html">
+              Discounter and the Wholesaler
             </a>
           </li><li>
             <a href="30-Implementation/02-Block_Elements.html">
@@ -109,6 +113,15 @@
           </li>
             </ul>
           </li><li>
+            <span class="group">Extras</span>
+            <ul>
+              <li>
+            <a href="30-Implementation/30-Extras/02-MetaDataConverter.html">
+              MetaData and MetaDataConverter
+            </a>
+          </li>
+            </ul>
+          </li><li>
             <a href="30-Implementation/50-Official_Markdown_Tests.html">
               The Official Tests
             </a>
@@ -129,11 +142,12 @@
             </ul>
           </li></ul></div>
       <div class="article span-15 append-1 last"><h1>Introduction to Knockoff</h1><p>Knockoff is a Markdown parser with a twist. Most Markdown systems just convert
-Markdown source to HTML. Knockoff converts from Markdown source to an
-in-memory model ... with a handy (X)HTML version. It's written in <a href="http://scala-lang.org" >Scala</a>,
-whose power affords us simple and fast extension.
-</p><p>This is more than just &quot;generating&quot; web documents. It's the backbone of a great
-&quot;only what you need&quot; approach to doing things built for web distribution.
+Markdown source to HTML.
+</p><pre><code class="prettyprint">Markdown Text -&gt; [ Markdown Script ] -&gt; HTML
+</code></pre><p>Knockoff converts from Markdown source to an object model ... then, to an XHMTL
+fragment, generated easily with Scala's excellent XML integration:
+</p><pre><code class="prettyprint">Markdown Text -&gt; [ Knockoff ] -&gt; Scala Object Model -&gt; XHTML
+</code></pre><p>I've found it an easy way to manipulate Markdown text in Scala applications.
 </p><p>For example, it was easy for me to build a <a href="http://tristanhunt.com/projects/literable" >literate programming</a> environment on
 top of an object model. This approach &quot;tags&quot; specific bits of markdown code blocks
 with special meaning - stick this code block in a separate file in a particular
@@ -147,7 +161,12 @@ in the root of the project tree:
 </p><pre><code class="prettyprint">./discounter [file ...]
 </code></pre><h2>What is This <code>Discounter</code> Thing, What The Hell Am I Thinking?</h2><p>The <code>Discounter</code> is the base object you can use to start to specialize how the
 document is parsed.
-</p><h2>Recent Updates</h2><h3><code>0.6.0-4</code> Nov 28, 2009</h3><ul><li>Set package name as <code>com.tristanhunt.knockoff</code>. [Let's try being standard!]
+</p><h2>Recent Updates</h2><h3><code>0.6.1-SNAPSHOT</code></h3><ul><li>Created the <code>MetaData</code> extension, which allows for extra document-related info.
+</li><li>Added <code>Wholesaler</code> class to <code>com.tristanhunt.knockoff.extra</code> namespace, which
+is the container for Markdown extensions.
+</li></ul><h3><code>0.6.0-5</code> Nov 28, 2009</h3><ul><li>Small alteration to the <code>CodeBlock</code> that doesn't force a newline at the end of
+every code block. I have no idea what I was thinking here.
+</li></ul><h3><code>0.6.0-4</code> Nov 28, 2009</h3><ul><li>Set package name as <code>com.tristanhunt.knockoff</code>. [Let's try being standard!]
 </li><li>Fixed whitespace problem that caused crash, and trying to report failures better.
 </li><li>Added <code>Nothin But Code</code> test to suite, which triggered a crash during parsing.
 </li><li>Upgraded project to literable <code>0.5.0-3</code>, which involves moving <code>src/main/markdown</code>

@@ -4,6 +4,7 @@ import scala.xml.{ Node, Unparsed }
 import scala.io.Source
 import scala.util.parsing.input.Position
 
+
 class HorizontalRule( val position : Position ) extends SimpleBlock {
   
   def markdown = "* * *"

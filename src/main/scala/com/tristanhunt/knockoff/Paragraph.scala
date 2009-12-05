@@ -3,10 +3,8 @@ package com.tristanhunt.knockoff
 import scala.xml.Elem
 import scala.util.parsing.input.Position
 
-class Paragraph(
-  val span      : SpanSeq,
-  val position  : Position
-)
+
+class   Paragraph( val span : SpanSeq, val position  : Position )
 extends SimpleBlock {
 
   def markdown = span.toMarkdown
@@ -18,11 +16,13 @@ extends SimpleBlock {
   def xml =
     if ( isHTML ) span.toXML else <p>{ span.toXML }</p>
   
-  def isHTML : Boolean = ! span.exists( s => s match {
-    case html : HTMLSpan => false
-    case t:Text => ! t.content.trim.isEmpty
-    case _ => true
-  } )
+  def isHTML : Boolean = ! span.exists(
+    s => s match {
+      case html : HTMLSpan => false
+      case text : Text     => ! text.content.trim.isEmpty
+      case _               => true
+    }
+  )
   
   override def toString = "Paragraph(" + markdown + ")"
   

@@ -4,6 +4,7 @@ import scala.io.Source
 import scala.xml.Elem
 import scala.util.parsing.input.Position
 
+
 class Blockquote(
   val children : BlockSeq,
   val position : Position

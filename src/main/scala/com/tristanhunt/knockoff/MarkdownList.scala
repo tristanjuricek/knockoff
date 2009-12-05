@@ -3,6 +3,7 @@ package com.tristanhunt.knockoff
 import scala.io.Source
 import scala.util.parsing.input.{ NoPosition, Position }
 
+
 /**
  * @param ordered Alters the output, mostly.
  */

@@ -3,6 +3,7 @@ package com.tristanhunt.knockoff
 import scala.xml.{ Node, Group }
 import scala.util.parsing.input.Position
 
+
 class LinkDefinition(
   val id        : String,
   val url       : String,

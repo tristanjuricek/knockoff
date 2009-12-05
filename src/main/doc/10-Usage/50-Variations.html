@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
         <head>
-          <title>Discounter - The One Trait</title>
+          <title>Where Knockoff is not like Markdown</title>
           <link rel="stylesheet" href="../screen.css" type="text/css" media="screen, projection"></link><link rel="stylesheet" href="../print.css" type="text/css" media="print"></link><!--[if lt IE 8]><link rel="stylesheet" href="../ie.css" type="text/css" media="screen, projection"><![endif]-->
           <link href="../prettify.css" rel="stylesheet" type="text/css"></link><script type="text/javascript" src="../prettify.js"></script>
           <style> 
@@ -72,8 +72,8 @@
             <span class="group">Implementation</span>
             <ul>
               <li>
-            <a href="../30-Implementation/01-Discounter.html">
-              Discounter - The One Trait
+            <a href="../30-Implementation/01-Discounter_DefaultDiscounter_Wholesaler.html">
+              Discounter and the Wholesaler
             </a>
           </li><li>
             <a href="../30-Implementation/02-Block_Elements.html">
@@ -113,6 +113,15 @@
           </li>
             </ul>
           </li><li>
+            <span class="group">Extras</span>
+            <ul>
+              <li>
+            <a href="../30-Implementation/30-Extras/02-MetaDataConverter.html">
+              MetaData and MetaDataConverter
+            </a>
+          </li>
+            </ul>
+          </li><li>
             <a href="../30-Implementation/50-Official_Markdown_Tests.html">
               The Official Tests
             </a>
@@ -132,110 +141,16 @@
           </li>
             </ul>
           </li></ul></div>
-      <div class="article span-15 append-1 last"><h1><code>Discounter</code> - The One Trait</h1><p>You inherit from <code>KnockOff</code> to be able to parse your sources. If you're not doing
-fancy customization, you use the DefaultDiscounter.
-</p><pre><code class="prettyprint">val blocks = DefaultDiscounter.knockoff( &quot;document&quot; )
-
-println( &quot;Hello, Conversion!&quot; )
-println( blocks.toXML )
-</code></pre><p>Otherwise...
-</p><pre><code class="prettyprint">// In com/tristanhunt/knockoff/Discounter.scala
-package com.tristanhunt.knockoff
-// See the Discounter imports
-
-trait   Discounter
-extends ChunkStreamFactory
-with    SpanConverterFactory
-with    HasElementFactory {
-
-  /**
-    Parses and returns our best guess at the sequence of blocks. It will
-    never fail, just log all suspicious things.
-  */
-  def knockoff( source : java.lang.CharSequence ) : BlockSeq = {
-      
-    val chunks = createChunkStream( new CharSequenceReader( source, 0 ) )
-
-    // These next lines are really ugly because I couldn't figure out a nice
-    // way to match a tuple argument (thank you erasure!)
-    val linkDefinitions = chunks.flatMap{ case ((chunk, pos)) =&gt;
-      if ( chunk.isLinkDefinition )
-        List( chunk.asInstanceOf[ LinkDefinitionChunk ] )
-      else Nil
-    }
-    
-    val convert = spanConverter( linkDefinitions )
-    
-    val spanned = chunks.map { chunkAndPos =&gt;
-      ( chunkAndPos._1, convert( chunkAndPos._1 ), chunkAndPos._2 )
-    }
-    
-    combine( spanned.toList, new ListBuffer )
-  }
-  
-  /**
-    Consume input and append the right thing to the output until empty. The
-    Chunk itself determines the &quot;right thing to do&quot;. All chunks only know what
-    has come before itself, by peering into the output. (It shouldn't matter
-    what comes next...)
-  */
-  private def combine( input : List[ (Chunk, SpanSeq, Position) ],
-                       output  : ListBuffer[ Block ] )
-                     : BlockSeq = {
-    if ( input.isEmpty ) return new GroupBlock( output.toSeq )
-    input.head._1.appendNewBlock( output, input.tail, input.head._2,
-                                  input.head._3 )( elementFactory, this )
-    combine( input.tail, output )
-  }
-}
-
-// The Discounter imports
-
-import scala.collection.mutable.ListBuffer
-import scala.util.parsing.input.Position
-import scala.util.parsing.input.CharSequenceReader
-</code></pre><h3><code>DefaultDiscounter</code></h3><p>For many applications the default is &quot;good enough&quot;. Note that a major aim of this
-discounter is to mimic the usage of <code>Markdown.pl</code>.
-</p><pre><code class="prettyprint">Markdown.pl [ ??html4tags ] [ ??version ] [ ?shortversion ] [ file ... ]
-</code></pre><p>The <code>--html4tags</code> argument will just do nothing, but not be processed as a file.
-</p><pre><code class="prettyprint">// In com/tristanhunt/knockoff/DefaultDiscounter.scala
-package com.tristanhunt.knockoff
-
-import scala.util.logging.ConsoleLogger
-
-object DefaultDiscounter extends Discounter with ColoredLogger {
-  def main( args : Array[ String ] ) : Unit = try {
-    if ( args.contains(&quot;--version&quot;) ) {
-      Console.err.print( &quot;DefaultDiscounter &quot; )
-    }
-    if ( args.contains(&quot;--version&quot;) || args.contains(&quot;-shortversion&quot;) ) {
-      Console.err.println( &quot;0.6.1-SNAPSHOT&quot; )
-      return 0
-    }
-    
-    if ( args.isEmpty ) {
-      val sb = new StringBuilder
-      var line : String = null
-      do {
-        line = Console.readLine
-        if ( line != null ) sb.append( line )
-      } while ( line != null )
-      println( knockoff( sb.toString ).toXML.toString )
-    } else {
-      args.filter( _ != &quot;--html4tags&quot; ).foreach { fileName =&gt;
-        println( knockoff( readText( fileName ) ).toXML.toString )
-      }
-    }
-  } catch {
-    case th : Throwable =&gt; {
-      th.printStackTrace( Console.err )
-    }
-  }
-  
-  private def readText( fileName : String ) : String =
-    io.Source.fromFile( fileName ).mkString(&quot;&quot;)
-}
-</code></pre></div>
+      <div class="article span-15 append-1 last"><h1>Where Knockoff is not like Markdown</h1><p>Knockoff does not generate HTML 100% exactly like the core Markdown script.
+</p><ol><li>Tabs are passed through. Why you're using tabs is beyond me, this will keep
+tools like <code>diff</code> honest and functional.
+</li><li>List items (<code>&lt;li&gt;</code>) only have a sub-paragraph (<code>&lt;p&gt;</code>) if you have complex
+content. (In the core script, if you space them widely, you get the sub <code>&lt;p&gt;</code>
+element, which made no sense to me.)
+</li><li>If you have a code line, followed by another indented line, even if that line's
+empty, the empty line is part of the code block.
+</li></ol><p>Other than this, Knockoff passes the markdown test suite. I've even extended it with
+my own examples, which I use to pass most of my own tests.</p></div>
       <div class="footer span-22 prepend-1 append-1 last">
       
     </div>

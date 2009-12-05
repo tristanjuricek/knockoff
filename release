@@ -1,4 +1,6 @@
 #!/bin/sh
+#
+# A stupid release script, until I figure out what I want to do with this later.
 
 BUILD_NUMBER=5
 VERSION_BASE=`grep project.version project/build.properties | sed -e 's/project.version=//'`
@@ -8,15 +10,18 @@ echo Checking out $VERSION_NUMBER-build
 git checkout -b $VERSION_NUMBER-build
 
 echo Changing $VERSION_BASE to $VERSION_NUMBER in project/build.properties
-cat project/build.properties | sed -e "s/$VERSION_BASE/$VERSION_NUMBER/" > project/build.properties.tmp
-rm project/build.properties
-mv project/build.properties.tmp project/build.properties
+for file in project/build.properties `find . -name '*.markdown'`
+do
+  cat $file | sed -e "s/$VERSION_BASE/$VERSION_NUMBER/" > $file.tmp
+  rm $file
+  mv $file.tmp $file
+done
 
 echo Committing
 git commit -m "$VERSION_NUMBER release" -a
 
 echo Build preparation
-sbt clean clean-lib update literate
+sbt clean clean-lib update lit
 
 echo Cross-compiling
 sbt +package
@@ -26,8 +31,12 @@ SCALA_VERSION=`grep scala.version project/build.properties | sed -e s'/scala.ver
 echo Publishing
 sbt +publish
 
+git reset --hard HEAD 
+
 git tag $VERSION_NUMBER
 
 git push --tags
+
+git checkout master
 
 echo You should update target/doc now

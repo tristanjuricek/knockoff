@@ -1,11 +1,11 @@
-package com.tristanhunt.knockoff
+package com.tristanhunt.knockoff.extra
 
 import scala.util.logging.ConsoleLogger
 
-object DefaultDiscounter extends Discounter with ColoredLogger {
+object DefaultWholesaler extends Wholesaler with ColoredLogger {
   def main( args : Array[ String ] ) : Unit = try {
     if ( args.contains("--version") ) {
-      Console.err.print( "DefaultDiscounter " )
+      Console.err.print( "DefaultWholesaler " )
     }
     if ( args.contains("--version") || args.contains("-shortversion") ) {
       Console.err.println( "0.6.1-SNAPSHOT" )

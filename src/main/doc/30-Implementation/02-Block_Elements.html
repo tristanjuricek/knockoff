@@ -62,14 +62,18 @@
             <a href="../10-Usage/02-Recipes.html">
               Recipes
             </a>
+          </li><li>
+            <a href="../10-Usage/50-Variations.html">
+              Where Knockoff is not like Markdown
+            </a>
           </li>
             </ul>
           </li><li>
             <span class="group">Implementation</span>
             <ul>
               <li>
-            <a href="../30-Implementation/01-Discounter.html">
-              Discounter - The One Trait
+            <a href="../30-Implementation/01-Discounter_DefaultDiscounter_Wholesaler.html">
+              Discounter and the Wholesaler
             </a>
           </li><li>
             <a href="../30-Implementation/02-Block_Elements.html">
@@ -105,6 +109,15 @@
           </li><li>
             <a href="../30-Implementation/10-Parsing/20-Span_Conversion.html">
               Span Conversion
+            </a>
+          </li>
+            </ul>
+          </li><li>
+            <span class="group">Extras</span>
+            <ul>
+              <li>
+            <a href="../30-Implementation/30-Extras/02-MetaDataConverter.html">
+              MetaData and MetaDataConverter
             </a>
           </li>
             </ul>
@@ -162,6 +175,7 @@ trait Block extends BlockSeq {
 package com.tristanhunt.knockoff
 
 trait SimpleBlock extends Block {
+  
     override def theSeq : Seq[ Block ] = List( this )
 }
 </code></pre><p>In some other cases, the block is a pretty complex thing:
@@ -169,10 +183,15 @@ trait SimpleBlock extends Block {
 package com.tristanhunt.knockoff
 
 trait ComplexBlock extends Block {
+
     val children : Seq[ Block ]
+    
     val span = new SpanSeq{ def theSeq = children.flatMap( _.span ) }
+    
     def theSeq = children
+    
     def childrenMarkdown = children.map( _.markdown ).mkString(&quot;\n&quot;) + &quot;\n&quot;
+    
     def childrenXML = children.map( _.xml )
 }
 </code></pre><p>There are moments when we need to capture a series of blocks as a <code>ComplexBlock</code>
@@ -205,7 +224,7 @@ package com.tristanhunt.knockoff
 
 /**
  * Used to indicate the type of blocks you are interested in when filtering via
- * the BlockSeq.? method.
+ * the BlockSeq.filterType method.
  */
 trait BlockType[T &lt;: Block] { def wrappedClass : Class[ T ] }
 
@@ -214,6 +233,33 @@ extends BlockType[ Paragraph ] { def wrappedClass = classOf[ Paragraph ] }
 
 case object Headers
 extends BlockType[ Header ] { def wrappedClass = classOf[ Header ] }
+
+case object LinkDefinitions
+extends BlockType[ LinkDefinition ] {
+  def wrappedClass = classOf[ LinkDefinition ]
+}
+
+case object Blockquotes
+extends BlockType[ Blockquote ] { def wrappedClass = classOf[ Blockquote ] }
+
+case object CodeBlocks
+extends BlockType[ CodeBlock ] { def wrappedClass = classOf[ CodeBlock ] }
+
+case object HorizontalRules
+extends BlockType[ HorizontalRule ] {
+  def wrappedClass = classOf[ HorizontalRule ]
+}
+
+case object OrderedItems
+extends BlockType[ OrderedItem ] { def wrappedClass = classOf[ OrderedItem ] }
+
+case object UnorderedItems
+extends BlockType[ UnorderedItem ] {
+  def wrappedClass = classOf[ UnorderedItem ]
+}
+
+case object MarkdownLists
+extends BlockType[ MarkdownList ] { def wrappedClass = classOf[ MarkdownList ] }
 </code></pre><p>This is used only as a short hand for query expressions.
 </p><pre><code class="prettyprint">// In com/tristanhunt/knockoff/BlockSeq.scala
 // See the BlockSeq package and imports
@@ -233,13 +279,13 @@ trait BlockSeq extends Seq[ Block ] {
   /**
    * Returns a BlockSeq that contains only that particular block type.
    */
-  def ? [ T &lt;: Block ] ( blockType : BlockType[T] ) : BlockSeq = {
+  def filterType [ T &lt;: Block ] ( blockType : BlockType[T] ) : BlockSeq = {
     BlockSeq.fromSeq( filter( blockType.wrappedClass.isInstance( _ ) ) )
   }
   
   
   /** Shorthand for the filter method. */
-  def ? ( query : Block =&gt; Boolean ) : BlockSeq =
+  def filterType ( query : Block =&gt; Boolean ) : BlockSeq =
     BlockSeq.fromSeq( filter( query ) )
 }
 
@@ -256,10 +302,7 @@ contain any other useful metadata.
 </p><pre><code class="prettyprint">// In com/tristanhunt/knockoff/Paragraph.scala
 // See the Paragraph package and imports
 
-class Paragraph(
-  val span      : SpanSeq,
-  val position  : Position
-)
+class   Paragraph( val span : SpanSeq, val position  : Position )
 extends SimpleBlock {
 
   def markdown = span.toMarkdown
@@ -271,11 +314,13 @@ extends SimpleBlock {
   def xml =
     if ( isHTML ) span.toXML else &lt;p&gt;{ span.toXML }&lt;/p&gt;
   
-  def isHTML : Boolean = ! span.exists( s =&gt; s match {
-    case html : HTMLSpan =&gt; false
-    case t:Text =&gt; ! t.content.trim.isEmpty
-    case _ =&gt; true
-  } )
+  def isHTML : Boolean = ! span.exists(
+    s =&gt; s match {
+      case html : HTMLSpan =&gt; false
+      case text : Text     =&gt; ! text.content.trim.isEmpty
+      case _               =&gt; true
+    }
+  )
   
   // See the Paragraph toString, equals, hashCode implementations
 }
@@ -287,11 +332,7 @@ headers - <code># Header #</code>.
 </p><pre><code class="prettyprint">// In com/tristanhunt/knockoff/Header.scala
 // See the Header package and imports
 
-class Header(
-  val level     : Int,
-  val span      : SpanSeq,
-  val position  : Position
-)
+class   Header( val level : Int, val span : SpanSeq, val position : Position )
 extends SimpleBlock {
 
   def markdown = {
@@ -398,7 +439,8 @@ extends SimpleBlock {
 </code></pre><h2><code>HorizontalRule</code></h2><p>Represents a <code>&lt;hr/&gt;</code> injected into content. Note that this does not happen to do
 anything but replace a line of asterixes, underscores, or hyphens.
 </p><pre><code class="prettyprint">// In com/tristanhunt/knockoff/HorizontalRule.scala
-// See the HorizontalRule package and imports
+package com.tristanhunt.knockoff
+// See the HorizontalRule imports
 
 class HorizontalRule( val position : Position ) extends SimpleBlock {
   
@@ -441,9 +483,7 @@ container.
 </p><p>In implementation terms, we don't have a single list.
 </p><h4><code>ListItem</code></h4><pre><code class="prettyprint">// In com/tristanhunt/knockoff/ListItem.scala
 package com.tristanhunt.knockoff
-
-import scala.util.parsing.input.Position
-import scala.xml.Node
+// See the ListItem imports
 
 abstract class ListItem(
   val items    : Seq[ Block ],
@@ -518,9 +558,7 @@ the position of the first item, however, it's elements may not contain the
 entire content; whitespace will be missing in complex cases.
 </p><pre><code class="prettyprint">// In com/tristanhunt/knockoff/MarkdownList.scala
 package com.tristanhunt.knockoff
-
-import scala.io.Source
-import scala.util.parsing.input.{ NoPosition, Position }
+// See the MarkdownList imports
 
 /**
  * @param ordered Alters the output, mostly.
@@ -586,47 +624,37 @@ class BlockSuite extends Spec with ShouldMatchers with HasElementFactory {
 
   describe(&quot;BlockSeq&quot;) {
 
-    it( &quot;should filter Paragraphs and Headers properly with ?&quot; ) {
+    it( &quot;should filter Paragraphs and Headers properly with filterType&quot; ) {
 
       val p1 = para( t(&quot;p1&quot;), NoPosition )
       val h1 = head( 1, t(&quot;h1&quot;), NoPosition )
 
       val blocks = BlockSeq.fromSeq( List( p1, h1 ) )
       
-      ( blocks ? Paragraphs ) should have length (1)
-      assert( ( blocks ? Paragraphs ) contains p1 )
+      ( blocks filterType Paragraphs ) should have length (1)
+      assert( ( blocks filterType Paragraphs ) contains p1 )
       
-      ( blocks ? Headers ) should have length (1)
-      assert( ( blocks ? Headers ) contains h1 )
-    }
-  }
-  
-  describe(&quot;MarkdownList&quot;) {
-    
-    it(&quot;should implement simple lists&quot;) {
-        
-    }
-    
-    it(&quot;should implement complex lists&quot;) {
-        
+      ( blocks filterType Headers ) should have length (1)
+      assert( ( blocks filterType Headers ) contains h1 )
     }
   }
 }
-</code></pre><h2>References</h2><h4>Block - Package And Imports</h4><pre><code class="prettyprint">// The Block package and imports
+</code></pre><h2>References</h2><h3><code>Block</code></h3><pre><code class="prettyprint">// The Block package and imports
 package com.tristanhunt.knockoff
 
 import scala.xml.Node
 import scala.util.parsing.input.Position
-</code></pre><h4>BlockSeq - Package And Imports</h4><pre><code class="prettyprint">// The BlockSeq package and imports
+</code></pre><h3><code>BlockSeq</code></h3><pre><code class="prettyprint">// The BlockSeq package and imports
 package com.tristanhunt.knockoff
 
 import scala.xml.{ Node, Elem, Group }
-</code></pre><h3><code>Paragraph</code></h3><h4><code>Paragraph</code> - Package And Imports</h4><pre><code class="prettyprint">// The Paragraph package and imports
+</code></pre><h3><code>Paragraph</code></h3><pre><code class="prettyprint">// The Paragraph package and imports
 package com.tristanhunt.knockoff
 
 import scala.xml.Elem
 import scala.util.parsing.input.Position
-</code></pre><h4><code>Paragraph</code> - <code>toString</code>, <code>equals</code>, <code>hashCode</code></h4><pre><code class="prettyprint">// The Paragraph toString, equals, hashCode implementations
+
+// The Paragraph toString, equals, hashCode implementations
 override def toString = &quot;Paragraph(&quot; + markdown + &quot;)&quot;
 
 override def equals( rhs : Any ):Boolean = rhs match {
@@ -642,12 +670,13 @@ def sameElements( p : Paragraph ) : Boolean = {
 }
 
 override def hashCode : Int = span.hashCode + position.hashCode
-</code></pre><h3><code>Header</code></h3><h4><code>Header</code> - Package And Imports</h4><pre><code class="prettyprint">// The Header package and imports
+</code></pre><h3><code>Header</code></h3><pre><code class="prettyprint">// The Header package and imports
 package com.tristanhunt.knockoff
 
 import scala.xml.Elem
 import scala.util.parsing.input.Position
-</code></pre><h4><code>Header</code> - <code>toString</code>, <code>equals</code>, <code>hashCode</code></h4><pre><code class="prettyprint">// The Header toString, equals, hashCode implementations
+
+// The Header toString, equals, hashCode implementations
 override def toString = &quot;Header(&quot; + markdown + &quot;)&quot;
 
 override def equals( rhs : Any ):Boolean = rhs match {
@@ -665,12 +694,13 @@ def sameElements( p : Header ) : Boolean = {
 
 override def hashCode : Int =
   43 + level + span.hashCode + position.hashCode
-</code></pre><h3><code>LinkDefinition</code></h3><h4><code>LinkDefinition</code> - Package And Imports</h4><pre><code class="prettyprint">// The LinkDefinition package and imports
+</code></pre><h3><code>LinkDefinition</code></h3><pre><code class="prettyprint">// The LinkDefinition package and imports
 package com.tristanhunt.knockoff
 
 import scala.xml.{ Node, Group }
 import scala.util.parsing.input.Position
-</code></pre><h4><code>LinkDefinition</code> - <code>toString</code>, <code>equals</code>, <code>hashCode</code></h4><pre><code class="prettyprint">// The LinkDefinition toString, equals, hashCode implementations
+
+// The LinkDefinition toString, equals, hashCode implementations
 override def toString = &quot;LinkDefinition(&quot; + markdown + &quot;)&quot;
 
 override def equals( rhs : Any ):Boolean = rhs match {
@@ -689,13 +719,14 @@ def sameElements( p : LinkDefinition ) : Boolean = {
 
 override def hashCode : Int =
   43 + id.hashCode + url.hashCode + span.hashCode + position.hashCode
-</code></pre><h3><code>Blockquote</code></h3><h4><code>Blockquote</code> - Package And Imports</h4><pre><code class="prettyprint">// The Blockquote package and imports
+</code></pre><h3><code>Blockquote</code></h3><pre><code class="prettyprint">// The Blockquote package and imports
 package com.tristanhunt.knockoff
 
 import scala.io.Source
 import scala.xml.Elem
 import scala.util.parsing.input.Position
-</code></pre><h4><code>Blockquote</code> - <code>toString</code>, <code>equals</code>, <code>hashCode</code></h4><pre><code class="prettyprint">// The Blockquote toString, equals, hashCode implementations
+
+// The Blockquote toString, equals, hashCode implementations
 override def toString = &quot;Blockquote(&quot; + markdown + &quot;)&quot;
 
 override def equals( rhs : Any ):Boolean = rhs match {
@@ -717,13 +748,14 @@ override def hashCode : Int = {
     }
   )
 }
-</code></pre><h3><code>CodeBlock</code></h3><h4><code>CodeBlock</code> - Package and Imports</h4><pre><code class="prettyprint">// The CodeBlock package and imports
+</code></pre><h3><code>CodeBlock</code></h3><pre><code class="prettyprint">// The CodeBlock package and imports
 package com.tristanhunt.knockoff
 
 import scala.xml.{ Node, Unparsed }
 import scala.io.Source
 import scala.util.parsing.input.Position
-</code></pre><h4><code>CodeBlock</code> - <code>toString</code>, <code>equals</code>, <code>hashCode</code></h4><pre><code class="prettyprint">// The CodeBlock toString, equals, hashCode implementations
+
+// The CodeBlock toString, equals, hashCode implementations
 override def toString = &quot;CodeBlock(&quot; + preformatted + &quot;)&quot;
 
 override def hashCode : Int = preformatted.hashCode
@@ -739,13 +771,13 @@ def sameElements( cb : CodeBlock ) : Boolean = {
 }
 
 def canEqual( t : CodeBlock ) : Boolean = t.getClass == getClass
-</code></pre><h3><code>HorizontalRule</code></h3><h4><code>HorizontalRule</code> - Package and Imports</h4><pre><code class="prettyprint">// The HorizontalRule package and imports
-package com.tristanhunt.knockoff
+</code></pre><h3><code>HorizontalRule</code></h3><pre><code class="prettyprint">// The HorizontalRule imports
 
 import scala.xml.{ Node, Unparsed }
 import scala.io.Source
 import scala.util.parsing.input.Position
-</code></pre><h4><code>HorizontalRule</code> - <code>toString</code>, <code>equals</code>, <code>hashCode</code></h4><pre><code class="prettyprint">// The HorizontalRule toString, equals, hashCode implementations
+
+// The HorizontalRule toString, equals, hashCode implementations
 override def toString = &quot;HorizontalRule&quot;
 
 override def hashCode : Int = position.hashCode + 47
@@ -756,7 +788,12 @@ override def equals( rhs : Any ) : Boolean = rhs match {
 }
 
 def canEqual( t : HorizontalRule ) : Boolean = t.getClass == getClass
-</code></pre><h3><code>ListItem</code></h3><h4><code>ListItem</code> - <code>toString</code>, <code>equals</code>, <code>hashCode</code></h4><pre><code class="prettyprint">// The ListItem toString, equals, hashCode implementations
+</code></pre><h3><code>ListItem</code></h3><pre><code class="prettyprint">// The ListItem imports
+
+import scala.util.parsing.input.Position
+import scala.xml.Node
+
+// The ListItem toString, equals, hashCode implementations
 override def toString = &quot;ListItem(&quot; + markdown + &quot;)&quot;
 
 override def hashCode : Int =  {
@@ -775,12 +812,12 @@ def sameElements( ci : ListItem ) : Boolean = {
 }
 
 def canEqual( t : ListItem ) : Boolean = t.getClass == getClass
-</code></pre><h3><code>MarkdownList</code></h3><h4><code>MarkdownList</code> - Package and Imports</h4><pre><code class="prettyprint">// The MarkdownList package and imports
-package com.tristanhunt.knockoff
+</code></pre><h3><code>MarkdownList</code></h3><pre><code class="prettyprint">// The MarkdownList imports
 
-import scala.xml.{ Node, Unparsed }
 import scala.io.Source
-</code></pre><h4><code>MarkdownList</code> - <code>toString</code>, <code>equals</code>, <code>hashCode</code></h4><pre><code class="prettyprint">// The MarkdownList toString, equals, hashCode implementations
+import scala.util.parsing.input.{ NoPosition, Position }
+
+// The MarkdownList toString, equals, hashCode implementations
 override def toString = &quot;MarkdownList(&quot; + markdown + &quot;)&quot;
 
 override def hashCode : Int = {

@@ -62,14 +62,18 @@
             <a href="../10-Usage/02-Recipes.html">
               Recipes
             </a>
+          </li><li>
+            <a href="../10-Usage/50-Variations.html">
+              Where Knockoff is not like Markdown
+            </a>
           </li>
             </ul>
           </li><li>
             <span class="group">Implementation</span>
             <ul>
               <li>
-            <a href="../30-Implementation/01-Discounter.html">
-              Discounter - The One Trait
+            <a href="../30-Implementation/01-Discounter_DefaultDiscounter_Wholesaler.html">
+              Discounter and the Wholesaler
             </a>
           </li><li>
             <a href="../30-Implementation/02-Block_Elements.html">
@@ -109,6 +113,15 @@
           </li>
             </ul>
           </li><li>
+            <span class="group">Extras</span>
+            <ul>
+              <li>
+            <a href="../30-Implementation/30-Extras/02-MetaDataConverter.html">
+              MetaData and MetaDataConverter
+            </a>
+          </li>
+            </ul>
+          </li><li>
             <a href="../30-Implementation/50-Official_Markdown_Tests.html">
               The Official Tests
             </a>
@@ -128,26 +141,30 @@
           </li>
             </ul>
           </li></ul></div>
-      <div class="article span-15 append-1 last"><h1>Getting Started</h1><p>Right now knockoff is easiest to use via <a href="http://code.google.com/p/simple-build-tool/" >sbt</a>.
-</p><h3>Building with SBT</h3><p>Add my public repository:
+      <div class="article span-15 append-1 last"><h1>Getting Started</h1><p>To run the following scala code:
+</p><pre><code class="prettyprint">import com.tristanhunt.knockoff.DefaultDiscounter.knockoff
+
+knockoff( markdownTextString ).toXML
+
+</code></pre><p>You need to have the knockoff build.
+</p><h2>Using Knockoff with the Simple Build Tool</h2><p>Right now knockoff is easiest to use via <a href="http://code.google.com/p/simple-build-tool/" >sbt</a>.
+</p><p>Include the direct dependency:
+</p><pre><code class="prettyprint">val knockoff = &quot;com.tristanhunt&quot; % &quot;knockoff&quot; %% &quot;0.6.1-SNAPSHOT&quot;
+</code></pre><p>You can grab it off of my repository:
 </p><pre><code class="prettyprint">val tristanhunt =
-	&quot;tristanhunt&quot; at &quot;http://tristanhunt.com:8081/content/groups/public/&quot;
-</code></pre><p>Include the direct dependency:
-</p><pre><code class="prettyprint">val knockoff = &quot;com.tristanhunt&quot; % &quot;knockoff&quot; %% &quot;0.5.0-1&quot;
-</code></pre><h3>Running outside of SBT</h3><p>Definitely possible, it will require a downloaded <a href="http://www.scala-lang.org" >scala</a> version, after which you
-include the <code>lib/scala-library.jar</code> file in your classpath along with the <a href="http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/knockoff_2.7.7/0.6.0-4/knockoff_2.7.7-0.6.0-4.jar" >file</a> at
-</p><pre><code class="prettyprint">http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/
-	knockoff_[SCALA_VERSION]/
-	[KNOCKOFF_VERSION]/
-	knockoff_[SCALA_VERSION]-[KNOCKOFF_VERSION].jar
-</code></pre><p>Yes, it's a long URL. So here's a <a href="http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/knockoff_2.7.7/0.6.0-4/knockoff_2.7.7-0.6.0-4.jar" >link</a> to one of the latest releases.
-</p><h3>Building knockoff source</h3><p>This project uses another project, called Literate, to build itself. This is already
-included as a plugin, but you have to alter your call to include the macro
-processing step. From the base directory, you call:
-</p><pre><code class="prettyprint">cd literable_plugin
-sbt update publish-local
-cd ..
-sbt update literate package
+  &quot;tristanhunt&quot; at &quot;http://tristanhunt.com:8081/content/groups/public/&quot;
+</code></pre><h2>Using Knockoff outside the Simple Build Tool</h2><p>Definitely possible, it will require a downloaded <a href="http://www.scala-lang.org" >scala</a> version, after which you
+include the <code>lib/scala-library.jar</code> file in your classpath along with the <a href="http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/knockoff_2.7.7/0.6.1-SNAPSHOT/knockoff_2.7.7-0.6.1-SNAPSHOT.jar" >file</a> at
+</p><pre><code class="prettyprint">  http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/
+	  knockoff_[SCALA_VERSION]/
+	  [KNOCKOFF_VERSION]/
+	  knockoff_[SCALA_VERSION]-[KNOCKOFF_VERSION].jar
+</code></pre><p>Yes, it's a long URL. So here's a <a href="http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/knockoff_2.7.7/0.6.1-SNAPSHOT/knockoff_2.7.7-0.6.1-SNAPSHOT.jar" >link</a> to one of the latest releases.
+</p><h2>Building knockoff source</h2><p>It uses <a href="http://code.google.com/p/simple-build-tool/" >sbt</a>:
+</p><pre><code class="prettyprint">sbt update package
+</code></pre><p>It also uses <a href="http://tristanhunt.com/projects/literable" >literable</a>, which is what generates both the source code and
+documentation. Add the <code>lit</code> sub command.
+</p><pre><code class="prettyprint">sbt update lit package
 </code></pre></div>
       <div class="footer span-22 prepend-1 append-1 last">
       

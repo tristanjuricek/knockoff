@@ -1,4 +1,4 @@
-# `Discounter` - The One Trait #
+# `Discounter` and the `Wholesaler` #
 
 You inherit from `KnockOff` to be able to parse your sources. If you're not doing
 fancy customization, you use the DefaultDiscounter.
@@ -11,7 +11,8 @@ fancy customization, you use the DefaultDiscounter.
 Otherwise...
 
     // In com/tristanhunt/knockoff/Discounter.scala
-    // See the Discounter package and imports
+    package com.tristanhunt.knockoff
+    // See the Discounter imports
     
     trait   Discounter
     extends ChunkStreamFactory
@@ -31,8 +32,7 @@ Otherwise...
         val linkDefinitions = chunks.flatMap{ case ((chunk, pos)) =>
           if ( chunk.isLinkDefinition )
             List( chunk.asInstanceOf[ LinkDefinitionChunk ] )
-          else
-            Nil
+          else Nil
         }
         
         val convert = spanConverter( linkDefinitions )
@@ -50,32 +50,22 @@ Otherwise...
         has come before itself, by peering into the output. (It shouldn't matter
         what comes next...)
       */
-      private def combine(
-        input   : List[ (Chunk, SpanSeq, Position) ],
-        output  : ListBuffer[ Block ]
-      ) : BlockSeq = {
-
+      private def combine( input : List[ (Chunk, SpanSeq, Position) ],
+                           output  : ListBuffer[ Block ] )
+                         : BlockSeq = {
         if ( input.isEmpty ) return new GroupBlock( output.toSeq )
-
-        input.head._1.appendNewBlock(
-          output,         // Adds block to the _end_
-          input.tail,
-          input.head._2,  // The spanning sequence (may be ignored)
-          input.head._3   // The position shoudl be passed through
-        )( elementFactory, this )
-
+        input.head._1.appendNewBlock( output, input.tail, input.head._2,
+                                      input.head._3 )( elementFactory, this )
         combine( input.tail, output )
       }
     }
-
-#### Package And Imports
-
-    // The Discounter package and imports
-    package com.tristanhunt.knockoff
+    
+    // The Discounter imports
     
     import scala.collection.mutable.ListBuffer
     import scala.util.parsing.input.Position
     import scala.util.parsing.input.CharSequenceReader
+
 
 ### `DefaultDiscounter` ###
 
@@ -97,7 +87,7 @@ The `--html4tags` argument will just do nothing, but not be processed as a file.
           Console.err.print( "DefaultDiscounter " )
         }
         if ( args.contains("--version") || args.contains("-shortversion") ) {
-          Console.err.println( "0.5.0-SNAPSHOT" )
+          Console.err.println( "0.6.1-SNAPSHOT" )
           return 0
         }
         
@@ -125,16 +115,79 @@ The `--html4tags` argument will just do nothing, but not be processed as a file.
     }
 
 
-## Variations off of Markdown ##
+### `Wholesaler` ###
 
-This has a couple of _very_ subtle adjustments to the base Markdown script:
+I've started to include ideas from the [MultiMarkdown][] syntax system, but I didn't
+want to mix that up with a normal Markdown format. The `Wholesaler` is going to be
+the variation of the `Discounter`, plus **so much more**!
 
-1. Tabs are passed through. Though why you're using tabs is beyond me, this keeps
-like diff tools honest.
+### Some Rules May Apply
 
-2. List items (`<li>`) only have a sub-paragraph (`<p>`) if you have complex
-content. (In the core script, if you space them widely, you get the sub `<p>`
-element, which made no sense to me.)
+If there is a leading `Paragraph`, and it can be broken into Metadata, we treat it
+like a block.
 
-3. If you have a code line, followed by another indented line, even if that line's
-empty, the empty line is part of the code block.
+    // In com/tristanhunt/knockoff/extra/Wholesaler.scala
+    package com.tristanhunt.knockoff.extra
+
+    trait Wholesaler extends Discounter with MetaDataConverter {
+      
+      override def knockoff( source : java.lang.CharSequence ) : BlockSeq = {
+        var blocks = super.knockoff( source )
+        
+        if ( ! blocks.isEmpty ) {
+          blocks.first match {
+            case p : Paragraph =>
+              toMetaData( p ).foreach { metaData =>
+                blocks = new GroupBlock( metaData :: blocks.toList.tail ) }
+            case _ => {}
+          }
+        }
+        
+        return blocks
+      }
+    }
+
+
+### `DefaultWholesaler` ###
+
+Another console wrapping application. This one has to be called explicitly.
+
+    // In com/tristanhunt/knockoff/extra/DefaultWholesaler.scala
+    package com.tristanhunt.knockoff.extra
+
+    import scala.util.logging.ConsoleLogger
+    
+    object DefaultWholesaler extends Wholesaler with ColoredLogger {
+      def main( args : Array[ String ] ) : Unit = try {
+        if ( args.contains("--version") ) {
+          Console.err.print( "DefaultWholesaler " )
+        }
+        if ( args.contains("--version") || args.contains("-shortversion") ) {
+          Console.err.println( "0.6.1-SNAPSHOT" )
+          return 0
+        }
+        
+        if ( args.isEmpty ) {
+          val sb = new StringBuilder
+          var line : String = null
+          do {
+            line = Console.readLine
+            if ( line != null ) sb.append( line )
+          } while ( line != null )
+          println( knockoff( sb.toString ).toXML.toString )
+        } else {
+          args.filter( _ != "--html4tags" ).foreach { fileName =>
+            println( knockoff( readText( fileName ) ).toXML.toString )
+          }
+        }
+      } catch {
+        case th : Throwable => {
+          th.printStackTrace( Console.err )
+        }
+      }
+      
+      private def readText( fileName : String ) : String =
+        io.Source.fromFile( fileName ).mkString("")
+    }
+
+[MultiMarkdown]: http://fletcherpenney.net/multimarkdown/users_guide/multimarkdown_syntax_guide/

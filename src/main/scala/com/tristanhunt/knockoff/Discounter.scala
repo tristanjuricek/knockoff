@@ -22,8 +22,7 @@ with    HasElementFactory {
     val linkDefinitions = chunks.flatMap{ case ((chunk, pos)) =>
       if ( chunk.isLinkDefinition )
         List( chunk.asInstanceOf[ LinkDefinitionChunk ] )
-      else
-        Nil
+      else Nil
     }
     
     val convert = spanConverter( linkDefinitions )
@@ -41,20 +40,13 @@ with    HasElementFactory {
     has come before itself, by peering into the output. (It shouldn't matter
     what comes next...)
   */
-  private def combine(
-    input   : List[ (Chunk, SpanSeq, Position) ],
-    output  : ListBuffer[ Block ]
-  ) : BlockSeq = {
-
+  private def combine( input : List[ (Chunk, SpanSeq, Position) ],
+                       output  : ListBuffer[ Block ] )
+                     : BlockSeq = {
     if ( input.isEmpty ) return new GroupBlock( output.toSeq )
-
-    input.head._1.appendNewBlock(
-      output,         // Adds block to the _end_
-      input.tail,
-      input.head._2,  // The spanning sequence (may be ignored)
-      input.head._3   // The position shoudl be passed through
-    )( elementFactory, this )
-
+    input.head._1.appendNewBlock( output, input.tail, input.head._2,
+                                  input.head._3 )( elementFactory, this )
     combine( input.tail, output )
   }
 }
+

@@ -24,38 +24,26 @@ class ChunkParser extends RegexParsers with StringExtras {
   def textLine : Parser[ Chunk ] =
     """[\t ]*\S[^\n]*\n?""".r ^^ ( str => TextChunk( str ) )
   
-  def bulletItem : Parser[ Chunk ] = {
-    bulletLead ~ rep( trailingLine ) ^^ { case ~(lead, texts) =>
-      BulletLineChunk( foldedString( lead :: texts ) )
-    }
-  }
+  def bulletItem : Parser[ Chunk ] =
+    bulletLead ~ rep( trailingLine ) ^^ {
+      case ~(lead, texts) => BulletLineChunk( foldedString( lead :: texts ) ) }
   
-  /**
-    Match a single line that is likely a bullet item.
-  */
-  def bulletLead : Parser[ Chunk ] = {
-    """[ ]{0,3}[*\-+](\t|[ ]{0,4})""".r ~> not("[*\\-+]".r) ~> textLine ^^ { textChunk =>
-      BulletLineChunk( textChunk.content )
-    }
-  }
+  /** Match a single line that is likely a bullet item. */
+  def bulletLead : Parser[ Chunk ] =
+    """[ ]{0,3}[*\-+](\t|[ ]{0,4})""".r ~> not("[*\\-+]".r) ~> textLine ^^ {
+      textChunk => BulletLineChunk( textChunk.content ) }
   
-  def numberedItem : Parser[ Chunk ] = {
-    numberedLead ~ rep( trailingLine ) ^^ { case ~(lead, texts) =>
-      NumberedLineChunk( foldedString( lead :: texts ) )
-    }
-  }
+  def numberedItem : Parser[ Chunk ] =
+    numberedLead ~ rep( trailingLine ) ^^ {
+      case ~(lead, texts) => NumberedLineChunk( foldedString( lead :: texts )) }
   
-  def numberedLead : Parser[ Chunk ] = {
-    """[ ]{0,3}\d+\.(\t|[ ]{0,4})""".r ~> textLine ^^ { textChunk =>
-      NumberedLineChunk( textChunk.content )
-    }
-  }
+  def numberedLead : Parser[ Chunk ] =
+    """[ ]{0,3}\d+\.(\t|[ ]{0,4})""".r ~> textLine ^^ {
+      textChunk => NumberedLineChunk( textChunk.content ) }
   
-  def trailingLine : Parser[ Chunk ] = {
+  def trailingLine : Parser[ Chunk ] =
     """\t|[ ]{0,4}""".r ~> """[\S&&[^*\-+]&&[^\d]][^\n]*\n?""".r ^^ (
-      s => TextChunk(s)
-    )
-  }
+      s => TextChunk(s) )
   
   def header : Parser[ Chunk ] =
     ( setextHeaderEquals | setextHeaderDashes | atxHeader )
@@ -70,17 +58,13 @@ class ChunkParser extends RegexParsers with StringExtras {
 
   def dashesLine : Parser[Any] = """-+\n""".r
 
-  def atxHeader : Parser[ Chunk ] = {
-    """#+ .*\n?""".r ^^ ( s =>
-      HeaderChunk( s.countLeading('#'), s.trim('#').trim )
-    )
-  }
+  def atxHeader : Parser[ Chunk ] =
+    """#+ .*\n?""".r ^^ (
+      s => HeaderChunk( s.countLeading('#'), s.trim('#').trim ) )
   
-  def horizontalRule : Parser[ Chunk ] = {
+  def horizontalRule : Parser[ Chunk ] =
     """[ ]{0,3}[*\-_][\t ]?[*\-_][\t ]?[*\-_][\t *\-_]*\n""".r ^^ {
-      s => HorizontalRuleChunk
-    }
-  }
+      s => HorizontalRuleChunk }
   
   def indentedChunk : Parser[ Chunk ] =
     rep1( indentedLine ) ^^ ( lines => IndentedChunk( foldedString( lines ) ) )
@@ -90,41 +74,29 @@ class ChunkParser extends RegexParsers with StringExtras {
 
   def emptyString : Parser[ Chunk ] = "".r ^^ ( s => EmptySpace(s) )
   
-  def blockquote : Parser[ Chunk ] = {
+  def blockquote : Parser[ Chunk ] =
     blockquotedLine ~ rep( blockquotedLine | textLine ) ^^ {
-      case ~(lead, trailing) => BlockquotedChunk( foldedString( lead :: trailing ) )
-    }
-  }
+      case ~(lead, trailing) =>
+        BlockquotedChunk( foldedString( lead :: trailing ) ) }
   
   def blockquotedLine : Parser[ Chunk ] =
     """^>[\t ]?""".r ~> ( textLine | emptyLine )
 
-  def linkDefinition : Parser[ Chunk ] = {
+  def linkDefinition : Parser[ Chunk ] =
     linkIDAndURL ~ opt( linkTitle ) <~ """[ ]*\n?""".r ^^ {
       case ~( idAndURL, titleOpt ) =>
-        LinkDefinitionChunk( idAndURL._1, idAndURL._2, titleOpt )
+        LinkDefinitionChunk( idAndURL._1, idAndURL._2, titleOpt ) }
+
+  private def linkIDAndURL : Parser[ (String, String) ] =
+    """[ ]{0,3}\[[^\[\]]*\]:[ ]+<?[\w\p{Punct}]+>?""".r ^^ { linkString =>
+      val linkMatch = """^\[([^\[\]]+)\]:[ ]+<?([\w\p{Punct}]+)>?$""".r
+                        .findFirstMatchIn( linkString.trim ).get;
+      ( linkMatch.group(1), linkMatch.group(2) )
     }
-  }
 
-  private def linkIDAndURL : Parser[ (String, String) ] = {
-    """[ ]{0,3}\[[^\[\]]*\]:[ ]+<?[\w\p{Punct}]+>?""".r ^^ (
-      linkString => {
-        val linkMatch = {
-          """^\[([^\[\]]+)\]:[ ]+<?([\w\p{Punct}]+)>?$""".r.findFirstMatchIn(
-            linkString.trim
-          ).get
-        }
-        ( linkMatch.group(1), linkMatch.group(2) )
-      }
-    )
-  }
-
-  private def linkTitle : Parser[ String ] = {
-    """\s*""".r ~> """["'(].*["')]""".r ^^ ( str =>
-      str.substring( 1, str.length - 1 )
-    )
-  }
-  
+  private def linkTitle : Parser[ String ] =
+    """\s*""".r ~> """["'(].*["')]""".r ^^ (
+      str => str.substring( 1, str.length - 1 ) )
   
   // Utility Methods
   

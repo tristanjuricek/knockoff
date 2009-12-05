@@ -3,6 +3,7 @@ package com.tristanhunt.knockoff
 import scala.util.parsing.input.Position
 import scala.xml.Node
 
+
 abstract class ListItem(
   val items    : Seq[ Block ],
   val position : Position

@@ -3,11 +3,8 @@ package com.tristanhunt.knockoff
 import scala.xml.Elem
 import scala.util.parsing.input.Position
 
-class Header(
-  val level     : Int,
-  val span      : SpanSeq,
-  val position  : Position
-)
+
+class   Header( val level : Int, val span : SpanSeq, val position : Position )
 extends SimpleBlock {
 
   def markdown = {

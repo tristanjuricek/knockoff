@@ -62,14 +62,18 @@
             <a href="../10-Usage/02-Recipes.html">
               Recipes
             </a>
+          </li><li>
+            <a href="../10-Usage/50-Variations.html">
+              Where Knockoff is not like Markdown
+            </a>
           </li>
             </ul>
           </li><li>
             <span class="group">Implementation</span>
             <ul>
               <li>
-            <a href="../30-Implementation/01-Discounter.html">
-              Discounter - The One Trait
+            <a href="../30-Implementation/01-Discounter_DefaultDiscounter_Wholesaler.html">
+              Discounter and the Wholesaler
             </a>
           </li><li>
             <a href="../30-Implementation/02-Block_Elements.html">
@@ -109,6 +113,15 @@
           </li>
             </ul>
           </li><li>
+            <span class="group">Extras</span>
+            <ul>
+              <li>
+            <a href="../30-Implementation/30-Extras/02-MetaDataConverter.html">
+              MetaData and MetaDataConverter
+            </a>
+          </li>
+            </ul>
+          </li><li>
             <a href="../30-Implementation/50-Official_Markdown_Tests.html">
               The Official Tests
             </a>
@@ -128,12 +141,30 @@
           </li>
             </ul>
           </li></ul></div>
-      <div class="article span-15 append-1 last"><h1>Recipes</h1><h3>Just getting the block sequence</h3><pre><code class="prettyprint">import knockoff._
+      <div class="article span-15 append-1 last"><h1>Recipes</h1><h3>Just getting the block sequence</h3><pre><code class="prettyprint">import com.tristanhunt.knockoff._
+
 val blocks = DefaultDiscounter.knockoff( markdownString )
-</code></pre><h3>Make An HTML String</h3><pre><code class="prettyprint">blocks.toXML.toString
-</code></pre><h3>Grab The First Header</h3><pre><code class="prettyprint">( blocks ? Headers ).firstOption {
+</code></pre><h3>... And then make it an XHTML fragment</h3><pre><code class="prettyprint">blocks.toXML.toString
+</code></pre><h3>Grab The First Header</h3><pre><code class="prettyprint">blocks.filterType( Headers ).firstOption {
   case Some( header ) =&gt; header.text
   case None =&gt; &quot;no header!&quot;
+}
+</code></pre><h3>Create an HTML Page</h3><p>Just a little inspiration of what you can do with Scala:
+</p><pre><code class="prettyprint">import com.tristanhunt.knockoff._
+
+class Page( val markdown : String, val discounter : Discounter ) {
+
+  def html = &quot;&lt;!doctype html&gt;\n&quot; + &lt;html&gt;{ head }{ body }&lt;/html&gt;
+  def head = &lt;head&gt;&lt;title&gt;{ titleContent }&lt;/title&gt;&lt;/head&gt;
+  def body = &lt;body&gt;{ blocks.toXML }&lt;/body&gt;
+  
+  lazy val blocks = discounter.knockoff( markdown )
+  
+  def titleContent =
+    filterType( Headers ).firstOption {
+      case Some( header ) =&gt; header.text
+      case None =&gt; &quot;&quot;
+    }
 }
 </code></pre><h3>Tweak The HTML Output For Something Like Prettify</h3><p>First, extend the <code>CodeBlock</code> to write the extra <code>class</code> attribute.
 </p><pre><code class="prettyprint">class   PrettifiedCodeBlock( text : Text, pos : Position )

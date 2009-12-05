@@ -2,12 +2,16 @@ Introduction to Knockoff
 ========================
 
 Knockoff is a Markdown parser with a twist. Most Markdown systems just convert
-Markdown source to HTML. Knockoff converts from Markdown source to an
-in-memory model ... with a handy (X)HTML version. It's written in [Scala][1],
-whose power affords us simple and fast extension.
+Markdown source to HTML.
 
-This is more than just "generating" web documents. It's the backbone of a great
-"only what you need" approach to doing things built for web distribution.
+    Markdown Text -> [ Markdown Script ] -> HTML
+
+Knockoff converts from Markdown source to an object model ... then, to an XHMTL
+fragment, generated easily with Scala's excellent XML integration:
+
+    Markdown Text -> [ Knockoff ] -> Scala Object Model -> XHTML
+
+I've found it an easy way to manipulate Markdown text in Scala applications.
 
 For example, it was easy for me to build a [literate programming][2] environment on
 top of an object model. This approach "tags" specific bits of markdown code blocks
@@ -37,6 +41,13 @@ document is parsed.
 
 
 ## Recent Updates ##
+
+### `0.6.1-SNAPSHOT`
+
+* Created the `MetaData` extension, which allows for extra document-related info.
+* Added `Wholesaler` class to `com.tristanhunt.knockoff.extra` namespace, which
+  is the container for Markdown extensions.
+
 
 ### `0.6.0-5` Nov 28, 2009
 

@@ -17,13 +17,13 @@ trait BlockSeq extends Seq[ Block ] {
   /**
    * Returns a BlockSeq that contains only that particular block type.
    */
-  def ? [ T <: Block ] ( blockType : BlockType[T] ) : BlockSeq = {
+  def filterType [ T <: Block ] ( blockType : BlockType[T] ) : BlockSeq = {
     BlockSeq.fromSeq( filter( blockType.wrappedClass.isInstance( _ ) ) )
   }
   
   
   /** Shorthand for the filter method. */
-  def ? ( query : Block => Boolean ) : BlockSeq =
+  def filterType ( query : Block => Boolean ) : BlockSeq =
     BlockSeq.fromSeq( filter( query ) )
 }
 

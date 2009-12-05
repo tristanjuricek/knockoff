@@ -40,6 +40,7 @@ In many cases, the Block can not contain other blocks.
     package com.tristanhunt.knockoff
     
     trait SimpleBlock extends Block {
+      
         override def theSeq : Seq[ Block ] = List( this )
     }
 
@@ -49,10 +50,15 @@ In some other cases, the block is a pretty complex thing:
     package com.tristanhunt.knockoff
     
     trait ComplexBlock extends Block {
+
         val children : Seq[ Block ]
+        
         val span = new SpanSeq{ def theSeq = children.flatMap( _.span ) }
+        
         def theSeq = children
+        
         def childrenMarkdown = children.map( _.markdown ).mkString("\n") + "\n"
+        
         def childrenXML = children.map( _.xml )
     }
 
@@ -93,7 +99,7 @@ One of the shorthand filter expressions allows for you to indicate the "BlockTyp
     
     /**
      * Used to indicate the type of blocks you are interested in when filtering via
-     * the BlockSeq.? method.
+     * the BlockSeq.filterType method.
      */
     trait BlockType[T <: Block] { def wrappedClass : Class[ T ] }
     
@@ -102,6 +108,33 @@ One of the shorthand filter expressions allows for you to indicate the "BlockTyp
     
     case object Headers
     extends BlockType[ Header ] { def wrappedClass = classOf[ Header ] }
+    
+    case object LinkDefinitions
+    extends BlockType[ LinkDefinition ] {
+      def wrappedClass = classOf[ LinkDefinition ]
+    }
+    
+    case object Blockquotes
+    extends BlockType[ Blockquote ] { def wrappedClass = classOf[ Blockquote ] }
+    
+    case object CodeBlocks
+    extends BlockType[ CodeBlock ] { def wrappedClass = classOf[ CodeBlock ] }
+    
+    case object HorizontalRules
+    extends BlockType[ HorizontalRule ] {
+      def wrappedClass = classOf[ HorizontalRule ]
+    }
+    
+    case object OrderedItems
+    extends BlockType[ OrderedItem ] { def wrappedClass = classOf[ OrderedItem ] }
+    
+    case object UnorderedItems
+    extends BlockType[ UnorderedItem ] {
+      def wrappedClass = classOf[ UnorderedItem ]
+    }
+    
+    case object MarkdownLists
+    extends BlockType[ MarkdownList ] { def wrappedClass = classOf[ MarkdownList ] }
 
 This is used only as a short hand for query expressions.
 
@@ -123,13 +156,13 @@ This is used only as a short hand for query expressions.
       /**
        * Returns a BlockSeq that contains only that particular block type.
        */
-      def ? [ T <: Block ] ( blockType : BlockType[T] ) : BlockSeq = {
+      def filterType [ T <: Block ] ( blockType : BlockType[T] ) : BlockSeq = {
         BlockSeq.fromSeq( filter( blockType.wrappedClass.isInstance( _ ) ) )
       }
       
       
       /** Shorthand for the filter method. */
-      def ? ( query : Block => Boolean ) : BlockSeq =
+      def filterType ( query : Block => Boolean ) : BlockSeq =
         BlockSeq.fromSeq( filter( query ) )
     }
 
@@ -152,10 +185,7 @@ Otherwise the paragraph is a simple `Block` type (does not contain other
     // In com/tristanhunt/knockoff/Paragraph.scala
     // See the Paragraph package and imports
 
-    class Paragraph(
-      val span      : SpanSeq,
-      val position  : Position
-    )
+    class   Paragraph( val span : SpanSeq, val position  : Position )
     extends SimpleBlock {
 
       def markdown = span.toMarkdown
@@ -167,11 +197,13 @@ Otherwise the paragraph is a simple `Block` type (does not contain other
       def xml =
         if ( isHTML ) span.toXML else <p>{ span.toXML }</p>
       
-      def isHTML : Boolean = ! span.exists( s => s match {
-        case html : HTMLSpan => false
-        case t:Text => ! t.content.trim.isEmpty
-        case _ => true
-      } )
+      def isHTML : Boolean = ! span.exists(
+        s => s match {
+          case html : HTMLSpan => false
+          case text : Text     => ! text.content.trim.isEmpty
+          case _               => true
+        }
+      )
       
       // See the Paragraph toString, equals, hashCode implementations
     }
@@ -190,11 +222,7 @@ headers - `# Header #`.
     // In com/tristanhunt/knockoff/Header.scala
     // See the Header package and imports
     
-    class Header(
-      val level     : Int,
-      val span      : SpanSeq,
-      val position  : Position
-    )
+    class   Header( val level : Int, val span : SpanSeq, val position : Position )
     extends SimpleBlock {
 
       def markdown = {
@@ -325,7 +353,8 @@ Represents a `<hr/>` injected into content. Note that this does not happen to do
 anything but replace a line of asterixes, underscores, or hyphens.
 
     // In com/tristanhunt/knockoff/HorizontalRule.scala
-    // See the HorizontalRule package and imports
+    package com.tristanhunt.knockoff
+    // See the HorizontalRule imports
     
     class HorizontalRule( val position : Position ) extends SimpleBlock {
       
@@ -381,9 +410,7 @@ In implementation terms, we don't have a single list.
 
     // In com/tristanhunt/knockoff/ListItem.scala
     package com.tristanhunt.knockoff
-    
-    import scala.util.parsing.input.Position
-    import scala.xml.Node
+    // See the ListItem imports
     
     abstract class ListItem(
       val items    : Seq[ Block ],
@@ -468,9 +495,7 @@ entire content; whitespace will be missing in complex cases.
 
     // In com/tristanhunt/knockoff/MarkdownList.scala
     package com.tristanhunt.knockoff
-    
-    import scala.io.Source
-    import scala.util.parsing.input.{ NoPosition, Position }
+    // See the MarkdownList imports
     
     /**
      * @param ordered Alters the output, mostly.
@@ -539,29 +564,18 @@ entire content; whitespace will be missing in complex cases.
 
       describe("BlockSeq") {
 
-        it( "should filter Paragraphs and Headers properly with ?" ) {
+        it( "should filter Paragraphs and Headers properly with filterType" ) {
 
           val p1 = para( t("p1"), NoPosition )
           val h1 = head( 1, t("h1"), NoPosition )
 
           val blocks = BlockSeq.fromSeq( List( p1, h1 ) )
           
-          ( blocks ? Paragraphs ) should have length (1)
-          assert( ( blocks ? Paragraphs ) contains p1 )
+          ( blocks filterType Paragraphs ) should have length (1)
+          assert( ( blocks filterType Paragraphs ) contains p1 )
           
-          ( blocks ? Headers ) should have length (1)
-          assert( ( blocks ? Headers ) contains h1 )
-        }
-      }
-      
-      describe("MarkdownList") {
-        
-        it("should implement simple lists") {
-            
-        }
-        
-        it("should implement complex lists") {
-            
+          ( blocks filterType Headers ) should have length (1)
+          assert( ( blocks filterType Headers ) contains h1 )
         }
       }
     }
@@ -569,7 +583,7 @@ entire content; whitespace will be missing in complex cases.
 
 ## References ##
 
-#### Block - Package And Imports
+### `Block`
 
     // The Block package and imports
     package com.tristanhunt.knockoff
@@ -577,24 +591,21 @@ entire content; whitespace will be missing in complex cases.
     import scala.xml.Node
     import scala.util.parsing.input.Position
 
-#### BlockSeq - Package And Imports
+### `BlockSeq`
 
     // The BlockSeq package and imports
     package com.tristanhunt.knockoff
 
     import scala.xml.{ Node, Elem, Group }
 
-### `Paragraph`
 
-#### `Paragraph` - Package And Imports
+### `Paragraph`
 
     // The Paragraph package and imports
     package com.tristanhunt.knockoff
 
     import scala.xml.Elem
     import scala.util.parsing.input.Position
-
-#### `Paragraph` - `toString`, `equals`, `hashCode`
 
     // The Paragraph toString, equals, hashCode implementations
     override def toString = "Paragraph(" + markdown + ")"
@@ -613,17 +624,14 @@ entire content; whitespace will be missing in complex cases.
     
     override def hashCode : Int = span.hashCode + position.hashCode
 
-### `Header`
 
-#### `Header` - Package And Imports
+### `Header`
 
     // The Header package and imports
     package com.tristanhunt.knockoff
 
     import scala.xml.Elem
     import scala.util.parsing.input.Position
-
-#### `Header` - `toString`, `equals`, `hashCode`
 
     // The Header toString, equals, hashCode implementations
     override def toString = "Header(" + markdown + ")"
@@ -647,15 +655,11 @@ entire content; whitespace will be missing in complex cases.
 
 ### `LinkDefinition`
 
-#### `LinkDefinition` - Package And Imports
-
     // The LinkDefinition package and imports
     package com.tristanhunt.knockoff
 
     import scala.xml.{ Node, Group }
     import scala.util.parsing.input.Position
-
-#### `LinkDefinition` - `toString`, `equals`, `hashCode`
 
     // The LinkDefinition toString, equals, hashCode implementations
     override def toString = "LinkDefinition(" + markdown + ")"
@@ -677,9 +681,8 @@ entire content; whitespace will be missing in complex cases.
     override def hashCode : Int =
       43 + id.hashCode + url.hashCode + span.hashCode + position.hashCode
 
-### `Blockquote`
 
-#### `Blockquote` - Package And Imports
+### `Blockquote`
 
     // The Blockquote package and imports
     package com.tristanhunt.knockoff
@@ -687,8 +690,6 @@ entire content; whitespace will be missing in complex cases.
     import scala.io.Source
     import scala.xml.Elem
     import scala.util.parsing.input.Position
-
-#### `Blockquote` - `toString`, `equals`, `hashCode`
 
     // The Blockquote toString, equals, hashCode implementations
     override def toString = "Blockquote(" + markdown + ")"
@@ -716,16 +717,12 @@ entire content; whitespace will be missing in complex cases.
 
 ### `CodeBlock`
 
-#### `CodeBlock` - Package and Imports
-
     // The CodeBlock package and imports
     package com.tristanhunt.knockoff
 
     import scala.xml.{ Node, Unparsed }
     import scala.io.Source
     import scala.util.parsing.input.Position
-
-#### `CodeBlock` - `toString`, `equals`, `hashCode`
 
     // The CodeBlock toString, equals, hashCode implementations
     override def toString = "CodeBlock(" + preformatted + ")"
@@ -744,18 +741,14 @@ entire content; whitespace will be missing in complex cases.
 
     def canEqual( t : CodeBlock ) : Boolean = t.getClass == getClass
 
+
 ### `HorizontalRule`
 
-#### `HorizontalRule` - Package and Imports
-
-    // The HorizontalRule package and imports
-    package com.tristanhunt.knockoff
+    // The HorizontalRule imports
 
     import scala.xml.{ Node, Unparsed }
     import scala.io.Source
     import scala.util.parsing.input.Position
-
-#### `HorizontalRule` - `toString`, `equals`, `hashCode`
 
     // The HorizontalRule toString, equals, hashCode implementations
     override def toString = "HorizontalRule"
@@ -772,7 +765,10 @@ entire content; whitespace will be missing in complex cases.
 
 ### `ListItem`
 
-#### `ListItem` - `toString`, `equals`, `hashCode`
+    // The ListItem imports
+    
+    import scala.util.parsing.input.Position
+    import scala.xml.Node
 
     // The ListItem toString, equals, hashCode implementations
     override def toString = "ListItem(" + markdown + ")"
@@ -798,16 +794,11 @@ entire content; whitespace will be missing in complex cases.
 
 ### `MarkdownList`
 
-#### `MarkdownList` - Package and Imports
-
-    // The MarkdownList package and imports
-    package com.tristanhunt.knockoff
-
-    import scala.xml.{ Node, Unparsed }
+    // The MarkdownList imports
+    
     import scala.io.Source
-
-#### `MarkdownList` - `toString`, `equals`, `hashCode`
-
+    import scala.util.parsing.input.{ NoPosition, Position }
+    
     // The MarkdownList toString, equals, hashCode implementations
     override def toString = "MarkdownList(" + markdown + ")"
 

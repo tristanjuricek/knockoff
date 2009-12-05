@@ -1,4 +1,5 @@
 Subject: Things I have To Do
 
-* I'd like a "release" script that prepares a nice tag in git and then pushes things
-  out for my website.
+* Add the `filterType` methods on `SpanSeq` as well.
+
+* Improve the documentation? Try out the "zero to getting things done" page.

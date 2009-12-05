@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
         <head>
-          <title>Discounter - The One Trait</title>
+          <title>Discounter and the Wholesaler</title>
           <link rel="stylesheet" href="../screen.css" type="text/css" media="screen, projection"></link><link rel="stylesheet" href="../print.css" type="text/css" media="print"></link><!--[if lt IE 8]><link rel="stylesheet" href="../ie.css" type="text/css" media="screen, projection"><![endif]-->
           <link href="../prettify.css" rel="stylesheet" type="text/css"></link><script type="text/javascript" src="../prettify.js"></script>
           <style> 
@@ -72,8 +72,8 @@
             <span class="group">Implementation</span>
             <ul>
               <li>
-            <a href="../30-Implementation/01-Discounter.html">
-              Discounter - The One Trait
+            <a href="../30-Implementation/01-Discounter_DefaultDiscounter_Wholesaler.html">
+              Discounter and the Wholesaler
             </a>
           </li><li>
             <a href="../30-Implementation/02-Block_Elements.html">
@@ -113,6 +113,15 @@
           </li>
             </ul>
           </li><li>
+            <span class="group">Extras</span>
+            <ul>
+              <li>
+            <a href="../30-Implementation/30-Extras/02-MetaDataConverter.html">
+              MetaData and MetaDataConverter
+            </a>
+          </li>
+            </ul>
+          </li><li>
             <a href="../30-Implementation/50-Official_Markdown_Tests.html">
               The Official Tests
             </a>
@@ -132,7 +141,7 @@
           </li>
             </ul>
           </li></ul></div>
-      <div class="article span-15 append-1 last"><h1><code>Discounter</code> - The One Trait</h1><p>You inherit from <code>KnockOff</code> to be able to parse your sources. If you're not doing
+      <div class="article span-15 append-1 last"><h1><code>Discounter</code> and the <code>Wholesaler</code></h1><p>You inherit from <code>KnockOff</code> to be able to parse your sources. If you're not doing
 fancy customization, you use the DefaultDiscounter.
 </p><pre><code class="prettyprint">val blocks = DefaultDiscounter.knockoff( &quot;document&quot; )
 
@@ -207,6 +216,69 @@ object DefaultDiscounter extends Discounter with ColoredLogger {
   def main( args : Array[ String ] ) : Unit = try {
     if ( args.contains(&quot;--version&quot;) ) {
       Console.err.print( &quot;DefaultDiscounter &quot; )
+    }
+    if ( args.contains(&quot;--version&quot;) || args.contains(&quot;-shortversion&quot;) ) {
+      Console.err.println( &quot;0.6.1-SNAPSHOT&quot; )
+      return 0
+    }
+    
+    if ( args.isEmpty ) {
+      val sb = new StringBuilder
+      var line : String = null
+      do {
+        line = Console.readLine
+        if ( line != null ) sb.append( line )
+      } while ( line != null )
+      println( knockoff( sb.toString ).toXML.toString )
+    } else {
+      args.filter( _ != &quot;--html4tags&quot; ).foreach { fileName =&gt;
+        println( knockoff( readText( fileName ) ).toXML.toString )
+      }
+    }
+  } catch {
+    case th : Throwable =&gt; {
+      th.printStackTrace( Console.err )
+    }
+  }
+  
+  private def readText( fileName : String ) : String =
+    io.Source.fromFile( fileName ).mkString(&quot;&quot;)
+}
+</code></pre><h3><code>Wholesaler</code></h3><p>I've started to include ideas from the <a href="http://fletcherpenney.net/multimarkdown/users_guide/multimarkdown_syntax_guide/" >MultiMarkdown</a> syntax system, but I didn't
+want to mix that up with a normal Markdown format. The <code>Wholesaler</code> is going to be
+the variation of the <code>Discounter</code>, plus <strong>so much more</strong>!
+</p><h3>Some Rules May Apply</h3><p>If there is a leading <code>Paragraph</code>, and it can be broken into Metadata, we treat it
+like a block.
+</p><pre><code class="prettyprint">// In com/tristanhunt/knockoff/extra/Wholesaler.scala
+package com.tristanhunt.knockoff.extra
+
+trait Wholesaler extends Discounter with MetaDataConverter {
+  
+  override def knockoff( source : java.lang.CharSequence ) : BlockSeq = {
+    var blocks = super.knockoff( source )
+    
+    if ( ! blocks.isEmpty ) {
+      blocks.first match {
+        case p : Paragraph =&gt;
+          toMetaData( p ).foreach { metaData =&gt;
+            blocks = new GroupBlock( metaData :: blocks.toList.tail ) }
+        case _ =&gt; {}
+      }
+    }
+    
+    return blocks
+  }
+}
+</code></pre><h3><code>DefaultWholesaler</code></h3><p>Another console wrapping application. This one has to be called explicitly.
+</p><pre><code class="prettyprint">// In com/tristanhunt/knockoff/extra/DefaultWholesaler.scala
+package com.tristanhunt.knockoff.extra
+
+import scala.util.logging.ConsoleLogger
+
+object DefaultWholesaler extends Wholesaler with ColoredLogger {
+  def main( args : Array[ String ] ) : Unit = try {
+    if ( args.contains(&quot;--version&quot;) ) {
+      Console.err.print( &quot;DefaultWholesaler &quot; )
     }
     if ( args.contains(&quot;--version&quot;) || args.contains(&quot;-shortversion&quot;) ) {
       Console.err.println( &quot;0.6.1-SNAPSHOT&quot; )

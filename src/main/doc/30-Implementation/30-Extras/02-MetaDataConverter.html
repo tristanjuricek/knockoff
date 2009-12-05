@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
         <head>
-          <title>Parsing Overview</title>
+          <title>MetaData and MetaDataConverter</title>
           <link rel="stylesheet" href="../../screen.css" type="text/css" media="screen, projection"></link><link rel="stylesheet" href="../../print.css" type="text/css" media="print"></link><!--[if lt IE 8]><link rel="stylesheet" href="../../ie.css" type="text/css" media="screen, projection"><![endif]-->
           <link href="../../prettify.css" rel="stylesheet" type="text/css"></link><script type="text/javascript" src="../../prettify.js"></script>
           <style> 
@@ -141,24 +141,121 @@
           </li>
             </ul>
           </li></ul></div>
-      <div class="article span-15 append-1 last"><h1>Parsing Overview</h1><p>Parsing is done in three steps:
-</p><ol><li>Chunk Parsing - The document is converted to a series of Chunk objects, each
-eventually mapping to a block. This is kicked off by the <code>ChunkStreamFactory</code>. A
-<code>Chunk</code> is generally a &quot;block-level&quot; element, but the final determination of what
-is a block level element isn't complete until step 3.
-</li><li>Span Parsing - The spans of each chunk are identified.
-</li><li>Object model creation.
-</li></ol><p>Note that things like block quotes and more complex lists turn into &quot;documents
-within documents&quot;.
-</p><h3>A Bit Of History To Satisfy Myself</h3><p>In my first attempt, I tried building one big parser combinator, and then, slowly,
-some part of my brain fell down a well. What ended up happening, however, is that I
-created an intermediate representation, but a wacky one, that was kind of hacked
-together. It lacked consistency in how I represented whitespace. I ended up doing
-lots of things, like:
-</p><ul><li>Preprocessing the text to switch tabs to spaces
-</li><li>Injecting extra whitespace to make regular expression matching easier
-</li></ul><p>Ug-ly.
-</p></div>
+      <div class="article span-15 append-1 last"><h1><code>MetaData</code> and <code>MetaDataConverter</code></h1><p>Methods to convert <code>Paragraph</code> to <code>MetaData</code>. A <code>Paragraph</code> is <code>MetaData</code> if all
+lines can be converted to key/value strings.
+</p><p>A key value string is a line that has two text sections divided by a colon.
+</p><pre><code class="prettyprint">key : value
+</code></pre><p>Spaces around the key will be trimmed.
+</p><p>A key value can have a trailing line appended to the value, only if the previous
+line ends with two spaces and then a newline.
+</p><h2><code>MetaData</code></h2><p><code>MetaData</code> is really just a <code>Map</code> of strings. But, we want to return it in the
+<code>BlockSeq</code>, so it's a special kind of <code>Block</code>.
+</p><p>The values of the map shoudn't contain the separating newline.
+</p><p>There is no XML representation of <code>MetaData</code>. Conversion to header elements is
+left to your program to interpret.
+</p><pre><code class="prettyprint">// In com/tristanhunt/knockoff/extra/MetaData.scala
+package com.tristanhunt.knockoff.extra
+// See the MetaData imports
+
+class   MetaData( val data : Map[ String, String ], val position : Position )
+extends SimpleBlock {
+  
+  val span : SpanSeq = new Text( markdown )
+  
+  /** This should be an empty element. */
+  val xml : Node = new Group( new NodeBuffer )
+  
+  val markdown : String =
+    data.map{ case ((k,v)) =&gt; k + &quot;: &quot; + v }.mkString(&quot;\n&quot;)
+}
+// The MetaData imports
+
+import scala.util.parsing.input.Position
+import scala.xml.{ Group, Node, NodeBuffer }
+</code></pre><h2><code>MetaDataConverter</code></h2><pre><code class="prettyprint">// In com/tristanhunt/knockoff/extra/MetaDataConverter.scala
+package com.tristanhunt.knockoff.extra
+// See the MetaDataConverter imports
+
+trait MetaDataConverter {
+  
+  /**
+    @param  para The paragraph to be converted. We use the trimmed markdown 
+                 value to determine the data.
+    @return Some metadata equivalent of the paragraph. Or, None.
+   */
+  def toMetaData( para : Paragraph ) : Option[ MetaData ] =
+    parseLine( para.markdown.trim.split(&quot;\n&quot;), new ListBuffer )
+      .map( new MetaData( _, para.position ) )
+  
+  /**
+    Creates the string map that becomes the main data for MetaData.
+  
+    @param in  Each line of markdown content, minus the trailing newlines.
+    @param out The current &quot;chunks&quot; of metadata. Each chunk can contain multiple
+               lines.
+    @return The parsed Metadata when every line can be chunked, or None.
+    */
+  private def parseLine( in : Seq[ String ], out : ListBuffer[ String ] )
+                        : Option[ Map[ String, String ] ] = {
+    if ( in.isEmpty ) return Some( toMetaDataMap( out ) )
+    in.first.indexOf(':') match {
+      case -1 =&gt;
+        if ( out.isEmpty || ! out.last.endsWith(&quot;  &quot;) ) return None
+        else {
+          val newChunk = out.last + &quot;\n&quot; + in.first
+          out.trimEnd(1)
+          out += newChunk
+        }
+      case idx =&gt; out += in.first
+    }
+    parseLine( in.drop(1), out )
+  }
+
+  private def toMetaDataMap( out : Seq[ String ] ) : Map[ String, String ] =
+    Map( out.map { chunk =&gt;
+          val idx = chunk.indexOf(':')
+          ( chunk.substring(0, idx).trim, chunk.substring(idx + 1) )
+         } : _* )
+}
+
+// The MetaDataConverter imports
+
+import scala.collection.mutable.ListBuffer
+</code></pre><h2><code>MetaDataConverterSpec</code></h2><pre><code class="prettyprint">// In test com/tristanhunt/knockoff/extra/MetaDataConverterSpec.scala
+package com.tristanhunt.knockoff.extra
+// See the MetaDataConverterSpec imports
+
+class MetaDataConverterSpec extends Spec with ShouldMatchers with Wholesaler {
+
+  describe(&quot;MetaDataConverter&quot;) {
+    it(&quot;should convert a Paragraph to MetaData&quot;) {
+      val content = &quot;key 1 : value\n&quot; +
+                    &quot;key2:value\n&quot; +
+                    &quot;key 3 : long  \n&quot; +
+                    &quot;        value\n&quot; +
+                    &quot;key4:\n&quot; +
+                    &quot;:oops&quot;
+
+      val metaData =
+        toMetaData( new Paragraph( new Text( content ), NoPosition ) )
+        .getOrElse( error(&quot;Did not convert the content to MetaData&quot;) )
+      
+      metaData.data should equal (
+        Map( &quot;key 1&quot; -&gt; &quot; value&quot;,
+             &quot;key2&quot;  -&gt; &quot;value&quot;,
+             &quot;key 3&quot; -&gt; &quot; long  \n        value&quot;,
+             &quot;key4&quot;  -&gt; &quot;&quot;,
+             &quot;&quot;      -&gt; &quot;oops&quot; )
+      )
+    }
+  }
+}
+
+// The MetaDataConverterSpec imports
+
+import org.scalatest.Spec
+import org.scalatest.matchers.ShouldMatchers
+import scala.util.parsing.input.NoPosition</code></pre></div>
       <div class="footer span-22 prepend-1 append-1 last">
       
     </div>

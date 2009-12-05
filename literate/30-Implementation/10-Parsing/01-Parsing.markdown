@@ -16,7 +16,6 @@ Note that things like block quotes and more complex lists turn into "documents
 within documents".
 
 
-
 ### A Bit Of History To Satisfy Myself ###
 
 In my first attempt, I tried building one big parser combinator, and then, slowly,

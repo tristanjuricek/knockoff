@@ -62,14 +62,18 @@
             <a href="../../10-Usage/02-Recipes.html">
               Recipes
             </a>
+          </li><li>
+            <a href="../../10-Usage/50-Variations.html">
+              Where Knockoff is not like Markdown
+            </a>
           </li>
             </ul>
           </li><li>
             <span class="group">Implementation</span>
             <ul>
               <li>
-            <a href="../../30-Implementation/01-Discounter.html">
-              Discounter - The One Trait
+            <a href="../../30-Implementation/01-Discounter_DefaultDiscounter_Wholesaler.html">
+              Discounter and the Wholesaler
             </a>
           </li><li>
             <a href="../../30-Implementation/02-Block_Elements.html">
@@ -109,6 +113,15 @@
           </li>
             </ul>
           </li><li>
+            <span class="group">Extras</span>
+            <ul>
+              <li>
+            <a href="../../30-Implementation/30-Extras/02-MetaDataConverter.html">
+              MetaData and MetaDataConverter
+            </a>
+          </li>
+            </ul>
+          </li><li>
             <a href="../../30-Implementation/50-Official_Markdown_Tests.html">
               The Official Tests
             </a>
@@ -136,42 +149,40 @@ This means this
 that there will be more and more problems, well. Hm.
 </p><p>Notably, this remembers the position of each chunk in the input.
 </p><pre><code class="prettyprint">// In com/tristanhunt/knockoff/ChunkStreamFactory.scala
-// See the ChunkStreamFactory package and imports
+package com.tristanhunt.knockoff
+// See the ChunkStreamFactory imports
 
 trait ChunkStreamFactory extends Logged {
 
-  val chunkParser = new ChunkParser
+  /** Overridable factory method. */
+  def newChunkParser : ChunkParser = new ChunkParser
+
+  lazy val chunkParser : ChunkParser = newChunkParser
 
   def createChunkStream( str : String ) : Stream[(Chunk, Position)] =
     createChunkStream( new CharSequenceReader( str, 0 ) )
   
   def createChunkStream( reader : Reader[Char] ) : Stream[(Chunk, Position)] = {
-      
     if ( reader.atEnd ) return Stream.empty
-    
     chunkParser.parse( chunkParser.chunk, reader ) match {
-
       case chunkParser.Error( msg, next ) =&gt; {
         log( msg )
         log( &quot;next == reader : &quot; + (next == reader) )
         createChunkStream( next )
       }
-      
       case chunkParser.Failure( msg, next ) =&gt; {
         log( msg )
         log( &quot;next == reader : &quot; + (next == reader) )
         createChunkStream( next )
       }
-      
-      case chunkParser.Success( result, next ) =&gt; Stream.cons(
-        ( result, reader.pos ),
-        createChunkStream( next )
-      )
+      case chunkParser.Success( result, next ) =&gt; {
+        Stream.cons( ( result, reader.pos ), createChunkStream( next ) )
+      }
     }
   }
 }
-</code></pre><h4>Package And Imports</h4><pre><code class="prettyprint">// The ChunkStreamFactory package and imports
-package com.tristanhunt.knockoff
+
+// The ChunkStreamFactory imports
 
 import scala.util.parsing.combinator.Parsers
 import scala.util.parsing.input.{ CharSequenceReader, Position, Reader }
