@@ -43,7 +43,6 @@ left to your program to interpret.
     import scala.util.parsing.input.Position
     import scala.xml.{ Group, Node, NodeBuffer }
 
-
 ## `MetaDataConverter` ##
 
     // In com/tristanhunt/knockoff/extra/MetaDataConverter.scala
@@ -134,3 +133,13 @@ left to your program to interpret.
     import org.scalatest.Spec
     import org.scalatest.matchers.ShouldMatchers
     import scala.util.parsing.input.NoPosition
+
+## `MetaDatas` ##
+
+This enables the `filterType` method to work to find the `MetaData`.
+
+    // In com/tristanhunt/knockoff/extra/MetaDatas.scala
+    package com.tristanhunt.knockoff.extra
+    
+    case object MetaDatas
+    extends BlockType[ MetaData ] { def wrappedClass = classOf[ MetaData ] }
