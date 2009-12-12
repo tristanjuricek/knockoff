@@ -1,5 +1,5 @@
-import literable.{ Generator, WebDocument }
-import literable.plugin.LiterableProject
+import com.tristanhunt.literable.{ Generator, WebDocument }
+import com.tristanhunt.literable.plugin.LiterableProject
 import sbt._
 import scala.xml._
 
