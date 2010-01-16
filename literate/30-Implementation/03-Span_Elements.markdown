@@ -1,6 +1,7 @@
 Spanning Elements
 =================
 
+
 ## `Span` ##
 
 Marks a string to become the basic building block of the Markdown tree.
@@ -21,6 +22,7 @@ can have part of it's description be code.
     object Span {
       val empty : Span = new Text("")
     }
+
 
 ## `SpanSeq` ##
 
@@ -81,7 +83,6 @@ And a workaround to cases where we need just a container of spans.
       
       def markdown = toMarkdown
     }
-
 
 
 ## `Text` ##

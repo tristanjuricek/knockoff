@@ -1,43 +1,26 @@
-Introduction to Knockoff
-========================
+Welcome to Knockoff
+===================
 
 Knockoff is a Markdown parser with a twist. Most Markdown systems just convert
-Markdown source to HTML.
+Markdown source to HTML. Knockoff converts from Markdown source to an object model
+... then, to an XHMTL fragment, generated easily with Scala's excellent XML
+integration. I've found it an easy way to manipulate Markdown content.
 
-    Markdown Text -> [ Markdown Script ] -> HTML
-
-Knockoff converts from Markdown source to an object model ... then, to an XHMTL
-fragment, generated easily with Scala's excellent XML integration:
-
-    Markdown Text -> [ Knockoff ] -> Scala Object Model -> XHTML
-
-I've found it an easy way to manipulate Markdown text in Scala applications.
-
-For example, it was easy for me to build a [literate programming][2] environment on
-top of an object model. This approach "tags" specific bits of markdown code blocks
-with special meaning - stick this code block in a separate file in a particular
-format. And then, the markdown document itself is placed into a website.
+For example, I've built a [literate programming][2] environment by basically
+stringing together specially tagged code blocks of the markdown content. With the
+meta-data extension, you can pretty easily use markdown files as the "storage"
+format for something like a website.
 
 
-## Converting Markdown to HTML Knockoff ##
+## Converting Markdown to HTML ##
 
-Anyhow, the main thing you do with knockoff is translate Markdown documents into
-HTML. In Scala code, this is done via:
+The `Discounter` is what grabs the "knockoff" of a markdown string. For simple usage,
+you can use the `DefaultDiscounter` object.
 
-    DefaultDiscounter.knockoff( markdownString ).toXML
+    import com.tristanhunt.knockoff.DefaultDiscounter._
+    toXML( knockoff( markdownString ) )
 
-This returns the `Group` representation of the document.
-
-This is pretty easy to call from the console as well, using a shell script set up
-in the root of the project tree:
-
-    ./discounter [file ...]
-
-
-## What is This `Discounter` Thing, What The Hell Am I Thinking? ##
-
-The `Discounter` is the base object you can use to start to specialize how the
-document is parsed.
+See the [Recipes](10-Usage/02-Recipes.html) page for more.
 
 
 ## Recent Updates ##

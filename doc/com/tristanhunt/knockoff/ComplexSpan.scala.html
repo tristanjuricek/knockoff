@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+          <head><title>com/tristanhunt/knockoff/ComplexSpan.scala</title><link rel="stylesheet" href="../../../screen.css" type="text/css" media="screen, projection"></link><link rel="stylesheet" href="../../../print.css" type="text/css" media="print"></link><!--[if lt IE 8]><link rel="stylesheet" href="../../../ie.css" type="text/css" media="screen, projection"><![endif]--><link href="../../../prettify.css" rel="stylesheet" type="text/css"></link><script type="text/javascript" src="../../../prettify.js"></script><style> 
+        /* Overriding a few defaults from blueprint. */
+        body {
+          background:#43180D;
+          font-size:100%; color: #f2e5ca;
+          font-family: Times, serif;
+        }
+        h1, h2, h3, h4, h5, h6 {
+          font-weight:normal;font-family: Georgia, Times, serif;
+          color: #f2e5ca;
+        }
+        /* 3, 2, 1.5, 1.2 */
+        h1 {font-size:3em;line-height:1;margin-bottom:0.5em;}
+        h2 {font-size:2em;margin-bottom:0.75em;}
+        h3 {font-size:1.5em;line-height:1;margin-bottom:1em;}
+        h4 {font-size:1em;line-height:1.25;margin-bottom:1.25em;}
+        h5 {font-size:1em;font-weight:bold;margin-bottom:1.5em;}
+        h6 {font-size:1em;font-weight:bold;}
+        
+        a:focus, a:hover {color: #CEA162; text-decoration: underline; }
+        a {color:#CEA162;text-decoration:none;}
+
+        code { text-transform: none; }
+
+        /* Style the code blocks */
+        pre {
+          color: #f2e5ca;
+          border: solid #180A07 1px;
+          border-right: 0;
+          border-left-width: 1em;
+          padding-left: 1em;
+        }
+        .str { color:rgb( 237, 239, 125 ); font-style:italic }
+        .kwd { color:rgb( 152, 129, 85 ); }
+        .com { color:#999 }
+        .typ { color:rgb( 255, 101, 33 ); }
+        .lit { color:rgb( 112, 83, 147 ); }
+        .pun { color:#aaa; font-weight:bold  }
+        .pln { color:#f2e5ca }
+        .tag { color:rgb( 137, 150, 168 ); font-weight:bold  }
+        .atn { color:#939; font-weight:bold  }
+        .atv { color:#181 }
+        .dec { color:#606 }
+
+        /* Custom styling */
+        .container { float: left; margin-top: 0em; } /* 7f2f18 */
+        .header { color: #f2e5ca; 
+          text-transform:uppercase; margin-bottom: 2em; vertical-align: center;
+        }
+        a:focus, a:hover {  background: #43180D; }
+        .header ul { list-style-type: none; margin: 0; padding: 0; }
+        .header ul li { display: inline; padding-right: 2em; }
+
+        .nav .current { background: #43180D; border-left: .3em solid #000; }
+    		.nav li { padding-left: .3em; padding-right: 3px; }
+    		.nav hr { background: #43180D; }
+    		
+    		hr { background: #000; }
+         </style></head>
+          <body onload="prettyPrint()" class="container"><div class="section">
+        <div class="header span-22 prepend-1 append-1 last">
+      <ul style="list-style-type: none">
+            <li><a href="../../../../..">tristan hunt.com</a></li>
+            <li>knockoff</li>
+        </ul>
+    </div>
+        <div class="nav small span-7 prepend-1"><ul id="tabs">
+        <li>
+          <a href="../../../01-Introduction.html">Documentation</a>
+        </li>
+        <li class="current">Sources</li>
+      </ul><hr></hr><ul><li>
+            <span class="group">com.tristanhunt.knockoff</span>
+            <ul>
+              <li >
+            <a href="../../../com/tristanhunt/knockoff/Block.scala.html">
+              Block.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/BlockSeq.scala.html">
+              BlockSeq.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/BlockSuite.scala.html">
+              BlockSuite.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/BlockType.scala.html">
+              BlockType.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/Blockquote.scala.html">
+              Blockquote.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/BlockquotedChunk.scala.html">
+              BlockquotedChunk.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/BulletLineChunk.scala.html">
+              BulletLineChunk.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/Chunk.scala.html">
+              Chunk.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/ChunkParsers.scala.html">
+              ChunkParsers.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/ChunkParsersSpec.scala.html">
+              ChunkParsersSpec.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/ChunkStreamFactory.scala.html">
+              ChunkStreamFactory.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/CodeBlock.scala.html">
+              CodeBlock.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/CodeMatchers.scala.html">
+              CodeMatchers.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/CodeSpan.scala.html">
+              CodeSpan.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/ColoredLogger.scala.html">
+              ColoredLogger.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/ComplexBlock.scala.html">
+              ComplexBlock.scala
+            </a>
+          </li><li class="current">
+            <a href="../../../com/tristanhunt/knockoff/ComplexSpan.scala.html">
+              ComplexSpan.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/DefaultDiscounter.scala.html">
+              DefaultDiscounter.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/Discounter.scala.html">
+              Discounter.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/ElementFactory.scala.html">
+              ElementFactory.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/Emphasis.scala.html">
+              Emphasis.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/EmphasisMatchers.scala.html">
+              EmphasisMatchers.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/EmptySpace.scala.html">
+              EmptySpace.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/EqualDelimiterMatcher.scala.html">
+              EqualDelimiterMatcher.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/GroupBlock.scala.html">
+              GroupBlock.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/GroupSpan.scala.html">
+              GroupSpan.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/HTMLSpan.scala.html">
+              HTMLSpan.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/HTMLSpanMatcher.scala.html">
+              HTMLSpanMatcher.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/HasElementFactory.scala.html">
+              HasElementFactory.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/Header.scala.html">
+              Header.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/HeaderChunk.scala.html">
+              HeaderChunk.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/HorizontalRule.scala.html">
+              HorizontalRule.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/HorizontalRuleChunk.scala.html">
+              HorizontalRuleChunk.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/ImageLink.scala.html">
+              ImageLink.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/ImageSpan.scala.html">
+              ImageSpan.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/IndentedChunk.scala.html">
+              IndentedChunk.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/IndirectImageLink.scala.html">
+              IndirectImageLink.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/IndirectLink.scala.html">
+              IndirectLink.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/Link.scala.html">
+              Link.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/LinkDefinition.scala.html">
+              LinkDefinition.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/LinkDefinitionChunk.scala.html">
+              LinkDefinitionChunk.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/LinkMatcher.scala.html">
+              LinkMatcher.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/LinkSpec.scala.html">
+              LinkSpec.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/ListItem.scala.html">
+              ListItem.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/MarkdownList.scala.html">
+              MarkdownList.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/NumberedLineChunk.scala.html">
+              NumberedLineChunk.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/OrderedItem.scala.html">
+              OrderedItem.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/Paragraph.scala.html">
+              Paragraph.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/SimpleBlock.scala.html">
+              SimpleBlock.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/SimpleSpan.scala.html">
+              SimpleSpan.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/Span.scala.html">
+              Span.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/SpanConverter.scala.html">
+              SpanConverter.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/SpanConverterFactory.scala.html">
+              SpanConverterFactory.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/SpanConverterSpec.scala.html">
+              SpanConverterSpec.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/SpanMatch.scala.html">
+              SpanMatch.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/SpanSeq.scala.html">
+              SpanSeq.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/StringExtras.scala.html">
+              StringExtras.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/StringExtrasSpec.scala.html">
+              StringExtrasSpec.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/Strong.scala.html">
+              Strong.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/StrongAndEmMatchers.scala.html">
+              StrongAndEmMatchers.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/StrongMatchers.scala.html">
+              StrongMatchers.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/Text.scala.html">
+              Text.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/TextChunk.scala.html">
+              TextChunk.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/UnorderedItem.scala.html">
+              UnorderedItem.scala
+            </a>
+          </li>
+            </ul>
+          </li><li>
+            <span class="group">com.tristanhunt.knockoff.extra</span>
+            <ul>
+              <li >
+            <a href="../../../com/tristanhunt/knockoff/extra/DefaultWholesaler.scala.html">
+              DefaultWholesaler.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/extra/MetaData.scala.html">
+              MetaData.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/extra/MetaDataConverter.scala.html">
+              MetaDataConverter.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/extra/MetaDataConverterSpec.scala.html">
+              MetaDataConverterSpec.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/extra/MetaDatas.scala.html">
+              MetaDatas.scala
+            </a>
+          </li><li >
+            <a href="../../../com/tristanhunt/knockoff/extra/Wholesaler.scala.html">
+              Wholesaler.scala
+            </a>
+          </li>
+            </ul>
+          </li></ul></div>
+        <div class="article span-13 prepend-1 last"><h1><code>ComplexSpan.scala</code></h1><pre><code class="prettyprint">package com.tristanhunt.knockoff
+
+trait ComplexSpan extends Span {
+  val children : Seq[ Span ]
+  def theSeq = children
+  def childrenMarkdown = children.map( _.markdown ).mkString(&quot;&quot;)
+  def childrenXML = toXML
+}
+</code></pre></div>
+        <div class="footer span-22 prepend-1 append-1 last">
+      
+    </div>
+      </div></body>
+        </html>

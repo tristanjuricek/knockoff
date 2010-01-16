@@ -1,27 +1,18 @@
-Getting Started
-===============
+# Getting Started #
 
-To run the following scala code:
+Right now knockoff is easiest to use via [sbt][]. You can add a dependency to many
+recent scala builds.
 
-    import com.tristanhunt.knockoff.DefaultDiscounter.knockoff
-    
-    knockoff( markdownTextString ).toXML
-    
-You need to have the knockoff build.
+    val knockoff = "com.tristanhunt" % "knockoff" %% "0.6.1-8"
 
+If you have a problem with the scala version, you can specify it directly as part
+of the project name:
 
-## Using Knockoff with the Simple Build Tool ##
+    val knockoff = "com.tristanhunt" % "knockoff_2.7.7" % "0.6.1-8"
 
-Right now knockoff is easiest to use via [sbt][].
+The repository specification is:
 
-Include the direct dependency:
-
-    val knockoff = "com.tristanhunt" % "knockoff" %% "0.6.1-SNAPSHOT"
-
-You can grab it off of my repository:
-
-    val tristanhunt =
-      "tristanhunt" at "http://tristanhunt.com:8081/content/groups/public/"
+    val t_repo = "t_repo" at "http://tristanhunt.com:8081/content/groups/public/"
 
 
 ## Using Knockoff outside the Simple Build Tool ##
@@ -49,7 +40,7 @@ documentation. Add the `lit` sub command.
     sbt update lit package
 
 
-[1]: http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/knockoff_2.7.7/0.6.1-SNAPSHOT/knockoff_2.7.7-0.6.1-SNAPSHOT.jar
+[1]: http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/knockoff_2.7.7/0.6.1-8/knockoff_2.7.7-0.6.1-8.jar
 [literable]: http://tristanhunt.com/projects/literable
 [sbt]: http://code.google.com/p/simple-build-tool/
 [scala]: http://www.scala-lang.org

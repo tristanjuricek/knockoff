@@ -1,17 +1,17 @@
 Recipes
 =======
 
-### Just getting the block sequence ###
+To run the code, import the `DefaultDiscounter`:
 
-    import com.tristanhunt.knockoff._
+    import com.tristanhunt.knockoff.DefaultDiscounter._
 
-    val blocks = DefaultDiscounter.knockoff( markdownString )
+### Get the Block Sequence ###
 
+    val blocks = knockoff( markdownString )
 
-### ... And then make it an XHTML fragment ###
+### ... Make an XHTML Fragment ###
 
-    blocks.toXML.toString
-
+    toXML( blocks ).toString
 
 ### Grab The First Header ###
 
@@ -19,7 +19,6 @@ Recipes
       case Some( header ) => header.text
       case None => "no header!"
     }
-
 
 ### Create an HTML Page ###
 
@@ -43,14 +42,16 @@ Just a little inspiration of what you can do with Scala:
     }
 
 
-### Tweak The HTML Output For Something Like Prettify ###
+### Prettify the Code Blocks ###
+
+An example of how to tweak the object model.
 
 First, extend the `CodeBlock` to write the extra `class` attribute.
 
     class   PrettifiedCodeBlock( text : Text, pos : Position )
     extends CodeBlock( text, pos ) {
 
-      override def xml : Node =
+      override def toXML : Node =
         <pre><code class="prettyprint">{ preformatted }</code></pre>
     }
 
@@ -62,4 +63,9 @@ Then setup the factory to create your `PrettifiedCodeBlock` instead.
           new PrettifiedCodeBlock( t, p )
       }
     }
+
+You'll have to create your own `Discounter` type now, however:
+
+    object MyDiscounter extends PrettyDiscounter
+    import MyDiscounter._
 

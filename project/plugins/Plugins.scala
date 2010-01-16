@@ -8,5 +8,5 @@ class Plugins(info: ProjectInfo) extends PluginDefinition(info) {
     override def managedStyle = ManagedStyle.Maven
     
     val literable_plugin_base =
-      "com.tristanhunt" % "literable-plugin-base_2.7.7" % "0.5.6-14"
+      "com.tristanhunt" % "literable-plugin_2.7.7" % "0.5.11-22"
 }
