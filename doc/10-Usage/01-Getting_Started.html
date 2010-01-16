@@ -164,14 +164,23 @@
           </li>
             </ul>
           </li></ul></div>
-      <div class="article span-13 prepend-1 last"><h1>Getting Started</h1><p>Right now knockoff is easiest to use via <a href="http://code.google.com/p/simple-build-tool/" >sbt</a>. You can add a dependency to many
-recent scala builds.
+      <div class="article span-13 prepend-1 last"><h1>Getting Started</h1><p>Right now knockoff is easiest to use via <a href="http://code.google.com/p/simple-build-tool/" >sbt</a>. The dependency declaration that
+resolves the scala version looks like this:
 </p><pre><code class="prettyprint">val knockoff = &quot;com.tristanhunt&quot; % &quot;knockoff&quot; %% &quot;0.6.1-8&quot;
 </code></pre><p>If you have a problem with the scala version, you can specify it directly as part
 of the project name:
 </p><pre><code class="prettyprint">val knockoff = &quot;com.tristanhunt&quot; % &quot;knockoff_2.7.7&quot; % &quot;0.6.1-8&quot;
 </code></pre><p>The repository specification is:
 </p><pre><code class="prettyprint">val t_repo = &quot;t_repo&quot; at &quot;http://tristanhunt.com:8081/content/groups/public/&quot;
+</code></pre><p>A very simple example of the project definition file that goes in a place like
+<code>project/build/MyProject.scala</code>:
+</p><pre><code class="prettyprint">import sbt._
+
+class MyProject( info : ProjectInfo ) extends DefaultProject( info ) {
+  val knockoff  = &quot;com.tristanhunt&quot; % &quot;knockoff_2.7.7&quot; % &quot;0.6.1-8&quot;
+  val nexus =
+    &quot;tristanhunt nexus&quot; at &quot;http://tristanhunt.com:8081/content/groups/public&quot;
+}
 </code></pre><h2>Using Knockoff outside the Simple Build Tool</h2><p>Definitely possible, it will require a downloaded <a href="http://www.scala-lang.org" >scala</a> version, after which you
 include the <code>lib/scala-library.jar</code> file in your classpath along with the <a href="http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/knockoff_2.7.7/0.6.1-8/knockoff_2.7.7-0.6.1-8.jar" >file</a> at
 </p><pre><code class="prettyprint">  http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/

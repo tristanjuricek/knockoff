@@ -1,7 +1,7 @@
 # Getting Started #
 
-Right now knockoff is easiest to use via [sbt][]. You can add a dependency to many
-recent scala builds.
+Right now knockoff is easiest to use via [sbt][]. The dependency declaration that
+resolves the scala version looks like this:
 
     val knockoff = "com.tristanhunt" % "knockoff" %% "0.6.1-8"
 
@@ -13,6 +13,17 @@ of the project name:
 The repository specification is:
 
     val t_repo = "t_repo" at "http://tristanhunt.com:8081/content/groups/public/"
+
+A very simple example of the project definition file that goes in a place like
+`project/build/MyProject.scala`:
+
+    import sbt._
+    
+    class MyProject( info : ProjectInfo ) extends DefaultProject( info ) {
+      val knockoff  = "com.tristanhunt" % "knockoff_2.7.7" % "0.6.1-8"
+      val nexus =
+        "tristanhunt nexus" at "http://tristanhunt.com:8081/content/groups/public"
+    }
 
 
 ## Using Knockoff outside the Simple Build Tool ##

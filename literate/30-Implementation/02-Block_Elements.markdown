@@ -11,18 +11,18 @@ are usually seen as separated by whitespace lines.
     // See the Block package and imports
 
     trait Block extends BlockSeq {
-        
+      
       /**
         The actual content of each block.
        */
       val span     : SpanSeq
-
+      
       /**
         A markdown representation of this block - it may not equal the original
         source.
        */
       def markdown : String
-
+      
       /**
         An HTML rendering of the Block element.
        */
