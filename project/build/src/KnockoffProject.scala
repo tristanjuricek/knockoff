@@ -3,9 +3,7 @@ import sbt._
 class KnockoffProject( info : ProjectInfo )
 extends DefaultProject( info )
 with    KnockoffLiterableProject {
-  
-  override def crossScalaVersions = Set("2.7.5", "2.7.6", "2.7.7")
-  
+    
   override def compileOptions = {
     List( MaxCompileErrors( 5 ), CompileOption("-unchecked") ) :::
     super.compileOptions.toList

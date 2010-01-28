@@ -39,10 +39,10 @@ class StringExtrasSpec extends Spec with ShouldMatchers with ColoredLogger
     }
   }
   
-  describe("StringExtras.trim(ch)") {
+  describe("StringExtras.trimChars(ch)") {
    
     it("should remove likely headers with the match char inside") {
-      "## Who does #2 work for? #".trim('#').trim should equal (
+      "## Who does #2 work for? #".trimChars('#').trim should equal (
         "Who does #2 work for?"
       )
     }

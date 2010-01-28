@@ -13,7 +13,7 @@ extends ComplexBlock {
             
   def markdown : String = {
     Source.fromString( childrenMarkdown )
-      .getLines.map( l => "> " + l ).mkString("")
+      .getLines().map( l => "> " + l ).mkString("")
   }
   
   def xml : Elem = <blockquote>{ childrenXML }</blockquote>

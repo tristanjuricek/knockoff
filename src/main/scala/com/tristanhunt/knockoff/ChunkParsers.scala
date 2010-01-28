@@ -60,7 +60,7 @@ class ChunkParser extends RegexParsers with StringExtras {
 
   def atxHeader : Parser[ Chunk ] =
     """#+ .*\n?""".r ^^ (
-      s => HeaderChunk( s.countLeading('#'), s.trim('#').trim ) )
+      s => HeaderChunk( s.countLeading('#'), s.trimChars('#').trim ) )
   
   def horizontalRule : Parser[ Chunk ] =
     """[ ]{0,3}[*\-_][\t ]?[*\-_][\t ]?[*\-_][\t *\-_]*\n""".r ^^ {

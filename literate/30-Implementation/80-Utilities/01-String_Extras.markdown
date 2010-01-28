@@ -109,7 +109,7 @@ recurrence.
             }
           }
           
-          def trim( ch : Char ) : String =
+          def trimChars( ch : Char ) : String =
             ("^" + ch + "+(.*?\\s?)" + ch + "*+$").r.replaceFirstIn( wrapped, "$1" )
         }
 
@@ -163,10 +163,10 @@ recurrence.
         }
       }
       
-      describe("StringExtras.trim(ch)") {
+      describe("StringExtras.trimChars(ch)") {
        
         it("should remove likely headers with the match char inside") {
-          "## Who does #2 work for? #".trim('#').trim should equal (
+          "## Who does #2 work for? #".trimChars('#').trim should equal (
             "Who does #2 work for?"
           )
         }

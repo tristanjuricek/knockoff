@@ -83,6 +83,7 @@ The `--html4tags` argument will just do nothing, but not be processed as a file.
     // In com/tristanhunt/knockoff/DefaultDiscounter.scala
     package com.tristanhunt.knockoff
     
+    import java.io.{ File }
     import scala.util.logging.ConsoleLogger
     
     object DefaultDiscounter extends Discounter with ColoredLogger {
@@ -115,7 +116,7 @@ The `--html4tags` argument will just do nothing, but not be processed as a file.
       }
       
       private def readText( fileName : String ) : String =
-        io.Source.fromFile( fileName ).mkString("")
+        io.Source.fromFile( new File( fileName ) ).mkString("")
     }
 
 
@@ -133,6 +134,8 @@ like a block.
     // In com/tristanhunt/knockoff/extra/Wholesaler.scala
     package com.tristanhunt.knockoff.extra
 
+    import com.tristanhunt.knockoff.{ Block, Paragraph, Discounter }
+    
     trait Wholesaler extends Discounter with MetaDataConverter {
       
       override def knockoff( source : java.lang.CharSequence ) : Seq[ Block ] = {
@@ -159,6 +162,8 @@ Another console wrapping application. This one has to be called explicitly.
     // In com/tristanhunt/knockoff/extra/DefaultWholesaler.scala
     package com.tristanhunt.knockoff.extra
 
+    import com.tristanhunt.knockoff.{ ColoredLogger }
+    import java.io.File
     import scala.util.logging.ConsoleLogger
     
     object DefaultWholesaler extends Wholesaler with ColoredLogger {
@@ -191,7 +196,7 @@ Another console wrapping application. This one has to be called explicitly.
       }
       
       private def readText( fileName : String ) : String =
-        io.Source.fromFile( fileName ).mkString("")
+        io.Source.fromFile( new File( fileName ) ).mkString("")
     }
 
 [MultiMarkdown]: http://fletcherpenney.net/multimarkdown/users_guide/multimarkdown_syntax_guide/

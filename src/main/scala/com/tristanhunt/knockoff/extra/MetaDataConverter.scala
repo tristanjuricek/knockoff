@@ -1,5 +1,6 @@
 package com.tristanhunt.knockoff.extra
 
+import com.tristanhunt.knockoff.{ Paragraph }
 import scala.collection.mutable.ListBuffer
 
 trait MetaDataConverter {

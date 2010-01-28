@@ -16,7 +16,7 @@ extends SimpleBlock {
   val preformatted = text.markdown
   
   lazy val preformattedLines =
-    Source.fromString( preformatted ).getLines
+    Source.fromString( preformatted ).getLines()
   
   def markdown =
     preformattedLines.map{ line =>  "    " + line }.mkString("")

@@ -103,7 +103,7 @@ trait StringExtras {
         }
       }
       
-      def trim( ch : Char ) : String =
+      def trimChars( ch : Char ) : String =
         ("^" + ch + "+(.*?\\s?)" + ch + "*+$").r.replaceFirstIn( wrapped, "$1" )
     }
 

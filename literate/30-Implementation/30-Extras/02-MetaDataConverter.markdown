@@ -18,7 +18,7 @@ line ends with two spaces and then a newline.
 `MetaData` is really just a `Map` of strings. But, we want to return it in the
 `BlockSeq`, so it's a special kind of `Block`.
 
-The values of the map shoudn't contain the separating newline.
+The values of the map shouldn't contain the separating newline.
 
 There is no XML representation of `MetaData`. Conversion to header elements is
 left to your program to interpret.
@@ -42,6 +42,7 @@ left to your program to interpret.
     }
     // The MetaData imports
     
+    import com.tristanhunt.knockoff.{ SpanSeq, SimpleBlock, Text }
     import scala.util.parsing.input.Position
     import scala.xml.{ Group, Node, NodeBuffer }
     
@@ -112,7 +113,8 @@ left to your program to interpret.
     }
     
     // The MetaDataConverter imports
-    
+
+    import com.tristanhunt.knockoff.{ Paragraph }
     import scala.collection.mutable.ListBuffer
 
 
@@ -150,6 +152,7 @@ left to your program to interpret.
     
     // The MetaDataConverterSpec imports
     
+    import com.tristanhunt.knockoff.{ Paragraph, Text }
     import org.scalatest.Spec
     import org.scalatest.matchers.ShouldMatchers
     import scala.util.parsing.input.NoPosition
@@ -160,6 +163,8 @@ This enables the `filterType` method to work to find the `MetaData`.
 
     // In com/tristanhunt/knockoff/extra/MetaDatas.scala
     package com.tristanhunt.knockoff.extra
+    
+    import com.tristanhunt.knockoff.{ BlockType }
     
     case object MetaDatas
     extends BlockType[ MetaData ] { def wrappedClass = classOf[ MetaData ] }

@@ -1,5 +1,7 @@
 # Getting Started #
 
+### Notice - the 0.7.x series of knockoff is 2.8 *only* ###
+
 Right now knockoff is easiest to use via [sbt][]. The dependency declaration that
 resolves the scala version looks like this:
 

@@ -1,5 +1,7 @@
 package com.tristanhunt.knockoff.extra
 
+import com.tristanhunt.knockoff.{ Block, Paragraph, Discounter }
+
 trait Wholesaler extends Discounter with MetaDataConverter {
   
   override def knockoff( source : java.lang.CharSequence ) : Seq[ Block ] = {

@@ -1,5 +1,6 @@
 package com.tristanhunt.knockoff.extra
 
+import com.tristanhunt.knockoff.{ Paragraph, Text }
 import org.scalatest.Spec
 import org.scalatest.matchers.ShouldMatchers
 import scala.util.parsing.input.NoPosition

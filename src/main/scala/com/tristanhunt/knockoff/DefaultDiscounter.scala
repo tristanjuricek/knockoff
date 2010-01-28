@@ -1,5 +1,6 @@
 package com.tristanhunt.knockoff
 
+import java.io.{ File }
 import scala.util.logging.ConsoleLogger
 
 object DefaultDiscounter extends Discounter with ColoredLogger {
@@ -32,5 +33,5 @@ object DefaultDiscounter extends Discounter with ColoredLogger {
   }
   
   private def readText( fileName : String ) : String =
-    io.Source.fromFile( fileName ).mkString("")
+    io.Source.fromFile( new File( fileName ) ).mkString("")
 }

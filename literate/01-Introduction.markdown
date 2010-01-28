@@ -25,6 +25,16 @@ See the [Recipes](10-Usage/02-Recipes.html) page for more.
 
 ## Recent Updates ##
 
+### `0.7.0-X` Coming Soon
+
+This is a major revision of the project. Your code will break. For the time being,
+it will be **scala 2.8 only** until the project stabilizes.
+
+The 0.7 version attempts to bring [pandoc][] style document translation to knockoff.
+This means that the system is broken up into _reader_ and _writer_ facilities that
+convert to and from an internal object model.
+
+
 ### `0.6.1-8` Dec 6, 2009
 
 * Changed the output from `GroupSeq` to `BlockSeq` of `Wholesaler`.

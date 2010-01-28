@@ -147,6 +147,7 @@ This is used only as a short hand for query expressions.
       
       override def length : Int = theSeq.length
       
+      def iterator = theSeq.iterator
       override def elements = theSeq.elements
       
       override def apply( ii : Int ) = theSeq(ii)
@@ -298,7 +299,7 @@ A block quote is really another markdown document, quoted.
                 
       def markdown : String = {
         Source.fromString( childrenMarkdown )
-          .getLines.map( l => "> " + l ).mkString("")
+          .getLines().map( l => "> " + l ).mkString("")
       }
       
       def xml : Elem = <blockquote>{ childrenXML }</blockquote>
@@ -336,7 +337,7 @@ if you want to inject a series of line numbers via `<span>` elements.
       val preformatted = text.markdown
       
       lazy val preformattedLines =
-        Source.fromString( preformatted ).getLines
+        Source.fromString( preformatted ).getLines()
       
       def markdown =
         preformattedLines.map{ line =>  "    " + line }.mkString("")

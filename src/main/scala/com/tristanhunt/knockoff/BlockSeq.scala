@@ -8,6 +8,7 @@ trait BlockSeq extends Seq[ Block ] {
   
   override def length : Int = theSeq.length
   
+  def iterator = theSeq.iterator
   override def elements = theSeq.elements
   
   override def apply( ii : Int ) = theSeq(ii)

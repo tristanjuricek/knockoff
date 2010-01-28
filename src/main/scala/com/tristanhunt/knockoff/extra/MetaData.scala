@@ -1,5 +1,6 @@
 package com.tristanhunt.knockoff.extra
 
+import com.tristanhunt.knockoff.{ SpanSeq, SimpleBlock, Text }
 import scala.util.parsing.input.Position
 import scala.xml.{ Group, Node, NodeBuffer }
 
