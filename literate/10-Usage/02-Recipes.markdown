@@ -11,14 +11,14 @@ To run the code, import the `DefaultDiscounter`:
 
 ### ... Make an XHTML Fragment ###
 
-    toXML( blocks ).toString
+    val xhtml = toXHTML( blocks )
+    
+    val sw = 
+    val asString = XML.write( xhtml, 
 
-### Grab The First Header ###
+### Grab The Title Of The First Header  ###
 
-    blocks.filterType( Headers ).firstOption {
-      case Some( header ) => header.text
-      case None => "no header!"
-    }
+    blocks.find( _.isInstanceOf[Header] ).map( toText ).getOrElse( "No header" )
 
 ### Create an HTML Page ###
 

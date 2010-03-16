@@ -3,7 +3,7 @@ package com.tristanhunt.knockoff
 import java.io.{ File }
 import scala.util.logging.ConsoleLogger
 
-object DefaultDiscounter extends Discounter with ColoredLogger {
+object DefaultDiscounter extends Discounter with ConsoleLogger {
   def main( args : Array[ String ] ) : Unit = try {
     if ( args.contains("--version") ) {
       Console.err.print( "DefaultDiscounter " )
@@ -20,10 +20,10 @@ object DefaultDiscounter extends Discounter with ColoredLogger {
         line = Console.readLine
         if ( line != null ) sb.append( line )
       } while ( line != null )
-      println( toXML( knockoff( sb.toString ) ).toString )
+      println( toXHTML( knockoff( sb.toString ) ).toString )
     } else {
       args.filter( _ != "--html4tags" ).foreach { fileName =>
-        println( toXML( knockoff( readText( fileName ) ) ).toString )
+        println( toXHTML( knockoff( readText( fileName ) ) ).toString )
       }
     }
   } catch {

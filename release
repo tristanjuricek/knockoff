@@ -2,7 +2,7 @@
 #
 # A stupid release script, until I figure out what I want to do with this later.
 
-BUILD_NUMBER=8
+BUILD_NUMBER=10
 VERSION_BASE=`grep project.version project/build.properties | sed -e 's/project.version=//'`
 VERSION_NUMBER=`echo $VERSION_BASE | sed -e "s/SNAPSHOT/$BUILD_NUMBER/"`
 
@@ -17,16 +17,11 @@ do
   mv $file.tmp $file
 done
 
-echo Build preparation
-sbt clean clean-lib update lit
+echo Building...
+sbt +clean +clean-lib +update lit-src +test +package
 
 echo Committing
 git commit -m "$VERSION_NUMBER release" -a
-
-echo Cross-compiling
-sbt +package
-
-SCALA_VERSION=`grep scala.version project/build.properties | sed -e s'/scala.version=//'`
 
 echo Publishing
 sbt +publish
@@ -39,4 +34,4 @@ git push --tags
 
 git checkout master
 
-echo You should update target/doc now
+echo New Version $VERSION_NUMBER Ready For Announcement

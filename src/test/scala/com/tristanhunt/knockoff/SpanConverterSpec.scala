@@ -4,202 +4,131 @@ import org.scalatest._
 import org.scalatest.matchers._
 import scala.util.parsing.input.NoPosition
 
-class   SpanConverterSpec
-extends Spec
-with    ShouldMatchers
-with    SpanConverterFactory
-with    ColoredLogger {
-  
-  val factory = elementFactory
-  import factory._
-  
-  override def spanConverter( definitions : Seq[ LinkDefinitionChunk ] ) : Chunk => SpanSeq =
-    new SpanConverter( definitions, elementFactory ) with ColoredLogger
+class SpanConverterSpec extends Spec with ShouldMatchers {
 
-  describe( "CodeMatchers" ) {
+  def convert( txt : String ) : List[Span] = convert( txt, Nil )
   
+  def convert( txt : String, defs : Seq[LinkDefinitionChunk] ) : List[Span] =
+    new SpanConverter( defs )( TextChunk(txt) ).toList
+
+  describe("SpanConverter") {
     it( "should parse a couple of single code blocks in text" ) {
-      val spans = spanConverter( Nil )(
-        TextChunk("a `code1` and a `code 2`")
-      )
-      val expected = List(
-        t("a "), codeSpan("code1"), t(" and a "), codeSpan("code 2")
-      )
-      assert( spans sameElements expected )
+      val txt = "a `code1` and a `code 2`"
+      convert( txt ) should equal {
+        List( Text("a "), CodeSpan("code1"), Text(" and a "), CodeSpan("code 2") ) }
     }
-  
+    
     it("should not care about other elements in the code") {
-      val converted = spanConverter( Nil )(
-        TextChunk("This `code block *with em*` is OK")
-      )
-      converted.toList should equal { List(
-        text("This "),
-        codeSpan( "code block *with em*" ),
-        text(" is OK")
-      ) }
+      val txt = "This `code block *with em*` is OK"
+      convert( txt ) should equal {
+        List( Text("This "), CodeSpan( "code block *with em*" ), Text(" is OK") ) }
     }
-    
+      
     it("double-tick code markers should preserve whitespace") {
-      val converted = spanConverter(Nil)( TextChunk("AA `` ` `` BB") )
-      converted.toList should equal { List(
-        text("AA "),
-        codeSpan(" ` "),
-        text(" BB")
-      ) }
+      val txt = "AA `` ` `` BB"
+      convert( txt ) should equal {
+        List( Text("AA "), CodeSpan(" ` "), Text(" BB") ) }
     }
-  }
   
-  describe( "EmphasisMatchers" ) {
-    it("should match underscores containing asterix emphases") {
-      val converted = spanConverter( Nil )(
-        TextChunk( "a _underscore *and block* em_" )
-      )
-      converted.toList should equal { List(
-        text("a "),
-        em( toSpan( List( t("underscore "), em( t("and block") ), t(" em") ) ) )
-      ) }
+    it("should match emphasis underscores containing asterix emphases") {
+      val txt = "an _underscore *and block* em_"
+      convert( txt ) should equal {
+        List( Text("an "),
+              Emphasis(
+                List( Text("underscore "),
+                      Emphasis( Text("and block") :: Nil ),
+                      Text(" em") ) ) ) }
     }
-  }
 
-  describe( "StrongMatchers" ) {
-    it("should match underscores containing asterix emphases") {
-      val converted = spanConverter( Nil )(
-        TextChunk( "an __underscore **and asterix** strong__" )
-      )
-      converted.toList should equal { List(
-        text("an "),
-        strong(
-          toSpan(
-            List( t("underscore "), strong( t("and asterix") ), t(" strong") )
-          )
-        )
-      ) }
+    it("should match strong underscores containing asterix emphases") {
+      val txt = "an __underscore **and asterix** strong__"
+      convert( txt ) should equal {
+        List( Text("an "),
+              Strong( List( Text("underscore "),
+                            Strong( List(Text("and asterix")) ),
+                            Text(" strong") ) ) )
+      }
     }
-  }
   
-  describe("HTMLSpanMatcher") {
     it("should find an <a> and an <img>") {
-      val spans = spanConverter( Nil )( TextChunk(
-        """with <a href="http://example.com">a link</a> and an """ +
-        """<img src="foo.img"/> ha!"""
-      ) )
-      spans.toList should equal ( List(
-        t("with "),
-        htmlSpan("""<a href="http://example.com">a link</a>"""),
-        t(" and an "),
-        htmlSpan("""<img src="foo.img"/>"""),
-        t(" ha!")
-      ) )
+      val txt = """with <a href="http://example.com">a link</a> and an 
+                  |<img src="foo.img"/> ha!""".stripMargin
+      convert( txt ) should equal {
+        List( Text("with "),
+              HTMLSpan("""<a href="http://example.com">a link</a>"""),
+              Text(" and an \n"), HTMLSpan("""<img src="foo.img"/>"""),
+              Text(" ha!") ) }
     }
-    
+      
     it("should wrap a <span> that contains another <span>") {
-      val convertedSpans = spanConverter( Nil ){ TextChunk(
-        """a <span class="container">contains <span>something</span>""" +
-        """ else</span> without a problem <br /> !"""
-      ) }
-      convertedSpans.toList should equal { List(
-        t("a "),
-        htmlSpan(
-          """<span class="container">contains """ +
-          """<span>something</span> else</span>"""
-        ),
-        t(" without a problem "),
-        htmlSpan("<br />"),
-        t(" !")
-      ) }
+      val txt = """a <span class="container">contains <span>something</span>
+                  | else</span> without a problem <br /> !""".stripMargin
+      convert( txt ) should equal {
+        List( Text("a "),
+              HTMLSpan( """<span class="container">contains """ +
+                        "<span>something</span>\n else</span>" ),
+              Text(" without a problem "), HTMLSpan("<br />"), Text(" !") ) }
     }
-    
+      
     it("should find a couple of entities and pass them through") {
-      val converted = spanConverter( Nil )(
-          TextChunk( "an &amp; and an &em; are in here" )
-      )
-      converted.toList should equal( List(
-        t("an "),
-        htmlSpan("&amp;"),
-        t(" and an "),
-        htmlSpan("&em;"),
-        t(" are in here")
-      ) )
+      val txt = "an &amp; and an &em; are in here"
+      convert( txt ) should equal {
+        List( Text("an "), HTMLSpan("&amp;"), Text(" and an "), HTMLSpan("&em;"),
+              Text(" are in here") ) }
     }
-    
+      
     it("should handle HTML headers defined in text") {
-      val converted = spanConverter(Nil)(
-          TextChunk("<h2 id=\"overview\">Overview</h2>")
-      )
-      converted.toList should equal( List(
-        htmlSpan("<h2 id=\"overview\">Overview</h2>")
-      ) )
+      val txt = "<h2 id=\"overview\">Overview</h2>"
+      convert( txt ) should equal {
+        List( HTMLSpan("<h2 id=\"overview\">Overview</h2>") ) }
     }
-  }
   
-  describe("LinkMatcher") {
     it("should discover inline, image, automatic, and reference links") {
-      val convert = spanConverter(
-        Seq( new LinkDefinitionChunk("link1", "http://example.com", Some("title") ) )
-      )
-      val converted = convert(
-        TextChunk(
-          "A [link](http://example.com/link1) " +
-          "An ![image link](http://example.com/image1 \"image test\") " +
-          "The <http://example.com/automatic> " +
-          "A [reference link] [link1]"
-        )
-      )
-      converted.toList should equal { List(
-        text("A "),
-        link( t("link"), "http://example.com/link1" ),
-        text(" An "),
-        ilink( t("image link"), "http://example.com/image1", Some("image test") ),
-        text(" The "),
-        link( t("http://example.com/automatic"), "http://example.com/automatic" ),
-        text(" A "),
-        link( t("reference link"), "http://example.com", Some("title") )
-      ) }
+      val defs = List( new LinkDefinitionChunk( "link1", "http://example.com",
+                                                Some("title") ) )
+      val txt = "A [link](http://example.com/link1) " +
+                "An ![image link](http://example.com/image1 \"image test\") " +
+                "The <http://example.com/automatic> A [reference link] [link1]"
+      convert( txt, defs ) should equal {
+        List( Text("A "),
+              Link( List(Text("link")), "http://example.com/link1", None ),
+          		Text(" An "),
+              ImageLink( List(Text("image link")), "http://example.com/image1",
+                         Some("image test") ),
+              Text(" The "),
+              Link( List(Text("http://example.com/automatic")),
+                    "http://example.com/automatic", None ),
+              Text(" A "),
+              Link( List(Text("reference link")), "http://example.com",
+                    Some("title") ) ) }
     }
-    
+      
     it("should hande link references in different case") {
-      val convert = spanConverter( Seq(
-        new LinkDefinitionChunk("link 1", "http://example.com/1", None),
-        new LinkDefinitionChunk("link 2", "http://example.com/2", None)
-      ) )
-      val converted = convert( TextChunk("[Link 1][] and [link 2][]") )
-      converted.toList should equal { List(
-        link( t("Link 1"), "http://example.com/1" ),
-        text(" and "),
-        link( t("link 2"), "http://example.com/2" )
-      ) }
+      val defs = List( new LinkDefinitionChunk( "link 1", "http://example.com/1",
+                                                None ),
+                       new LinkDefinitionChunk( "link 2", "http://example.com/2",
+                                                None ) )
+      val txt = "[Link 1][] and [link 2][]"
+      convert( txt, defs ) should equal {
+        List( Link( List(Text("Link 1")), "http://example.com/1", None ),
+              Text(" and "),
+              Link( List(Text("link 2")), "http://example.com/2", None ) ) }
     }
-  }
-  
-  describe("Escaping system") {
   
     it("should escape asterixes in content") {
-      val converted = spanConverter(Nil)(
-        TextChunk("""an \*escaped\* emphasis""")
-      )
-      converted.toList should equal( List(
-        text("""an \*escaped\* emphasis""")
-      ) )
+      val txt = """an \*escaped\* emphasis"""
+      convert( txt ) should equal( List( Text("""an \*escaped\* emphasis""") ) )
     }
-    
+      
     it("should escape backticks in content") {
-      val converted = spanConverter(Nil)(
-        TextChunk("""an escaped \' backtick""")
-      )
-      converted.toList should equal( List(
-        text("""an escaped \' backtick""")
-      ) )
+      val txt = """an escaped \' backtick"""
+      convert( txt ) should equal( List( Text("""an escaped \' backtick""") ) )
     }
-    
+      
     it("should ignore backslashes in code") {
-      val converted = spanConverter(Nil)(
-        TextChunk("""a backslash `\` in code""")
-      )
-      converted.toList should equal( List(
-        text("""a backslash """),
-        codeSpan("\\"),
-        text(""" in code""")
-      ) )
+      val txt = """a backslash `\` in code"""
+      convert( txt ) should equal(
+        List( Text("""a backslash """), CodeSpan("\\"), Text(""" in code""") ) )
     }
   }
 }

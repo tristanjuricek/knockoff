@@ -1,16 +1,18 @@
 # Getting Started #
 
-### Notice - the 0.7.x series of knockoff is 2.8 *only* ###
+
+
+## Using Knockoff With [SBT][] ##
 
 Right now knockoff is easiest to use via [sbt][]. The dependency declaration that
 resolves the scala version looks like this:
 
-    val knockoff = "com.tristanhunt" % "knockoff" %% "0.6.1-8"
+    val knockoff = "com.tristanhunt" % "knockoff" %% "0.7.0-10"
 
 If you have a problem with the scala version, you can specify it directly as part
 of the project name:
 
-    val knockoff = "com.tristanhunt" % "knockoff_2.7.7" % "0.6.1-8"
+    val knockoff = "com.tristanhunt" % "knockoff_2.7.7" % "0.7.0-10"
 
 The repository specification is:
 
@@ -22,10 +24,33 @@ A very simple example of the project definition file that goes in a place like
     import sbt._
     
     class MyProject( info : ProjectInfo ) extends DefaultProject( info ) {
-      val knockoff  = "com.tristanhunt" % "knockoff_2.7.7" % "0.6.1-8"
+      val knockoff  = "com.tristanhunt" % "knockoff_2.7.7" % "0.7.0-10"
       val nexus =
         "tristanhunt nexus" at "http://tristanhunt.com:8081/content/groups/public"
     }
+
+
+
+## Using Knockoff With Maven ##
+
+An example dependency definitions includes the scala version as part of the
+`artifactId`.
+
+    <dependency>
+      <groupId>com.tristanhunt</groupId>
+      <artifactId>knockoff_2.7.7</artifactId>
+      <version>0.7.0-10</version>
+    </dependency>
+
+You'll likely need to grab things off of my nexus host, which can be done with this
+repository definition:
+
+    <repository>
+      <id>tristanhunt.com</id>
+      <name>Tristan's Repo</name>
+      <url>http://tristanhunt.com:8081/content/groups/public/</url>
+    </repository>
+
 
 
 ## Using Knockoff outside the Simple Build Tool ##
@@ -53,7 +78,7 @@ documentation. Add the `lit` sub command.
     sbt update lit package
 
 
-[1]: http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/knockoff_2.7.7/0.6.1-8/knockoff_2.7.7-0.6.1-8.jar
+[1]: http://tristanhunt.com:8081/content/groups/public/com/tristanhunt/knockoff_2.7.7/0.7.0-10/knockoff_2.7.7-0.7.0-10.jar
 [literable]: http://tristanhunt.com/projects/literable
 [sbt]: http://code.google.com/p/simple-build-tool/
 [scala]: http://www.scala-lang.org

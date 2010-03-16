@@ -18,11 +18,11 @@ class ChunkParser extends RegexParsers with StringExtras {
     """[\t ]*\n""".r ^^ ( str => EmptySpace( str ) )
 
   def textBlock : Parser[ Chunk ] =
-    rep1( textLine ) ^^ ( str => TextChunk( foldedString( str ) ) )
-
+    rep1( textLine ) ^^ { seq => TextChunk( foldedString(seq) ) }
+  
   /** Match any line up until it ends with a newline. */
   def textLine : Parser[ Chunk ] =
-    """[\t ]*\S[^\n]*\n?""".r ^^ ( str => TextChunk( str ) )
+    """[\t ]*\S[^\n]*\n?""".r ^^ { str => TextChunk(str) }
   
   def bulletItem : Parser[ Chunk ] =
     bulletLead ~ rep( trailingLine ) ^^ {

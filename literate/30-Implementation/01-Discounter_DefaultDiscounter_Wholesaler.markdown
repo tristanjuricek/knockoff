@@ -1,7 +1,7 @@
 # `Discounter` and the `Wholesaler` #
 
 You inherit from `KnockOff` to be able to parse your sources. If you're not doing
-fancy customization, you use the DefaultDiscounter.
+fancy customization, you can use the DefaultDiscounter.
 
     val blocks = DefaultDiscounter.knockoff( "document" )
 
@@ -14,19 +14,11 @@ Otherwise...
     package com.tristanhunt.knockoff
     // See the Discounter imports
     
-    trait   Discounter
-    extends ChunkStreamFactory
-    with    SpanConverterFactory
-    with    HasElementFactory {
+    trait Discounter extends ChunkStreamFactory with XHTMLWriter with TextWriter {
   
-      def toXML( blocks : Seq[ Block ]  ) : Node =
-        Group( blocks.map( _.xml ) )
-  
-      /**
-        Parses and returns our best guess at the sequence of blocks. It will
-        never fail, just log all suspicious things.
-      */
-      def knockoff( source : java.lang.CharSequence ) : Seq[ Block ] = {
+      /** Parses and returns our best guess at the sequence of blocks. It will
+          never fail, just log all suspicious things. */
+      def knockoff( source : java.lang.CharSequence ) : Seq[Block] = {
           
         val chunks = createChunkStream( new CharSequenceReader( source, 0 ) )
 
@@ -38,7 +30,7 @@ Otherwise...
           else Nil
         }
         
-        val convert = spanConverter( linkDefinitions )
+        val convert = new SpanConverter( linkDefinitions )
         
         val spanned = chunks.map { chunkAndPos =>
           ( chunkAndPos._1, convert( chunkAndPos._1 ), chunkAndPos._2 )
@@ -47,18 +39,16 @@ Otherwise...
         combine( spanned.toList, new ListBuffer )
       }
       
-      /**
-        Consume input and append the right thing to the output until empty. The
-        Chunk itself determines the "right thing to do". All chunks only know what
-        has come before itself, by peering into the output. (It shouldn't matter
-        what comes next...)
-      */
-      private def combine( input : List[ (Chunk, SpanSeq, Position) ],
-                           output  : ListBuffer[ Block ] )
+      /** Consume input and append the right thing to the output until empty. The
+          Chunk itself determines the "right thing to do". All chunks only know what
+          has come before itself, by peering into the output. (It shouldn't matter
+          what comes next...) */
+      private def combine( input : List[ (Chunk, Seq[Span], Position) ],
+                           output : ListBuffer[Block] )
                          : Seq[ Block ] = {
         if ( input.isEmpty ) return output
         input.head._1.appendNewBlock( output, input.tail, input.head._2,
-                                      input.head._3 )( elementFactory, this )
+                                      input.head._3, this )
         combine( input.tail, output )
       }
     }
@@ -86,13 +76,13 @@ The `--html4tags` argument will just do nothing, but not be processed as a file.
     import java.io.{ File }
     import scala.util.logging.ConsoleLogger
     
-    object DefaultDiscounter extends Discounter with ColoredLogger {
+    object DefaultDiscounter extends Discounter with ConsoleLogger {
       def main( args : Array[ String ] ) : Unit = try {
         if ( args.contains("--version") ) {
           Console.err.print( "DefaultDiscounter " )
         }
         if ( args.contains("--version") || args.contains("-shortversion") ) {
-          Console.err.println( "0.6.1-6" )
+          Console.err.println( "0.7.0-10" )
           return 0
         }
         
@@ -103,10 +93,10 @@ The `--html4tags` argument will just do nothing, but not be processed as a file.
             line = Console.readLine
             if ( line != null ) sb.append( line )
           } while ( line != null )
-          println( toXML( knockoff( sb.toString ) ).toString )
+          println( toXHTML( knockoff( sb.toString ) ).toString )
         } else {
           args.filter( _ != "--html4tags" ).foreach { fileName =>
-            println( toXML( knockoff( readText( fileName ) ) ).toString )
+            println( toXHTML( knockoff( readText( fileName ) ) ).toString )
           }
         }
       } catch {
@@ -135,8 +125,10 @@ like a block.
     package com.tristanhunt.knockoff.extra
 
     import com.tristanhunt.knockoff.{ Block, Paragraph, Discounter }
+    import com.tristanhunt.knockoff.latex.{ LatexDiscounter, LatexWriter }
     
-    trait Wholesaler extends Discounter with MetaDataConverter {
+    trait Wholesaler extends Discounter with MetaDataConverter
+    with MetaDataXHTMLWriter with LatexDiscounter with LatexWriter {
       
       override def knockoff( source : java.lang.CharSequence ) : Seq[ Block ] = {
         var blocks = super.knockoff( source )
@@ -145,7 +137,7 @@ like a block.
           blocks.first match {
             case p : Paragraph =>
               toMetaData( p ).foreach { metaData =>
-                blocks = Seq( metaData ) ++ blocks.drop(1) }
+                blocks = List( metaData ) ++ blocks.drop(1) }
             case _ => {}
           }
         }
@@ -162,17 +154,16 @@ Another console wrapping application. This one has to be called explicitly.
     // In com/tristanhunt/knockoff/extra/DefaultWholesaler.scala
     package com.tristanhunt.knockoff.extra
 
-    import com.tristanhunt.knockoff.{ ColoredLogger }
     import java.io.File
     import scala.util.logging.ConsoleLogger
     
-    object DefaultWholesaler extends Wholesaler with ColoredLogger {
+    object DefaultWholesaler extends Wholesaler with ConsoleLogger {
       def main( args : Array[ String ] ) : Unit = try {
         if ( args.contains("--version") ) {
           Console.err.print( "DefaultWholesaler " )
         }
         if ( args.contains("--version") || args.contains("-shortversion") ) {
-          Console.err.println( "0.6.1-6" )
+          Console.err.println( "0.7.0-10" )
           return 0
         }
         
@@ -183,10 +174,10 @@ Another console wrapping application. This one has to be called explicitly.
             line = Console.readLine
             if ( line != null ) sb.append( line )
           } while ( line != null )
-          println( toXML( knockoff( sb.toString ) ).toString )
+          println( toXHTML( knockoff( sb.toString ) ).toString )
         } else {
           args.filter( _ != "--html4tags" ).foreach { fileName =>
-            println( toXML( knockoff( readText( fileName ) ) ).toString )
+            println( toXHTML( knockoff( readText( fileName ) ) ).toString )
           }
         }
       } catch {
