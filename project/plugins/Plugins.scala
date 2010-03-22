@@ -13,4 +13,6 @@ class Plugins(info: ProjectInfo) extends PluginDefinition(info) {
   val newReleaseToolsRepository = "Scala Tools Repository" at
     "http://nexus.scala-tools.org/content/repositories/snapshots/" 
   val scalatest = "org.scalatest" % "scalatest" % "1.0.1-for-scala-2.8.0.Beta1-with-test-interfaces-0.3-SNAPSHOT" % "test"
+  
+  val posterous = "net.databinder" % "posterous-sbt" % "0.1.4"
 }

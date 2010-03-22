@@ -1,7 +1,7 @@
 import sbt._
 
 class KnockoffProject( info : ProjectInfo ) extends DefaultProject( info )
-  with KnockoffLiterableProject {
+  with KnockoffLiterableProject with posterous.Publish {
   
   override def compileOptions = {
     List( MaxCompileErrors( 10 ), CompileOption("-unchecked") ) :::
