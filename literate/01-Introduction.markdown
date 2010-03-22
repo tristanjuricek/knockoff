@@ -27,7 +27,7 @@ See the [Recipes](10-Usage/02-Recipes.html) page for more.
 
 ## Recent Updates ##
 
-### `0.7.0-10` March 19, 2010 "Seriously I'm not *this* stupid"
+### `0.7.0-10` March 22, 2010
 
 This is a major revision of the project. Your code will probably break if you did
 something other than just convert simple markdown to XHTML.

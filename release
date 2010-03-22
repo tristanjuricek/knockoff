@@ -18,7 +18,7 @@ do
 done
 
 echo Building...
-sbt +clean +clean-lib +update lit-src +test +package
+sbt +clean +clean-lib +update lit-src +package
 
 echo Committing
 git commit -m "$VERSION_NUMBER release" -a
