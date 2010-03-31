@@ -1,0 +1,23 @@
+This is a major revision of the project. Your code will probably break if you did
+something other than just convert simple markdown to XHTML.
+
+Generally speaking, the project is taking a few ideas from [pandoc][], starting
+with output to LaTeX.
+
+* Redid the entire object model to remove the `xml` and `markdown` methods, and the
+  silly little object factory. If you need to customize the output, override one
+  of the `FooWriter` traits.
+
+* Added plain text and a *preliminary* LaTeX writer.
+
+* Fixed an issue where two spaces at the end of the line were not breaking into
+  separate paragraphs.
+  
+* Removed the use of perl for the integration tests. Everything should be kicked
+  off by the `test` command.
+  
+* Cross-compiled for Scala 2.7.4-2.8.0.Beta1 for the 1.5 JVM. The core project did
+  run under 2.8.0 recently, but getting the sbt configuration straight for ScalaTest
+  isn't as "plug and play" as I would have liked.
+  
+[pandoc]: http://johnmacfarlane.net/pandoc/

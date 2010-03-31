@@ -37,8 +37,32 @@ left to your program to interpret.
 
 ## `MetaDataConverter` ##
 
+If there is a leading `Paragraph`, and it can be broken into Metadata, we treat it
+like a block. This is the only potential block that can be metadata.
+
+**TODO** Some utilities enable metadata throughout the document, or complex data
+like YAML. Where would this be useful?
+
+**TODO** There could be a leading XML block, which to me, is a different kind of
+"MetaData". (Hm... perhaps these should be "PropertyMetaData"?)
+
     // The MetaDataConverter
-    trait MetaDataConverter extends Logged {
+    trait MetaDataConverter extends Discounter {
+      
+      override def knockoff( source : java.lang.CharSequence ) : Seq[ Block ] = {
+        var blocks = super.knockoff( source )
+        
+        if ( ! blocks.isEmpty ) {
+          blocks.first match {
+            case p : Paragraph =>
+              toMetaData( p ).foreach { metaData =>
+                blocks = List( metaData ) ++ blocks.drop(1) }
+            case _ => {}
+          }
+        }
+        
+        return blocks
+      }
       
       /**
         @param  para The paragraph to be converted. We use the trimmed markdown 
@@ -90,7 +114,7 @@ left to your program to interpret.
     // In com/tristanhunt/knockoff/extra/MetaDataConverter.scala
     package com.tristanhunt.knockoff.extra
 
-    import com.tristanhunt.knockoff.{ Paragraph, Span, Text }
+    import com.tristanhunt.knockoff.{ Block, Discounter, Paragraph, Span, Text }
     import scala.collection.mutable.ListBuffer
     import scala.util.logging.{ Logged }
     

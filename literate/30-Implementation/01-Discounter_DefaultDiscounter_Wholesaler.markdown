@@ -116,11 +116,6 @@ I've started to include ideas from the [MultiMarkdown][] syntax system, but I di
 want to mix that up with a normal Markdown format. The `Wholesaler` is going to be
 the variation of the `Discounter`, plus **so much more**!
 
-### Some Rules May Apply
-
-If there is a leading `Paragraph`, and it can be broken into Metadata, we treat it
-like a block.
-
     // In com/tristanhunt/knockoff/extra/Wholesaler.scala
     package com.tristanhunt.knockoff.extra
 
@@ -128,23 +123,8 @@ like a block.
     import com.tristanhunt.knockoff.latex.{ LatexDiscounter, LatexWriter }
     
     trait Wholesaler extends Discounter with MetaDataConverter
-    with MetaDataXHTMLWriter with LatexDiscounter with LatexWriter {
-      
-      override def knockoff( source : java.lang.CharSequence ) : Seq[ Block ] = {
-        var blocks = super.knockoff( source )
-        
-        if ( ! blocks.isEmpty ) {
-          blocks.first match {
-            case p : Paragraph =>
-              toMetaData( p ).foreach { metaData =>
-                blocks = List( metaData ) ++ blocks.drop(1) }
-            case _ => {}
-          }
-        }
-        
-        return blocks
-      }
-    }
+      with MetaDataXHTMLWriter with LatexDiscounter with LatexWriter
+      with SCAMLDiscounter with SCAMLLatexWriter
 
 
 ### `DefaultWholesaler` ###

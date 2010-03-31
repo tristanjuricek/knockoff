@@ -27,6 +27,15 @@ See the [Recipes](10-Usage/02-Recipes.html) page for more.
 
 ## Recent Updates ##
 
+### `0.7.1-SNAPSHOT`
+
+**TODO** Move the 'knockoff.latex' package to the 'extra' package.
+
+**TODO** Investigate SSP pass-through, it might have to be extended on top of HTML
+
+* Added SCAML pass-through to the Wholesaler.
+
+
 ### `0.7.0-10` March 22, 2010
 
 This is a major revision of the project. Your code will probably break if you did

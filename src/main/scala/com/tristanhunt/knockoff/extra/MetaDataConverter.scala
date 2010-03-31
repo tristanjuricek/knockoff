@@ -1,10 +1,25 @@
 package com.tristanhunt.knockoff.extra
 
-import com.tristanhunt.knockoff.{ Paragraph, Span, Text }
+import com.tristanhunt.knockoff.{ Block, Discounter, Paragraph, Span, Text }
 import scala.collection.mutable.ListBuffer
 import scala.util.logging.{ Logged }
 
-trait MetaDataConverter extends Logged {
+trait MetaDataConverter extends Discounter {
+  
+  override def knockoff( source : java.lang.CharSequence ) : Seq[ Block ] = {
+    var blocks = super.knockoff( source )
+    
+    if ( ! blocks.isEmpty ) {
+      blocks.first match {
+        case p : Paragraph =>
+          toMetaData( p ).foreach { metaData =>
+            blocks = List( metaData ) ++ blocks.drop(1) }
+        case _ => {}
+      }
+    }
+    
+    return blocks
+  }
   
   /**
     @param  para The paragraph to be converted. We use the trimmed markdown 
