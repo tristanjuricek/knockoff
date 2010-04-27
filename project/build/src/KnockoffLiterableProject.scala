@@ -16,7 +16,7 @@ trait KnockoffLiterableProject extends LiterableProject {
             <li> <a href={ doc.relativePathTo( "../.." ) }> Home </a> </li>
             <li> <a href="http://github.com/tristanjuricek/knockoff"> Github </a> </li>
             <li> <a href="http://www.linkedin.com/in/tristanjuricek">Linked In</a> </li>
-            <li> <a href="resume.html">Resume</a> </li>
+            <li> <a href={ doc.relativePathTo( "../../resume.html" ) }>Resume</a> </li>
             <li> <a href="http://twitter.com/mr_tristan">Twitter</a> </li>
             <li> <a href="mailto:mr.tristan@gmail.com">Email</a> </li>
     	    </ul>
@@ -31,24 +31,14 @@ trait KnockoffLiterableProject extends LiterableProject {
             <li> <a href={ code.relativePathTo( "../.." ) }> Home </a> </li>
             <li> <a href="http://github.com/tristanjuricek/knockoff"> Github </a> </li>
             <li> <a href="http://www.linkedin.com/in/tristanjuricek">Linked In</a> </li>
-            <li> <a href="resume.html">Resume</a> </li>
+            <li> <a href={ code.relativePathTo( "../../resume.html" ) }>Resume</a> </li>
             <li> <a href="http://twitter.com/mr_tristan">Twitter</a> </li>
             <li> <a href="mailto:mr.tristan@gmail.com">Email</a> </li>
     	    </ul>
       		<hr />
       		<h3> Knockoff </h3>
         </div>
-      )
-      
-      // override def overview( current : WebDocument ) : Node = {
-      //   val elem = super.overview( current )        
-      //   xml.Elem( elem.prefix, elem.label, new xml.UnprefixedAttribute( "class", xml.Text("inline"), elem.attributes ), elem.scope, elem.child : _* )
-      // }
-      // 
-      // override def codeOverview( current : Code ) : Node = {
-      //   val elem = super.codeOverview( current )        
-      //   xml.Elem( elem.prefix, elem.label, new xml.UnprefixedAttribute( "class", xml.Text("inline"), elem.attributes ), elem.scope, elem.child : _* )
-      // }      
+      )    
       
       override def navContent( doc : WebDocument ) : Node = Group(
         baseNav( doc ) ++ overview( doc )
