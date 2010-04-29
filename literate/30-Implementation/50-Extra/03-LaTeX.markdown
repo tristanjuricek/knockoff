@@ -135,7 +135,17 @@ which first assumes I can parse the HTML nicely. And assuming I can parse that H
 the rest of the HTML might just have the text content stripped out and passed on.
 
     // The LatexWriter
-    trait LatexWriter {
+    trait LatexWriter extends XHTMLWriter {
+      
+      override def blockToXHTML : Block => Node = block => block match {
+        case LatexBlock( latex, _ ) => XMLText( latex )
+        case _ => super.blockToXHTML( block )
+      }
+      
+      override def spanToXHTML : Span => Node = span => span match {
+        case LatexSpan( latex ) => XMLText( latex )
+        case _ => super.spanToXHTML( span )
+      }
       
       def ruleWidth : String = "\\textwidth"
       def ruleHeight : String = ".3pt"
@@ -327,5 +337,6 @@ the rest of the HTML might just have the text content stripped out and passed on
     
     import com.tristanhunt.knockoff._
     import java.io.{ StringWriter, Writer }
-      
+    import scala.xml.{ Node, Text => XMLText }
+    
     // See the LatexWriter

@@ -2,8 +2,19 @@ package com.tristanhunt.knockoff.latex
 
 import com.tristanhunt.knockoff._
 import java.io.{ StringWriter, Writer }
+import scala.xml.{ Node, Text => XMLText }
+
+trait LatexWriter extends XHTMLWriter {
   
-trait LatexWriter {
+  override def blockToXHTML : Block => Node = block => block match {
+    case LatexBlock( latex, _ ) => XMLText( latex )
+    case _ => super.blockToXHTML( block )
+  }
+  
+  override def spanToXHTML : Span => Node = span => span match {
+    case LatexSpan( latex ) => XMLText( latex )
+    case _ => super.spanToXHTML( span )
+  }
   
   def ruleWidth : String = "\\textwidth"
   def ruleHeight : String = ".3pt"
