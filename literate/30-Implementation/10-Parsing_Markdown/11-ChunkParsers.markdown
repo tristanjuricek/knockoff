@@ -17,8 +17,9 @@ together. To group things together, the `foldedString` will combine
       override def skipWhitespace = false
       
       def chunk : Parser[ Chunk ] = {
-        horizontalRule | bulletItem | numberedItem | indentedChunk |
-        header | blockquote | linkDefinition | textBlock | emptyLines
+        horizontalRule | leadingStrongTextBlock | leadingEmTextBlock | bulletItem |
+        numberedItem | indentedChunk | header | blockquote | linkDefinition |
+        textBlock | emptyLines
       }
       
       def emptyLines : Parser[ Chunk ] =
@@ -42,6 +43,18 @@ together. To group things together, the `foldedString` will combine
       def bulletLead : Parser[ Chunk ] =
         """[ ]{0,3}[*\-+](\t|[ ]{0,4})""".r ~> not("[*\\-+]".r) ~> textLine ^^ {
           textChunk => BulletLineChunk( textChunk.content ) }
+      
+      /** A special case where an emphasis marker on a word on a text block doesn't
+          make the block a list item. */
+      def leadingEmTextBlock : Parser[ Chunk ] =
+        """[ ]{0,3}\*[^*\n]+\*[^\n]*\n?""".r ~ rep( textLine ) ^^ {
+          case ~(emLine, textSeq) => TextChunk( emLine + foldedString(textSeq) ) }
+          
+      /** A special case where an emphasis marker on a word on a text block doesn't
+          make the block a list item. */
+      def leadingStrongTextBlock : Parser[ Chunk ] =
+        """[ ]{0,3}\*\*[^*\n]+\*\*[^\n]*\n?""".r ~ rep( textLine ) ^^ {
+          case ~(strLine, textSeq) => TextChunk( strLine + foldedString(textSeq) ) }
       
       def numberedItem : Parser[ Chunk ] =
         numberedLead ~ rep( trailingLine ) ^^ {

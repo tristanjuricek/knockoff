@@ -27,13 +27,19 @@ See the [Recipes](10-Usage/02-Recipes.html) page for more.
 
 ## Recent Updates ##
 
-### `0.7.1-SNAPSHOT`
+### `0.7.2-SNAPSHOT`
 
 **TODO** Move the 'knockoff.latex' package to the 'extra' package.
 
 **TODO** Investigate SSP pass-through, it might have to be extended on top of HTML
 
+
+### `0.7.1-11` May 17, 2010
+
 * Added SCAML pass-through to the Wholesaler.
+
+* Added special case where a leading emphasis or strong element would cause the
+  paragraph to be interpreted as a text string.
 
 
 ### `0.7.0-10` March 22, 2010
