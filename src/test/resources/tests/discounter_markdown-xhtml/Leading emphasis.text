@@ -1,2 +1,5 @@
 * This * should be emphasized ** but
 that ** shouldn't cause problems.
+
+* *This* should be a list though.
+* _But_ it's easy to work around.

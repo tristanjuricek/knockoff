@@ -29,3 +29,8 @@ Indented [four][] times.
 
 
 [b]: /url/
+
+
+Here is a [link][] (cool!) that should be referenced.
+
+[link]: http://localhost/

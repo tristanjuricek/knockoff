@@ -1,0 +1,4 @@
+* Added SCAML pass-through to the Wholesaler.
+
+* Added special case where a leading emphasis or strong element would cause the
+  paragraph to be interpreted as a text string.

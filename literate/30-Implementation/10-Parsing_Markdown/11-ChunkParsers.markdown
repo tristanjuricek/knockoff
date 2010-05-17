@@ -11,6 +11,7 @@ together. To group things together, the `foldedString` will combine
     package com.tristanhunt.knockoff
     
     import scala.util.parsing.combinator.RegexParsers
+    import scala.util.parsing.input.Reader
 
     class ChunkParser extends RegexParsers with StringExtras {
         
@@ -41,14 +42,34 @@ together. To group things together, the `foldedString` will combine
       
       /** Match a single line that is likely a bullet item. */
       def bulletLead : Parser[ Chunk ] =
-        """[ ]{0,3}[*\-+](\t|[ ]{0,4})""".r ~> not("[*\\-+]".r) ~> textLine ^^ {
+        // """[ ]{0,3}[*\-+](\t|[ ]{0,4})""".r ~> not("[*\\-+]".r) ~> textLine ^^ {
+        """[ ]{0,3}[*\-+](\t|[ ]{0,4})""".r ~> textLine ^^ {
           textChunk => BulletLineChunk( textChunk.content ) }
       
-      /** A special case where an emphasis marker on a word on a text block doesn't
-          make the block a list item. */
+      /** A special case where an emphasis marker, using an asterix, on the first word
+          in a text block doesn't make the block a list item. We'll only catch lines
+          here that have an even number of asterixes, because if it's odd, well, you
+          probably have an asterix line indicator followed by an emphasis. */
       def leadingEmTextBlock : Parser[ Chunk ] =
-        """[ ]{0,3}\*[^*\n]+\*[^\n]*\n?""".r ~ rep( textLine ) ^^ {
-          case ~(emLine, textSeq) => TextChunk( emLine + foldedString(textSeq) ) }
+        """[ ]{0,3}\*""".r ~ notEvenAsterixes ~ rep( textLine ) ^^ {
+          case ~(~(emLine, s), textSeq) => TextChunk( emLine + s + foldedString(textSeq) ) }
+      
+      def notEvenAsterixes = new Parser[String] {
+    
+        def apply( in : Reader[Char] ) : ParseResult[String] = {
+          val (line, asterixCount, remaining) = readLine( in, new StringBuilder, 0 )
+          if ( asterixCount >= 1 && asterixCount % 2 == 1 ) return Success( line, remaining )
+          else Failure( "Odd number of asterixes, skipping.", in )
+        }
+        
+        def readLine( in : Reader[Char], sb : StringBuilder, count : Int )
+                    : (String, Int, Reader[Char]) = {
+          if ( ! in.atEnd ) sb.append( in.first )
+          if ( in.atEnd || in.first == '\n' ) return (sb.toString, count, in.rest)
+          if ( in.first == '*' ) readLine( in.rest, sb, count + 1 )
+          else readLine( in.rest, sb, count )
+        }
+      }
           
       /** A special case where an emphasis marker on a word on a text block doesn't
           make the block a list item. */

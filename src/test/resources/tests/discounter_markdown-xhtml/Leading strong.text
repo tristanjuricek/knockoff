@@ -1,2 +1,5 @@
 **Leading strong** elements with asterisks should also
  *not* be considered lists.
+
+* **This** should be a list though.
+* __But__ it's easy to work around.

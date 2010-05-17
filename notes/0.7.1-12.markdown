@@ -1,0 +1,7 @@
+Two small bug fixes:
+
+1. A reference link followed by a paren was being matched as a normal link.
+
+1. If you used an asterix-delimited em right after a list item asterix marker, the
+   line is now considered to be a list item if you use an odd number of asterixes
+   on the line. (Ugly, but generally going to be OK.)

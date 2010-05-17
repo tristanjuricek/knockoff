@@ -66,7 +66,8 @@ of that span.
       }
       
       def matchers : List[ String => Option[SpanMatch] ] = List(
-        matchDoubleCodes, matchSingleCodes, matchLink, matchHTMLComment,
+        matchDoubleCodes, matchSingleCodes, findReferenceMatch, findAutomaticMatch,
+        findNormalMatch, matchHTMLComment,
         matchEntity, matchHTMLSpan, matchUnderscoreStrongAndEm,
         matchAsterixStrongAndEm, matchUnderscoreStrong, matchAsterixStrong,
         matchUnderscoreEmphasis, matchAsterixEmphasis
@@ -324,16 +325,8 @@ So, things like:
     I'm [a link](http://example.com "Title (in paren)")
 
     // The link matchers
-    def matchLink( source : String ) : Option[SpanMatch] =
-      normalLinks.findFirstMatchIn( source ) match {
-        case None =>
-          findAutomaticMatch( source ).orElse( findReferenceMatch( source ) )
-        case Some( matchr ) =>
-          findNormalMatch( source, matchr )
-      }
-      
     private val automaticLinkRE = """<((http:|mailto:|https:)\S+)>""".r
-      
+    
     def findAutomaticMatch( source : String ) : Option[ SpanMatch ] =
       automaticLinkRE.findFirstMatchIn( source ).map { aMatch =>
         val url = aMatch.group(1)
@@ -341,7 +334,11 @@ So, things like:
         val link = Link( List( Text(url) ), url, None )
         SpanMatch( aMatch.start, before, link, aMatch.after.toOption )
       }
-      
+    
+    def findNormalMatch( source : String ) : Option[SpanMatch] =
+      normalLinks.findFirstMatchIn( source )
+                 .flatMap { matchr => findNormalMatch( source, matchr ) }
+    
     def findNormalMatch( source : String, matchr : Match ) : Option[ SpanMatch ] = {
       val isImage     = matchr.group(1) == "!" || matchr.group(4) == "!"
       val hasTitle    = matchr.group(7) != null

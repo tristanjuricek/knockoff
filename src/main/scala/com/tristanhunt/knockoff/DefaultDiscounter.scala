@@ -9,7 +9,7 @@ object DefaultDiscounter extends Discounter with ConsoleLogger {
       Console.err.print( "DefaultDiscounter " )
     }
     if ( args.contains("--version") || args.contains("-shortversion") ) {
-      Console.err.println( "0.7.0-10" )
+      Console.err.println( "0.7.1-SNAPSHOT" )
       return 0
     }
     
