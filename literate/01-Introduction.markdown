@@ -25,13 +25,31 @@ See the [Recipes](10-Usage/02-Recipes.html) page for more.
 
 
 
+## Possible Updates
+
+- Move the 'knockoff.latex' package to the 'extra' package.
+
+- Investigate SSP pass-through, it might have to be extended on top of HTML
+
+
+
 ## Recent Updates ##
+
 
 ### `0.7.2-SNAPSHOT`
 
-**TODO** Move the 'knockoff.latex' package to the 'extra' package.
+* Added a SCAML writer
 
-**TODO** Investigate SSP pass-through, it might have to be extended on top of HTML
+
+### `0.7.1-12` June 1, 2010
+
+Two small bug fixes:
+
+1. A reference link followed by a paren was being matched as a normal link.
+
+1. If you used an asterix-delimited em right after a list item asterix marker, the
+   line is now considered to be a list item if you use an odd number of asterixes
+   on the line. (Ugly, but generally going to be OK.)
 
 
 ### `0.7.1-11` May 17, 2010

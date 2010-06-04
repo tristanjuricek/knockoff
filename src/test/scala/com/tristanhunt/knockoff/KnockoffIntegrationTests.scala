@@ -122,6 +122,17 @@ class KnockoffIntegrationTests extends Spec with ShouldMatchers {
         fromText should equal ( to.text )
       }
     }
+    
+    it( "should convert tests from Markdown to SCAML" ) {
+      val dir = file( basedir, "wholesaler_markdown-scaml" )
+      dir.listTests(".txt", ".scaml").foreach { case (from, to) =>
+        from should be ('exists)
+        to should be ('exists)
+        println( "Test: " + from.getName )
+        val fromSCAML = toSCAML( knockoff( from.text ) ).trim
+        fromSCAML should equal( to.text )
+      }
+    }
   }
 }
 

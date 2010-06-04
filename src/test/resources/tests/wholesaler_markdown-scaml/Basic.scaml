@@ -1,0 +1,47 @@
+%h1
+  This is a heading
+%h3
+  And here's a third level heading
+%p
+  Paragraph with a 
+  %a{ :href => "http://example.com/1" }
+    direct
+   link and an 
+  %a{ :href => "http://example.com/2", :title => "Indirect link" }
+    indirect
+   one.
+
+%blockquote
+  %p
+    A blockquote with 
+    %em
+      Something 
+      %strong
+        strong
+       inside
+    .
+
+%p
+  Why not try a list
+
+%ul
+  %li
+    %p
+      Here's something
+
+  %li
+    %p
+      That is unordered
+
+%ol
+  %li
+    %p
+      And here's something
+
+  %li
+    %p
+      That's ordered
+
+%p
+  Hey look an image reference: 
+  %img{ :src => "http://example.com/hello.jpg", :title => "This could be bad", :alt => "don't click" }

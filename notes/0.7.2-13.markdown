@@ -1,0 +1,6 @@
+* Added the `SCAMLWriter` with associated `toSCAML` method, in case you want to
+  pepper your markdown files with SCAML - and then use [Scalate](http://scalate.fusesource.org)
+  to process them. (_Note_ No SSP... yet.)
+
+* Specification bugfix whereupon hard breaks are properly broken with `<br/>`s
+  instead of splitting the two lines into separate paragraphs.

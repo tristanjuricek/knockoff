@@ -152,25 +152,30 @@ case class TextChunk( val content : String ) extends Chunk {
                       spans : Seq[Span], position : Position,
                       discounter : Discounter ) {
 
-    val (lead, rest) = splitAtHardBreak( spans, new ListBuffer )
-    list += Paragraph( lead, position )
-    if ( ! rest.isEmpty )
-      appendNewBlock( list, remaining, rest, position, discounter )
+    val split = splitAtHardBreak( spans, new ListBuffer )
+    list += Paragraph( split, position )
   }
 
   def splitAtHardBreak( spans : Seq[Span], cur : Buffer[Span] )
-                      : (Seq[Span], Seq[Span]) = {
-    if ( spans.isEmpty ) return ( cur, spans )
+                      : Seq[Span] = {
+    if ( spans.isEmpty ) return cur
     spans.first match {
       case text : Text =>
-        text.content.indexOf("  \n") match {
+        // Skip past whitespace in the case we have some HTML.
+        var start = 0
+        if ( ! cur.isEmpty && cur.last.isInstanceOf[HTMLSpan] )
+          while ( start < text.content.length &&
+                  Character.isWhitespace( text.content(start) ) )
+            start = start + 1
+        text.content.indexOf("  \n", start) match {
           case -1 => {}
           case idx =>
             val end = idx + "  \n".length
-            val (c1, c2) = ( text.content.substring( 0, end ),
+            val (c1, c2) = ( text.content.substring( 0, idx ),
                              text.content.substring( end ) )
             cur += Text(c1)
-            return ( cur, List(Text(c2)) ++ spans.drop(1) )
+            cur += HTMLSpan("<br/>\n")
+            return splitAtHardBreak( List(Text(c2)) ++ spans.drop(1), cur )
         }
       case _ => {}
     }
