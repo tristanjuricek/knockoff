@@ -1,4 +1,4 @@
-# Writing Plain Text #
+# 2. Writing Plain Text #
 
 The utility of plain text is mostly to get the text without any markup, useful
 in cases where you're using the document in other circumstances.

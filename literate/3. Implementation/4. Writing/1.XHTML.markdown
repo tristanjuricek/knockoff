@@ -1,4 +1,4 @@
-# Writing XHTML #
+# 1. Writing XHTML #
 
 This page is an experiment with using extractors to write XHTML instead of embedding
 everything into the object model.

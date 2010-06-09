@@ -1,4 +1,4 @@
-# `Chunk` Types #
+# 4. `Chunk` Types #
 
 Chunks are used to capture the major blocks in the early stage, and then once we've
 grabbed the spanning elements of each block, to construct the final `Block` model.

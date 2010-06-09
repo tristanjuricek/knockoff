@@ -67,6 +67,19 @@ trait SCAMLWriter { self : TextWriter =>
                                              currentIndent.length )
   
   
+  val specialBodyChars = ".-=#/%"
+  
+  def escapeBody( str : String ) : String = {
+    if ( str.isEmpty ) return str
+    val sb = new StringBuilder
+    if ( specialBodyChars.exists( _ == str.first ) ) sb.append('\\')
+    sb.append( str.trim )
+    return sb.toString
+  }
+  
+  def escapeAttribute( str : String ) : String =
+    str.replace("\"", "\\\"").replace("\n", " ").trim
+  
   /** Generates a SCAML version of the markdown document. */
   def toSCAML( blocks : Seq[Block] ) : String = {
     implicit val writer = new StringWriter
@@ -131,9 +144,11 @@ trait SCAMLWriter { self : TextWriter =>
   /** Delegate to the appropriate handler to decide on indentation. */
   def spanToSCAML( span : Span )( implicit writer : Writer ) : Unit = {
     span match {
-      case Text(_) | HTMLSpan(_) | CodeSpan(_) => normalSpanToSCAML( span )
+      case Text(_) | HTMLSpan(_) | CodeSpan(_) | InterpolatedSCAML(_) =>
+        normalSpanToSCAML( span )
       case Strong(_) | Emphasis(_) | Link(_,_,_) | IndirectLink(_,_) |
-           ImageLink(_,_,_) | IndirectImageLink(_,_) => spanBlockToSCAML( span )
+           ImageLink(_,_,_) | IndirectImageLink(_,_) => 
+        spanBlockToSCAML( span )
     }
   }
   
@@ -149,7 +164,7 @@ trait SCAMLWriter { self : TextWriter =>
         writer.write( "\"" )
         for ( t <- title ) {
           writer.write( ", :title => \"" )
-          writer.write( t.replace("\"", "\\\"").replace("\n", " ").trim )
+          writer.write( escapeAttribute(t) )
           writer.write( "\"" )
         }
         writer.write( " }\n" )
@@ -218,8 +233,9 @@ trait SCAMLWriter { self : TextWriter =>
   def normalSpanToSCAML( span : Span )( implicit writer : Writer ) : Unit = {
     writer.write( indent )
     span match {
-      case Text( content ) => writer.write( content )
+      case Text( content ) => writer.write( escapeBody(content) )
       case HTMLSpan( html ) => writer.write( html )
+      case InterpolatedSCAML( src ) => writer.write( src )
       case CodeSpan( code ) =>
         writer.write( "%code " )
         writer.write( code.replace("\n", " ") ) // There shouldn't be newlines
@@ -255,6 +271,13 @@ trait SCAMLPlainTextWriter extends TextWriter {
       case InterpolatedSCAML( content ) => writer.write( content + " " )
       case _ => super.spanToText( span )
     }
+  }
+}
+
+
+trait SCAMLMetaDataWriter extends SCAMLWriter { self : TextWriter =>
+  override def blockToSCAML( block : Block )( implicit writer : Writer ) : Unit = {
+    if ( ! block.isInstanceOf[MetaData] ) super.blockToSCAML(block)(writer)
   }
 }
 

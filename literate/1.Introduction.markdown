@@ -1,5 +1,4 @@
-Welcome to Knockoff
-===================
+# 1. Welcome to Knockoff #
 
 Knockoff is a Markdown parser with a twist. Most Markdown systems just convert
 Markdown source to HTML. Knockoff converts from Markdown source to an object model
@@ -21,7 +20,7 @@ you can use the `DefaultDiscounter` object.
     import com.tristanhunt.knockoff.DefaultDiscounter._
     toXHTML( knockoff( markdownString ) )
 
-See the [Recipes](10-Usage/02-Recipes.html) page for more.
+See the [Recipes](2.%20Usage/2.Recipes.html) page for more.
 
 
 
@@ -36,10 +35,14 @@ See the [Recipes](10-Usage/02-Recipes.html) page for more.
 ## Recent Updates ##
 
 
-### `0.7.2-SNAPSHOT`
+### `0.7.2-13` June 7, 2010
 
-* Added a SCAML writer
+* Added the `SCAMLWriter` with associated `toSCAML` method, in case you want to
+  pepper your markdown files with SCAML - and then use [Scalate](http://scalate.fusesource.org)
+  to process them. (_Note_ No SSP... yet.)
 
+* Specification bugfix whereupon hard breaks are properly broken with `<br/>`s
+  instead of splitting the two lines into separate paragraphs.
 
 ### `0.7.1-12` June 1, 2010
 

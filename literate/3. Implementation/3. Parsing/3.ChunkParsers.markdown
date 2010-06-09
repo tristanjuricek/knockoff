@@ -1,4 +1,4 @@
-## `ChunkParsers` ##
+# 3. `ChunkParsers` #
 
 Mostly, this is a series of regular expressions built to find the next chunk in a
 markdown document. Some expressions, like headings, will determine the "real span"

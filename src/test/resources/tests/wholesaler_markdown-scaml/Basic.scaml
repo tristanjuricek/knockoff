@@ -3,45 +3,38 @@
 %h3
   And here's a third level heading
 %p
-  Paragraph with a 
+  Paragraph with a
   %a{ :href => "http://example.com/1" }
     direct
-   link and an 
+  link and an
   %a{ :href => "http://example.com/2", :title => "Indirect link" }
     indirect
-   one.
-
+  one.
 %blockquote
   %p
-    A blockquote with 
+    A blockquote with
     %em
-      Something 
+      Something
       %strong
         strong
-       inside
-    .
-
+      inside
+    \.
 %p
   Why not try a list
-
 %ul
   %li
     %p
       Here's something
-
   %li
     %p
       That is unordered
-
 %ol
   %li
     %p
       And here's something
-
   %li
     %p
       That's ordered
-
 %p
-  Hey look an image reference: 
+  Hey look an image reference:
   %img{ :src => "http://example.com/hello.jpg", :title => "This could be bad", :alt => "don't click" }

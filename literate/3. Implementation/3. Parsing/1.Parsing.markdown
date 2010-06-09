@@ -1,5 +1,4 @@
-Parsing Overview
-================
+# 1. Parsing Overview #
 
 Parsing is done in three steps:
 

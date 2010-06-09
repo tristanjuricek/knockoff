@@ -1,5 +1,4 @@
-Recipes
-=======
+# 2. Recipes #
 
 To run the code, import the `DefaultDiscounter`:
 
@@ -12,9 +11,9 @@ To run the code, import the `DefaultDiscounter`:
 ### ... Make an XHTML Fragment ###
 
     val xhtml = toXHTML( blocks )
-    
-    val sw = 
-    val asString = XML.write( xhtml, 
+    val sw = new StringWriter
+    XML.write( sw, xhtml, "utf-8", false, null )
+    val myString = sw.toString
 
 ### Grab The Title Of The First Header  ###
 

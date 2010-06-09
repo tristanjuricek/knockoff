@@ -1,4 +1,4 @@
-# LaTeX Writing #
+# 2. LaTeX Writing #
 
 This will write the object model as a LaTeX document _fragment_, intended to be
 included in some kind of template system. And, if you're creating TeX, you'll

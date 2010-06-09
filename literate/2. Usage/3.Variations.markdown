@@ -1,4 +1,4 @@
-# Where Knockoff is not like Markdown #
+# 3. Where Knockoff is not like Markdown #
 
 Knockoff does not generate HTML 100% exactly like the core Markdown script.
 

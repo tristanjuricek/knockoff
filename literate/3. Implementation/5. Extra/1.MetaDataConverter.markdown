@@ -1,4 +1,4 @@
-# `MetaData` and `MetaDataConverter` #
+# 1. `MetaData` and `MetaDataConverter` #
 
 Methods to convert `Paragraph` to `MetaData`. A `Paragraph` is `MetaData` if all
 lines can be converted to key/value strings.

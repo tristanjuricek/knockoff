@@ -1,4 +1,4 @@
-# `ChunkStreamFactory` #
+# 2. `ChunkStreamFactory` #
 
 Breaks the markdown document in to `Chunk`s, so that later recognition can function.
 This means this

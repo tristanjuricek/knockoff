@@ -1,4 +1,4 @@
-# SCAML Interpolation #
+# 3. SCAML #
 
 If you are using something like [Scalate][] as a template system, you may want to
 inject some basic [SCAML][] scala code in your documents, treating them like
@@ -126,6 +126,19 @@ plain text writers.
                                                  currentIndent.length )
       
       
+      val specialBodyChars = ".-=#/%"
+      
+      def escapeBody( str : String ) : String = {
+        if ( str.isEmpty ) return str
+        val sb = new StringBuilder
+        if ( specialBodyChars.exists( _ == str.first ) ) sb.append('\\')
+        sb.append( str.trim )
+        return sb.toString
+      }
+      
+      def escapeAttribute( str : String ) : String =
+        str.replace("\"", "\\\"").replace("\n", " ").trim
+      
       /** Generates a SCAML version of the markdown document. */
       def toSCAML( blocks : Seq[Block] ) : String = {
         implicit val writer = new StringWriter
@@ -190,9 +203,11 @@ plain text writers.
       /** Delegate to the appropriate handler to decide on indentation. */
       def spanToSCAML( span : Span )( implicit writer : Writer ) : Unit = {
         span match {
-          case Text(_) | HTMLSpan(_) | CodeSpan(_) => normalSpanToSCAML( span )
+          case Text(_) | HTMLSpan(_) | CodeSpan(_) | InterpolatedSCAML(_) =>
+            normalSpanToSCAML( span )
           case Strong(_) | Emphasis(_) | Link(_,_,_) | IndirectLink(_,_) |
-               ImageLink(_,_,_) | IndirectImageLink(_,_) => spanBlockToSCAML( span )
+               ImageLink(_,_,_) | IndirectImageLink(_,_) => 
+            spanBlockToSCAML( span )
         }
       }
       
@@ -208,7 +223,7 @@ plain text writers.
             writer.write( "\"" )
             for ( t <- title ) {
               writer.write( ", :title => \"" )
-              writer.write( t.replace("\"", "\\\"").replace("\n", " ").trim )
+              writer.write( escapeAttribute(t) )
               writer.write( "\"" )
             }
             writer.write( " }\n" )
@@ -278,8 +293,9 @@ plain text writers.
       def normalSpanToSCAML( span : Span )( implicit writer : Writer ) : Unit = {
         writer.write( indent )
         span match {
-          case Text( content ) => writer.write( content )
+          case Text( content ) => writer.write( escapeBody(content) )
           case HTMLSpan( html ) => writer.write( html )
+          case InterpolatedSCAML( src ) => writer.write( src )
           case CodeSpan( code ) =>
             writer.write( "%code " )
             writer.write( code.replace("\n", " ") ) // There shouldn't be newlines
@@ -323,6 +339,13 @@ might appear to be a SCAML statement. This is not a good general solution.
       }
     }
     
+    // The SCAML MetaData Helper Writer
+    trait SCAMLMetaDataWriter extends SCAMLWriter { self : TextWriter =>
+      override def blockToSCAML( block : Block )( implicit writer : Writer ) : Unit = {
+        if ( ! block.isInstanceOf[MetaData] ) super.blockToSCAML(block)(writer)
+      }
+    }
+    
     // In com/tristanhunt/knockoff/extra/SCAML.scala
     package com.tristanhunt.knockoff.extra
     
@@ -342,6 +365,8 @@ might appear to be a SCAML statement. This is not a good general solution.
     // See the SCAML Latex Writer
     
     // See the SCAML Plain Text Writer
+    
+    // See the SCAML MetaData Helper Writer
     
     
     // In test com/tristanhunt/knockoff/extra/SCAMLSpec.scala
