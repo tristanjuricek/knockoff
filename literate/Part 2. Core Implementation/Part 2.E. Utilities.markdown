@@ -1,4 +1,6 @@
-# 1. `StringExtras` #
+# Part 2.E. Utilities #
+
+## String Extras ##
 
 Adds utilities to String for doing things like finding the next N indexes of a
 recurrence.

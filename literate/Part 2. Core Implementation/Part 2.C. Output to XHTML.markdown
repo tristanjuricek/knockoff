@@ -1,20 +1,11 @@
-# 1. Writing XHTML #
+# Part 2.C. Output To XHTML (and Text) #
 
-This page is an experiment with using extractors to write XHTML instead of embedding
-everything into the object model.
+Knockoff's XHTMLWriter uses match expressions on it's object model to create a
+very similar XHTML-style XML document.
 
-A major feature of the XHTML writing system would be simple customization. For
-example, writing out each code block with a special class attribute to enable code
-beautification is an immediate need. 
-
-The trick is making it easy / obvious to assign state to any one of the conversion
-methods: if I'm in a header, and I hit an Emphasis element, just add the text...
-
-Another reason for extractors would be to get rid of the ugly "Span is also a
-sequence of Span" setup of the current object model.
-
-My sense is that this could bind a series of methods to handle the individual
-conversions.
+Customization involves overriding one of these methods. At times, I've found it 
+easier to completely re-write or adjust the output method, so this technique may not
+be 100% finished.
 
     // In com/tristanhunt/knockoff/XHTMLWriter.scala
     package com.tristanhunt.knockoff
@@ -160,3 +151,66 @@ conversions.
           buf
       }
     }
+
+
+
+## Plain Text ##
+
+The utility of plain text is mostly to get the text without any markup, useful in
+cases where you're doing something like pulling the header into a title field, etc.
+
+**TODO** HTML is currently bypassed, we should parse it and strip out the text.
+
+    // The TextWriter
+    trait TextWriter {
+      
+      /** Creates a Group representation of the document. */
+      def toText( blocks : Seq[Block] ) : String = {
+        implicit val writer = new StringWriter
+        blocksToText( blocks )
+        writer.toString
+      }
+      
+      def blocksToText( blocks : Seq[Block] )( implicit writer : Writer ) : Unit =
+        blocks.foreach( blockToText )
+      
+      def blockToText( block : Block )( implicit writer : Writer ) : Unit = {
+        block match {
+          case Paragraph( spans, _ ) => spans.foreach( spanToText )
+          case Header( _, spans, _ ) => spans.foreach( spanToText )
+          case LinkDefinition( _, _, _, _ ) => {}
+          case Blockquote( children, _ ) => children.foreach( blockToText )
+          case CodeBlock( text, _ ) => writer.write( text.content )
+          case HorizontalRule( _ ) => {}
+          case OrderedItem( children, _ ) => children.foreach( blockToText )
+          case UnorderedItem( children, _ ) => children.foreach( blockToText )
+          case OrderedList( items ) => items.foreach( blockToText )
+          case UnorderedList( items ) => items.foreach( blockToText )
+        }
+        writer.write(" ")
+      }
+      
+      def spanToText( span : Span )( implicit writer : Writer ) : Unit = {
+        span match {
+          case Text( content ) => writer.write( content )
+          case HTMLSpan( html ) => {} 
+          case CodeSpan( code ) => writer.write( code )
+          case Strong( children ) => children.foreach( spanToText )
+          case Emphasis( children ) => children.foreach( spanToText )
+          case Link( children, url, title ) => children.foreach( spanToText )
+          case IndirectLink( children, definition ) => children.foreach( spanToText )
+          case ImageLink( children, url, title ) => children.foreach( spanToText )
+          case IndirectImageLink( children, definition ) => children.foreach( spanToText )
+        }
+        writer.write( " " )
+      }
+    }
+
+### TextWriter.scala
+
+    // In com/tristanhunt/knockoff/TextWriter.scala
+    package com.tristanhunt.knockoff
+    
+    import java.io.{ StringWriter, Writer }
+    
+    // See the TextWriter

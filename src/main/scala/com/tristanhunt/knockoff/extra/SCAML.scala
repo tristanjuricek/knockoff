@@ -1,7 +1,6 @@
 package com.tristanhunt.knockoff.extra
 
 import com.tristanhunt.knockoff._
-import com.tristanhunt.knockoff.latex.{ LatexWriter }
 import java.io.{ Writer, StringWriter }
 import scala.xml.{ Node, Unparsed }
 

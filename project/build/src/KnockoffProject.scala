@@ -15,6 +15,7 @@ class KnockoffProject( info : ProjectInfo ) extends DefaultProject( info )
 
   val scala_test = "org.scalatest" % "scalatest" % "1.0" % "test->default"
   val jtidy = "jtidy" % "jtidy" % "r938" % "test->default"
+  val snuggletex = "uk.ac.ed.ph.snuggletex" % "snuggletex-core" % "1.2.2"
     
   override def managedStyle = ManagedStyle.Maven
   val publishTo = "tristanhunt releases" at

@@ -1,4 +1,4 @@
-# 3. SCAML #
+# Part 3.C. SCAML #
 
 If you are using something like [Scalate][] as a template system, you may want to
 inject some basic [SCAML][] scala code in your documents, treating them like
@@ -350,7 +350,6 @@ might appear to be a SCAML statement. This is not a good general solution.
     package com.tristanhunt.knockoff.extra
     
     import com.tristanhunt.knockoff._
-    import com.tristanhunt.knockoff.latex.{ LatexWriter }
     import java.io.{ Writer, StringWriter }
     import scala.xml.{ Node, Unparsed }
     

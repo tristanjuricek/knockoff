@@ -1,13 +1,4 @@
-# 2. LaTeX Writing #
-
-This will write the object model as a LaTeX document _fragment_, intended to be
-included in some kind of template system. And, if you're creating TeX, you'll
-probably want a few math formulae. Thus, this will also add a couple of block types
-that will handle formulae into the system.
-
-
-
-# You've Got LaTeX In Your Markdown #
+# Part 3.B. LaTeX #
 
 There are two ways to include LaTeX in a markdown document with this extension; as
 a span or a block. The span, or _text style_ equation, is wrapped with dollar signs
@@ -24,6 +15,10 @@ going to be passed through without a lot of fuss.
         E = mc^2 \label{clever}
         \end{equation}
 
+
+
+## Object Model Extensions For LaTeX ##
+
 Extensions for LaTeX in the markdown are simple. The LaTeX-specific markup is passed
 through as strings.
 
@@ -32,8 +27,12 @@ through as strings.
     
     case class LatexBlock( latex : String, position : Position ) extends Block
 
-These are to be discovered in a post-processing step that can wrap the base
-`knockoff` method.
+
+
+## LaTeX Discovery ##
+
+These adjust the `knockoff` method in a post-processing step to capture the LaTeX
+in the Markdown document.
 
     // The LatexDiscounter
     trait LatexDiscounter extends Discounter {
@@ -98,10 +97,38 @@ These are to be discovered in a post-processing step that can wrap the base
                  lines.last.trim.startsWith("\\end") )
       }
     }
-    
 
 
-## The `LatexWriter` ##
+
+## Latex HTML Output ##
+
+I'm using [SnuggleTex](http://www2.ph.ed.ac.uk/snuggletex) to output the LaTeX
+fragments into MathML for now.
+
+    // The LatexXHTMLWriter
+    trait LatexXHTMLWriter extends XHTMLWriter {
+
+      override def blockToXHTML : Block => Node = block => block match {
+        case LatexBlock( tex, _ ) => toMathML( tex )
+        case _ => super.blockToXHTML( block )
+      }
+      
+      override def spanToXHTML : Span => Node = span => span match {
+        case LatexSpan( tex ) => toMathML( tex )
+        case _ => super.spanToXHTML( span )
+      }
+      
+      def toMathML( tex : String ) : Node = {
+        val engine = new SnuggleEngine
+        val session = engine.createSession
+        val input = new SnuggleInput(tex)
+        session.parseInput(input)
+        return Unparsed( session.buildXMLString )
+      }
+    }
+
+
+## Writing LaTeX ##
 
 This enables a slightly different call:
 
@@ -109,6 +136,9 @@ This enables a slightly different call:
     toLatex( knockoff( markdownString ) )
 
 Since it's just string building, you can alternatively pass in your own `Writer`.
+
+Usage of these files will probably be as fragments included in other documents, just
+like XHTML usage. That means you won't get all the heading front matter, etc.
 
 ### Correctness with bold and emphasis
 
@@ -309,34 +339,29 @@ the rest of the HTML might just have the text content stripped out and passed on
       }
     }
 
-    
-    
-## Source Files ##
 
-    // In com/tristanhunt/knockoff/latex/LatexObjectModel.scala
-    package com.tristanhunt.knockoff.latex
+
+### Latex.scala
+
+    // In com/tristanhunt/knockoff/latex/Latex.scala
+    package com.tristanhunt.knockoff.extra
     
-    import com.tristanhunt.knockoff.{ Span, Block }
+    import com.tristanhunt.knockoff._
     import scala.util.parsing.input.{ Position }
     
     // See the LaTeX object model
-
-
-    // In com/tristanhunt/knockoff/latex/LatexDiscounter.scala
-    package com.tristanhunt.knockoff.latex
     
-    import com.tristanhunt.knockoff._
     import java.lang.{ CharSequence }
     import scala.collection.mutable.{ Buffer, ListBuffer }
-
+    
     // See the LatexDiscounter
-
-
-    // In com/tristanhunt/knockoff/latex/LatexWriter.scala
-    package com.tristanhunt.knockoff.latex
     
-    import com.tristanhunt.knockoff._
+    import uk.ac.ed.ph.snuggletex.{ SnuggleEngine, SnuggleInput }
+    
+    import scala.xml.{ Node, Text => XMLText, Unparsed }
+    
+    // See the LatexXHTMLWriter
+    
     import java.io.{ StringWriter, Writer }
-    import scala.xml.{ Node, Text => XMLText }
-    
+        
     // See the LatexWriter

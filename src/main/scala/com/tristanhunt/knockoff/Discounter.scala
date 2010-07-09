@@ -10,9 +10,9 @@ trait Discounter extends ChunkStreamFactory with XHTMLWriter with TextWriter {
   /** Parses and returns our best guess at the sequence of blocks. It will
       never fail, just log all suspicious things. */
   def knockoff( source : java.lang.CharSequence ) : Seq[Block] = {
-      
+    
     val chunks = createChunkStream( new CharSequenceReader( source, 0 ) )
-
+    
     // These next lines are really ugly because I couldn't figure out a nice
     // way to match a tuple argument (thank you erasure!)
     val linkDefinitions = chunks.flatMap{ case ((chunk, pos)) =>
@@ -44,3 +44,38 @@ trait Discounter extends ChunkStreamFactory with XHTMLWriter with TextWriter {
   }
 }
 
+import java.io.File
+import scala.util.logging.ConsoleLogger
+
+object DefaultDiscounter extends Discounter with ConsoleLogger {
+  def main( args : Array[ String ] ) : Unit = try {
+    if ( args.contains("--version") ) {
+      Console.err.print( "DefaultDiscounter " )
+    }
+    if ( args.contains("--version") || args.contains("-shortversion") ) {
+      Console.err.println( "0.7.1-SNAPSHOT" )
+      return 0
+    }
+
+    if ( args.isEmpty ) {
+      val sb = new StringBuilder
+      var line : String = null
+      do {
+        line = Console.readLine
+        if ( line != null ) sb.append( line )
+      } while ( line != null )
+      println( toXHTML( knockoff( sb.toString ) ).toString )
+    } else {
+      args.filter( _ != "--html4tags" ).foreach { fileName =>
+        println( toXHTML( knockoff( readText( fileName ) ) ).toString )
+      }
+    }
+  } catch {
+    case th : Throwable => {
+      th.printStackTrace( Console.err )
+    }
+  }
+
+  private def readText( fileName : String ) : String =
+    io.Source.fromFile( new File( fileName ) ).mkString("")
+}
