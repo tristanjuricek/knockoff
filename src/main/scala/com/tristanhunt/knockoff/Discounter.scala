@@ -21,7 +21,7 @@ trait Discounter extends ChunkStreamFactory with XHTMLWriter with TextWriter {
       else Nil
     }
     
-    val convert = new SpanConverter( linkDefinitions )
+    val convert = createSpanConverter( linkDefinitions )
     
     val spanned = chunks.map { chunkAndPos =>
       ( chunkAndPos._1, convert( chunkAndPos._1 ), chunkAndPos._2 )
@@ -29,6 +29,9 @@ trait Discounter extends ChunkStreamFactory with XHTMLWriter with TextWriter {
     
     combine( spanned.toList, new ListBuffer )
   }
+  
+  def createSpanConverter( linkDefinitions : Seq[LinkDefinitionChunk] ) : SpanConverter =
+    new SpanConverter( linkDefinitions )
   
   /** Consume input and append the right thing to the output until empty. The
       Chunk itself determines the "right thing to do". All chunks only know what

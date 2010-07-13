@@ -13,7 +13,8 @@ class KnockoffProject( info : ProjectInfo ) extends DefaultProject( info )
   Credentials(Path.userHome / ".ivy2" / ".credentials", log)
   val nexus = "tristanhunt" at "http://tristanhunt.com:8081/content/groups/public/"
 
-  val scala_test = "org.scalatest" % "scalatest" % "1.0" % "test->default"
+  // TODO -> For 2.8.0.* series, figure out how to change test dependency.
+  // val scala_test = "org.scalatest" % "scalatest" % "1.0.1" % "test->default"
   val jtidy = "jtidy" % "jtidy" % "r938" % "test->default"
   val snuggletex = "uk.ac.ed.ph.snuggletex" % "snuggletex-core" % "1.2.2"
     

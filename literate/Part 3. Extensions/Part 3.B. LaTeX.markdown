@@ -39,10 +39,11 @@ in the Markdown document.
       
       override def knockoff( source : CharSequence ) : Seq[Block] =
         super.knockoff( source ).map( toLatex )
+      
+      override def createSpanConverter( linkDefinitions : Seq[LinkDefinitionChunk] ) =
+        new SpanConverter( linkDefinitions ) with LatexSpanConverter
 
       def toLatex( block : Block ) : Block = block match {
-        case Paragraph( spans, pos ) =>
-          Paragraph( spans.flatMap( toLatex ), pos )
         case CodeBlock( text, pos ) =>
           if ( isLatex( text.content ) ) LatexBlock( text.content, pos ) else block
         case Blockquote( children, pos ) =>
@@ -56,45 +57,63 @@ in the Markdown document.
         case _ => block
       }
       
-      def toLatex( span : Span ) : Seq[Span] = span match {
-        case text : Text => splitLatex( text )
-        case _ => List(span)
-      }
-      
-      /** Find the next two un-escaped LaTeX characters. Unescape \$ sequences in
-          text. */
-      private def splitLatex( text : Text ) : Seq[Span] = {
-        val idx = text.content.indexOf('$')
-        if ( idx > 0 && text.content(idx - 1) != '\\' )
-          return splitLatex( text.content, 0, new ListBuffer )
-        return List(text)
-      }
-      
-      private def splitLatex( src : String, from : Int, cur : Buffer[Span] )
-                            : Seq[Span] = {
-        var to = from + 1        
-        while ( to != -1 && src( to - 1) == '\\' )
-          to = src.indexOf( '$', to + 1 )
-        
-        if ( to == -1 )
-          return ( cur + Text( src.substring( from ) ) )
-        
-        cur += LatexSpan( src.substring( from, to ) )
-        
-        val next = src.indexOf( '$', to + 1 )
-        if ( next != -1 )
-          splitLatex( src, next, cur + Text( src.substring( to, next ) ) )
-        else
-          cur + Text( src.substring( to ) )
-      }
-      
-      // If first real line begins with \begin and last real line begins with \end,
-      // it's latex.
+      /** If the first real line begins with \begin and last real line begins with
+        * \end, it's a latex block expression. */
       def isLatex( code : String ) : Boolean = {
         val lines = code.split("\n").filter( ! _.trim.isEmpty ).toList
         return ( 2 <= lines.length &&
                  lines.head.trim.startsWith("\\begin") &&
                  lines.last.trim.startsWith("\\end") )
+      }
+    }
+
+#### LatexSpanConverter
+
+    // The LatexSpanConverter
+    trait LatexSpanConverter extends SpanConverter {
+      
+      override def matchers = matchLatexSpan :: super.matchers
+      
+      val matchLatexSpan =
+        new DelimMatcher( "$", s => LatexSpan( "$" + s.first.asInstanceOf[Text].content + "$" ),
+                          false, Some('\\') )
+      
+    }
+
+
+#### LatexDiscounterSpec.scala
+
+    // In test com/tristanhunt/knockoff/extra/LatexDiscounterSpec.scala
+    package com.tristanhunt.knockoff.extra
+    
+    import com.tristanhunt.knockoff._
+    import org.scalatest.fixture.FixtureFlatSpec
+    import org.scalatest.matchers.MustMatchers
+    
+    class LatexDiscounterSpec extends FixtureFlatSpec with MustMatchers {
+      
+      behavior of "LatexDiscounter"
+      
+      type FixtureParam = LatexDiscounter
+      
+      class TestLatexDiscounter extends LatexDiscounter
+      
+      def withFixture( test : OneArgTest ) {
+        test( new TestLatexDiscounter )
+      }
+
+      private def spanList( discounter : Discounter, src : String ) : List[Span] = {
+        val blocks = discounter.knockoff( "A series $s_1, s_2$ is simple" )
+        val para = blocks.first.asInstanceOf[Paragraph]
+        return para.spans.toList
+      }
+      
+      it should "read latex with underscores" in { discounter =>
+        val actual = spanList( discounter, "A series $s_1, s_2$ is simple" )
+        val expected = List( Text("A series "),
+                             LatexSpan("$s_1, s_2$"),
+                             Text(" is simple") )
+        actual must equal ( expected )
       }
     }
 
@@ -124,6 +143,49 @@ fragments into MathML for now.
         val input = new SnuggleInput(tex)
         session.parseInput(input)
         return Unparsed( session.buildXMLString )
+      }
+    }
+
+#### LatexXHTMLWriterSpec.scala
+
+Right now tidy is removing the MathML output, so the verification has do be done
+inline, in a very basic manner.
+
+    // In test com/tristanhunt/knockoff/extra/LatexXHTMLWriterSpec.scala
+    package com.tristanhunt.knockoff.extra
+    
+    import org.scalatest.fixture.FixtureFlatSpec
+    import org.scalatest.matchers.MustMatchers
+    
+    class LatexXHTMLWriterSpec extends FixtureFlatSpec with MustMatchers {
+      
+      behavior of "LatexXHTMLWriter"
+      
+      type FixtureParam = LatexDiscounter with LatexXHTMLWriter
+      
+      class TestDiscounter extends LatexDiscounter with LatexXHTMLWriter
+      
+      def withFixture( test : OneArgTest ) {
+        test( new TestDiscounter )
+      }
+      
+      it should "write out MathML inside a paragraph" in { discounter =>
+        val actual = htmlString( discounter, "A sequence $s_1, s_2 = N * M$ is *cool*." )
+        actual must equal (
+          "<p>A sequence " +
+          "<math xmlns=\"http://www.w3.org/1998/Math/MathML\">" +
+            "<msub><mi>s</mi><mn>1</mn></msub><mo>,</mo>" +
+            "<msub><mi>s</mi><mn>2</mn></msub><mo>=</mo>" +
+            "<mi>N</mi><mo>*</mo><mi>M</mi></math>" +
+          " is <em>cool</em>.</p>"  )
+      }
+      
+      private def htmlString( discounter : FixtureParam, src : String ) : String = {
+        val blocks = discounter.knockoff( src )
+        val xhtml = discounter.toXHTML( blocks )
+        val writer = new java.io.StringWriter
+        scala.xml.XML.write( writer, xhtml, "utf-8", false, null )
+        return writer.toString
       }
     }
 
@@ -341,9 +403,9 @@ the rest of the HTML might just have the text content stripped out and passed on
 
 
 
-### Latex.scala
+#### Latex.scala
 
-    // In com/tristanhunt/knockoff/latex/Latex.scala
+    // In com/tristanhunt/knockoff/extra/Latex.scala
     package com.tristanhunt.knockoff.extra
     
     import com.tristanhunt.knockoff._
@@ -365,3 +427,5 @@ the rest of the HTML might just have the text content stripped out and passed on
     import java.io.{ StringWriter, Writer }
         
     // See the LatexWriter
+    
+    // See the LatexSpanConverter
