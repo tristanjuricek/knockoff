@@ -1,9 +1,0 @@
-Subject: How To Extend Markdown Syntax
-
-Take, for example, [MultiMarkdown][1]. Knockoff should be easy to extend to
-"alternatively" parse a multi-markdown document instead of just a markdown document.
-
-Food for thought.
-
-
-[1]: http://fletcherpenney.net/multimarkdown/users_guide/multimarkdown_syntax_guide/

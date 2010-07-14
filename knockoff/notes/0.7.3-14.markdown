@@ -1,0 +1,12 @@
+* Added escapes for a few known special characters.
+
+* Fixed inline LaTeX parsing (issue [#24](http://github.com/tristanjuricek/knockoff/issues/closed#issue/24)).
+
+* Added the SnuggleTeX dependency to spit out MathML in the Wholesaler for
+  previously mentioned inline TeX. I note that MathML is kind of, well, poorly
+  supported, so YMMV.
+
+* Big revision of the literate markdown.
+
+* Fixed problems when combining MetaData with the SCAML writer.
+

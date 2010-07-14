@@ -1,0 +1,3 @@
+* Fix where CRLF sequences would break the empty space matcher.
+
+* First pass at a markdown generator for testing.
