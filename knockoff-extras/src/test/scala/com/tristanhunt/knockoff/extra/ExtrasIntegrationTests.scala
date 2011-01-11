@@ -1,4 +1,4 @@
-package com.tristanhunt.knockoff
+package com.tristanhunt.knockoff.extra
 
 import org.scalatest._
 import org.scalatest.matchers._
@@ -7,10 +7,9 @@ import java.io._
 import scala.collection.mutable.{ ListBuffer }
 import scala.xml.{ Node, XML }
 
-class KnockoffIntegrationTests extends Spec with ShouldMatchers {
-  
-  
-  val basedir = "knockoff/src/test/resources/tests"
+class ExtrasIntegrationTests extends Spec with ShouldMatchers {
+    
+  val basedir = "knockoff-extras/src/test/resources/tests"
   
   val jtidy = {
     val tidy = new Tidy
@@ -73,30 +72,41 @@ class KnockoffIntegrationTests extends Spec with ShouldMatchers {
   
   implicit def FileHelper( f : File ) = new FileHelper( f )
   
-  
-  describe( "Discounter" ) {
-    import DefaultDiscounter._
+  describe( "Wholesaler" ) {
+    import DefaultWholesaler._
     it( "should convert tests from Markdown to XHTML" ) {
-      val dir = file( basedir, "discounter_markdown-xhtml" )
+      val dir = file( basedir, "wholesaler_markdown-xhtml" )
       dir.listTests(".text", ".html").foreach { case (from, to) =>
         from should be ('exists)
         to should be ('exists)
         println( "Test: " + from.getName )
         val fromXHTML = writeString( toXHTML( knockoff( from.text ) ) )
         tidy( fromXHTML ) should equal ( tidy( to.text ) )
-      }
+      }          
     }
     
-    it( "should convert tests from Markdown to plain text" ) {
-      val dir = file( basedir, "discounter_markdown-text" )
-      dir.listTests(".markdown", ".txt").foreach { case (from, to) =>
+    it( "should convert tests from Markdown to LaTeX" ) {
+      val dir = file( basedir, "wholesaler_markdown-latex" )
+      dir.listTests(".markdown", ".tex").foreach { case (from, to) =>
         from should be ('exists)
         to should be ('exists)
         println( "Test: " + from.getName )
-        val fromText = normalizeSpace( toText( knockoff( from.text ) ) )
-        fromText should equal ( normalizeSpace( to.text ) )
+        val fromText = toLatex( knockoff( from.text ) )
+        fromText should equal ( to.text )
+      }
+    }
+    
+    it( "should convert tests from Markdown to SCAML" ) {
+      val dir = file( basedir, "wholesaler_markdown-scaml" )
+      dir.listTests(".txt", ".scaml").foreach { case (from, to) =>
+        from should be ('exists)
+        to should be ('exists)
+        println( "Test: " + from.getName )
+        val fromSCAML = toSCAML( knockoff( from.text ) ).trim
+        fromSCAML should equal( to.text )
       }
     }
   }
 }
+
 

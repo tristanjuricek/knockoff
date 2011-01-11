@@ -18,9 +18,22 @@ be 100% finished.
       /** Backwards compatibility? *cough* */
       def toXML( blocks : Seq[Block] ) : Node = toXHTML( blocks )
       
-      /** Creates a Group representation of the document. */
+      /**
+       * Wraps the generated sequence of blocks in a single Node element. This is 
+       * probably the method you're interested in, so you can do a single insertion
+       * point into your HTML template, like this:<br/>
+       * <pre><code>
+       * import com.tristanhunt.knockoff.DefaultDiscounter._
+       * val markdown = toXHTML( knockoff(src) )
+       * val document = &lt;html&gt;&lt;body&gt;{ markdown }&lt;/body&gt;&lt;/html&gt;
+       * </code></pre>
+       */
       def toXHTML( blocks : Seq[Block] ) : Node =
-        Group( blocks.map( blockToXHTML(_) ) )
+        Group(_) 
+        
+      /** Creates the block sequence directly. */
+      def toXHTMLSeq( blocks : Seq[Block] ) : Seq[Node] =
+        blocks.map( blockToXHTML(_) )
       
       def blockToXHTML : Block => Node = block => block match {
         case Paragraph( spans, _ ) => paragraphToXHTML( spans )

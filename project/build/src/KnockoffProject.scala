@@ -7,6 +7,7 @@ class KnockoffProject( info : ProjectInfo ) extends ParentProject( info ) {
   val scalatools           = "scalatools" at "http://scala-tools.org/repo-releases"
   
   lazy val knockoff = project("knockoff", "knockoff", new KnockoffProject(_) )
+  lazy val knockoffExtras = project("knockoff-extras", "knockoff-extras", new KnockoffExtrasProject(_), knockoff)
   
   // lazy val knockoffGenerator = project("knockoff-generator", "generator",
   //                                      new GeneratorProject(_), knockoff )
@@ -18,14 +19,22 @@ class KnockoffProject( info : ProjectInfo ) extends ParentProject( info ) {
     
     // TODO -> For 2.8.0.* series, figure out how to change test dependency.
     // val scala_test = "org.scalatest" % "scalatest" % "1.2-for-scala-2.8.0.RC7-SNAPSHOT" % "test->default"
-    //val scala_test = "org.scalatest" % "scalatest" % "1.2" % "test->default"  // >= 2.8.0
-    val scala_test = "org.scalatest" % "scalatest" % "1.1" % "test->default" // < 2.8.0
+    val scala_test = "org.scalatest" % "scalatest" % "1.2" % "test->default"  // >= 2.8.0
+    //val scala_test = "org.scalatest" % "scalatest" % "1.1" % "test->default" // < 2.8.0
+
     val jtidy = "jtidy" % "jtidy" % "r938" % "test->default"
-    val snuggletex = "uk.ac.ed.ph.snuggletex" % "snuggletex-core" % "1.2.2"
     
     override def managedStyle = ManagedStyle.Maven
     val publishTo = "tristanhunt releases" at
       "http://tristanhunt.com:8081/content/repositories/releases/"    
+  }
+
+  class KnockoffExtrasProject( info : ProjectInfo ) extends DefaultProject(info)
+  with KnockoffLiterableProject with posterous.Publish {
+    
+    Credentials(Path.userHome / ".ivy2" / ".credentials", log)
+
+    val snuggletex = "uk.ac.ed.ph.snuggletex" % "snuggletex-core" % "1.2.2"    
   }
 
   // Requires scala 2.8?
