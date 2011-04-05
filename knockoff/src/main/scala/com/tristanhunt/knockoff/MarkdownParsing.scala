@@ -43,7 +43,7 @@ class ChunkParser extends RegexParsers with StringExtras {
   def chunk : Parser[ Chunk ] = {
     horizontalRule | leadingStrongTextBlock | leadingEmTextBlock | bulletItem |
     numberedItem | indentedChunk | header | blockquote | linkDefinition |
-    textBlock | emptyLines
+    textBlockWithBreak | textBlock | emptyLines
   }
   
   def emptyLines : Parser[ Chunk ] =
@@ -52,13 +52,22 @@ class ChunkParser extends RegexParsers with StringExtras {
   def emptyLine : Parser[ Chunk ] =
     """[\t ]*\r?\n""".r ^^ ( str => EmptySpace( str ) )
 
+  def textBlockWithBreak : Parser[ Chunk ] =
+    rep( textLineWithEnd ) ~ hardBreakTextLine ^^ { case seq ~ break => TextChunk( foldedString(seq) + break.content ) }
+
   def textBlock : Parser[ Chunk ] =
     rep1( textLine ) ^^ { seq => TextChunk( foldedString(seq) ) }
   
   /** Match any line up until it ends with a newline. */
   def textLine : Parser[ Chunk ] =
     """[\t ]*\S[^\n]*\n?""".r ^^ { str => TextChunk(str) }
+
+  def textLineWithEnd : Parser[Chunk] =
+    """[\t ]*\S[^\n]*[^ \n][ ]?\n""".r ^^ { str => TextChunk(str) }
   
+  def hardBreakTextLine : Parser[Chunk] =
+    """[\t ]*\S[^\n]*[ ]{2}\n""".r ^^ { s => TextChunk(s) }
+
   def bulletItem : Parser[ Chunk ] =
     bulletLead ~ rep( trailingLine ) ^^ {
       case ~(lead, texts) => BulletLineChunk( foldedString( lead :: texts ) ) }
@@ -322,35 +331,36 @@ case class TextChunk( val content : String ) extends Chunk {
                       remaining : List[ (Chunk, Seq[Span], Position) ],
                       spans : Seq[Span], position : Position,
                       discounter : Discounter ) {
-
-    val split = splitAtHardBreak( spans, new ListBuffer )
-    list += Paragraph( split, position )
-  }
-
-  def splitAtHardBreak( spans : Seq[Span], cur : Buffer[Span] )
-                      : Seq[Span] = {
-    if ( spans.isEmpty ) return cur
-    spans.first match {
-      case text : Text =>
-        // Skip past whitespace in the case we have some HTML.
-        var start = 0
-        if ( ! cur.isEmpty && cur.last.isInstanceOf[HTMLSpan] )
-          while ( start < text.content.length &&
-                  Character.isWhitespace( text.content(start) ) )
-            start = start + 1
-        text.content.indexOf("  \n", start) match {
-          case -1 => {}
-          case idx =>
-            val end = idx + "  \n".length
-            val (c1, c2) = ( text.content.substring( 0, idx ),
-                             text.content.substring( end ) )
-            cur += Text(c1)
-            cur += HTMLSpan("<br/>\n")
-            return splitAtHardBreak( List(Text(c2)) ++ spans.drop(1), cur )
-        }
-      case _ => {}
+    def appendList = list += Paragraph(spans, position)
+	
+    if (list.isEmpty) {
+    	appendList
+    } else {
+		list.last match {
+			case p : Paragraph =>
+			  if (endsWithBreak(p.spans)) {
+			 	list.trimEnd(1)
+			    list += appendBreakAndSpans(p.spans, spans, position)
+			  }
+			  else appendList
+					
+			case _ => appendList
+		}
     }
-    return splitAtHardBreak( spans.drop(1), cur + spans.first )
+  }
+  
+  def endsWithBreak(spans : Seq[Span]) : Boolean = {
+    if (spans.isEmpty) return false
+    spans.last match {
+    	case text : Text =>
+    		text.content.endsWith("  \n")
+    	case _ => false
+    }
+  }
+  
+  def appendBreakAndSpans(preSpans : Seq[Span], tailSpans : Seq[Span],
+		                  position : Position) : Paragraph = {
+	Paragraph(preSpans ++ List(HTMLSpan("<br/>\n")) ++ tailSpans, position)
   }
 }
 

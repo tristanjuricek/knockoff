@@ -83,7 +83,7 @@ markdown document.
       def chunk : Parser[ Chunk ] = {
         horizontalRule | leadingStrongTextBlock | leadingEmTextBlock | bulletItem |
         numberedItem | indentedChunk | header | blockquote | linkDefinition |
-        textBlock | emptyLines
+        textBlockWithBreak | textBlock | emptyLines
       }
       
       def emptyLines : Parser[ Chunk ] =
@@ -92,13 +92,22 @@ markdown document.
       def emptyLine : Parser[ Chunk ] =
         """[\t ]*\r?\n""".r ^^ ( str => EmptySpace( str ) )
 
+      def textBlockWithBreak : Parser[ Chunk ] =
+        rep( textLineWithEnd ) ~ hardBreakTextLine ^^ { case seq ~ break => TextChunk( foldedString(seq) + break.content ) }
+    
       def textBlock : Parser[ Chunk ] =
         rep1( textLine ) ^^ { seq => TextChunk( foldedString(seq) ) }
       
       /** Match any line up until it ends with a newline. */
       def textLine : Parser[ Chunk ] =
         """[\t ]*\S[^\n]*\n?""".r ^^ { str => TextChunk(str) }
+    
+      def textLineWithEnd : Parser[Chunk] =
+        """.*[^ ][ ]?\n""".r ^^ { str => TextChunk(str) }
       
+      def hardBreakTextLine : Parser[Chunk] =
+        """[\t ]*\S.*[ ]{2}\n""".r ^^ { s => TextChunk(s) }
+    
       def bulletItem : Parser[ Chunk ] =
         bulletLead ~ rep( trailingLine ) ^^ {
           case ~(lead, texts) => BulletLineChunk( foldedString( lead :: texts ) ) }
@@ -170,7 +179,7 @@ markdown document.
           s => HeaderChunk( s.countLeading('#'), s.trimChars('#').trim ) )
       
       def horizontalRule : Parser[ Chunk ] =
-        """[ ]{0,3}[*\-_][\t ]?[*\-_][\t ]?[*\-_][\t *\-_]*\r?\n""".r ^^ {
+        """[ ]{0,3}[*\-_][\t ]?[*\-_][\t ]?[*\-_][\t *\-_]*\n""".r ^^ {
           s => HorizontalRuleChunk }
       
       def indentedChunk : Parser[ Chunk ] =
@@ -190,7 +199,7 @@ markdown document.
         """^>[\t ]?""".r ~> ( textLine | emptyLine )
     
       def linkDefinition : Parser[ Chunk ] =
-        linkIDAndURL ~ opt( linkTitle ) <~ """[ ]*\r?\n?""".r ^^ {
+        linkIDAndURL ~ opt( linkTitle ) <~ """[ ]*\n?""".r ^^ {
           case ~( idAndURL, titleOpt ) =>
             LinkDefinitionChunk( idAndURL._1, idAndURL._2, titleOpt ) }
 
@@ -306,8 +315,9 @@ be an `HTMLSpan(<br/>)`.
                           spans : Seq[Span], position : Position,
                           discounter : Discounter ) {
 
-        val split = splitAtHardBreak( spans, new ListBuffer )
-        list += Paragraph( split, position )
+        list += Paragraph( spans, position )
+        // val split = splitAtHardBreak( spans, new ListBuffer )
+        // list += Paragraph( split, position )
       }
 
       def splitAtHardBreak( spans : Seq[Span], cur : Buffer[Span] )

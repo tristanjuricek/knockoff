@@ -41,7 +41,7 @@ Code block:
 
 Just plain comment, with trailing spaces on the line:
 
-<!-- foo -->   
+<!-- foo -->
 
 Code:
 
@@ -55,11 +55,11 @@ Hr's:
 
 <hr />
 
-<hr>   
+<hr>
 
-<hr/>  
+<hr/>
 
-<hr /> 
+<hr />
 
 <hr class="foo" id="bar" />
 

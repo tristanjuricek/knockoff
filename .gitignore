@@ -1,5 +1,4 @@
 knockoff.tmproj
-lib
 lib_managed
 target
 project/boot
@@ -8,3 +7,6 @@ src_managed
 test-output
 *~
 #*#
+.classpath
+.project
+.scala_dependencies

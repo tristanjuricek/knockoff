@@ -1,12 +1,15 @@
 package com.tristanhunt.knockoff
 
-import org.scalatest._
-import org.scalatest.matchers._
-import org.w3c.tidy.{ Tidy }
 import java.io._
-import scala.collection.mutable.{ ListBuffer }
+//import org.junit.runner.RunWith
+import org.scalatest.matchers._
+import org.scalatest._
+import org.scalatest.junit.JUnitRunner
+import org.w3c.tidy.Tidy
+import scala.collection.mutable.ListBuffer
 import scala.xml.{ Node, XML }
 
+//@RunWith(classOf[JUnitRunner])
 class KnockoffIntegrationTests extends Spec with ShouldMatchers {
   
   
@@ -14,7 +17,7 @@ class KnockoffIntegrationTests extends Spec with ShouldMatchers {
   
   val jtidy = {
     val tidy = new Tidy
-    tidy.setXHTML( true )
+    tidy.setXmlOut(true)
     tidy.setShowWarnings( false )
     tidy.setShowErrors( 0 )
     tidy.setQuiet( true )
@@ -30,11 +33,11 @@ class KnockoffIntegrationTests extends Spec with ShouldMatchers {
     sw.toString
   }
   
-  def tidy( src : String ) : String = {
+  def tidy( src : String ) = {
     val reader = new StringReader( src )
     val writer = new StringWriter
     jtidy.parse( reader, writer )
-    writer.toString
+    XML.loadString( writer.toString )
   }
   
   def normalizeSpace( str : String ) : String =

@@ -53,42 +53,6 @@ This will indicate which direction we use for comparison.
           }
         }
       }
-      
-      describe( "Wholesaler" ) {
-        import extra.DefaultWholesaler._
-        it( "should convert tests from Markdown to XHTML" ) {
-          val dir = file( basedir, "wholesaler_markdown-xhtml" )
-          dir.listTests(".text", ".html").foreach { case (from, to) =>
-            from should be ('exists)
-            to should be ('exists)
-            println( "Test: " + from.getName )
-            val fromXHTML = writeString( toXHTML( knockoff( from.text ) ) )
-            tidy( fromXHTML ) should equal ( tidy( to.text ) )
-          }          
-        }
-        
-        it( "should convert tests from Markdown to LaTeX" ) {
-          val dir = file( basedir, "wholesaler_markdown-latex" )
-          dir.listTests(".markdown", ".tex").foreach { case (from, to) =>
-            from should be ('exists)
-            to should be ('exists)
-            println( "Test: " + from.getName )
-            val fromText = toLatex( knockoff( from.text ) )
-            fromText should equal ( to.text )
-          }
-        }
-        
-        it( "should convert tests from Markdown to SCAML" ) {
-          val dir = file( basedir, "wholesaler_markdown-scaml" )
-          dir.listTests(".txt", ".scaml").foreach { case (from, to) =>
-            from should be ('exists)
-            to should be ('exists)
-            println( "Test: " + from.getName )
-            val fromSCAML = toSCAML( knockoff( from.text ) ).trim
-            fromSCAML should equal( to.text )
-          }
-        }
-      }
     }
     
     // The KnockoffIntegrationTests configuration

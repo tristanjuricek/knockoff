@@ -51,7 +51,7 @@ import java.io.File
 import scala.util.logging.ConsoleLogger
 
 object DefaultDiscounter extends Discounter with ConsoleLogger {
-  def main( args : Array[ String ] ) : Unit = try {
+  def main( args : Array[String] ) : Unit = try {
     if ( args.contains("--version") ) {
       Console.err.print( "DefaultDiscounter " )
     }
