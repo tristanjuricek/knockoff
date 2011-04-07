@@ -2,7 +2,7 @@ import sbt._
 
 class KnockoffProject( info : ProjectInfo ) extends ParentProject( info ) {
   
-  val tristanhunt          = "tristanhunt" at "http://tristanhunt.com:8081/content/groups/public/"
+  val tristanhunt          = "tristanhunt" at "http://tristanhunt.com:8081/content/groups/releases_group/"
   val tristanhuntSnapshots = "tristanhunt Snapshots" at "http://tristanhunt.com:8081/content/groups/public-snapshots/"
   val scalatools           = "scalatools" at "http://scala-tools.org/repo-releases"
   
@@ -15,22 +15,18 @@ class KnockoffProject( info : ProjectInfo ) extends ParentProject( info ) {
   class KnockoffProject( info : ProjectInfo ) extends DefaultProject(info)
   with KnockoffLiterableProject with posterous.Publish {
     override def mainClass = Some("com.tristanhunt.knockoff.DefaultDiscounter")
-    Credentials(Path.userHome / ".ivy2" / ".credentials", log)
+    Credentials(Path.userHome / ".ivy2" / "credentials_scala-tools", log)
     
     val scala_test = "org.scalatest" % "scalatest" % "1.4-SNAPSHOT" % "test->default"  // >= 
 
-    // val jtidy = "jtidy" % "jtidy" % "r938" % "test->default"
-    
     override def managedStyle = ManagedStyle.Maven
-    val publishTo = "tristanhunt releases" at
-      "http://tristanhunt.com:8081/content/repositories/releases/"    
+    val publishTo = "scala-tools.org releases" at
+      "http://nexus.scala-tools.org/content/repositories/releases/"
   }
 
   class KnockoffExtrasProject( info : ProjectInfo ) extends DefaultProject(info)
   with KnockoffLiterableProject with posterous.Publish {
     
-    Credentials(Path.userHome / ".ivy2" / ".credentials", log)
-
     // val snuggletex = "uk.ac.ed.ph.snuggletex" % "snuggletex-core" % "1.2.2"    
   }
 

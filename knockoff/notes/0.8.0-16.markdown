@@ -1,0 +1,8 @@
+knockoff is now hosted on scala-tools.org. I will maintain my current server for at least 6 months.
+
+Knockoff has now been split up between the base project, which handles the Markdown -> XHTML conversion, and the "extras" project, which is where the various extensions and experiments live. This way, the core project maintains a very small size, and can be loaded in plugins without pulling other dependencies.
+
+Also, in this version is a fix for linebreak handling. You should be able to use two spaces before a newline to indicate that this should either be a `<br/>` tag (in a content block), or, indicate that the line you just wrote is a separate block. This makes it easier to sprinkle things like `*` and `>` in your markdown without having to think about "oh that might mean a newline". This adds another inconsistency with the base perl script.
+
+
+
