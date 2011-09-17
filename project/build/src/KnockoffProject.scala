@@ -17,7 +17,7 @@ class KnockoffProject( info : ProjectInfo ) extends ParentProject( info ) {
     override def mainClass = Some("com.tristanhunt.knockoff.DefaultDiscounter")
     Credentials(Path.userHome / ".ivy2" / "credentials_scala-tools", log)
     
-    val scala_test = "org.scalatest" % "scalatest" % "1.4-SNAPSHOT" % "test->default"  // >= 
+    val scala_test = "org.scalatest" %% "scalatest" % "1.6.1" % "test->default"  // >= 
 
     override def managedStyle = ManagedStyle.Maven
     val publishTo = "scala-tools.org releases" at
