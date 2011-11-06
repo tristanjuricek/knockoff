@@ -1,3 +1,16 @@
+/*
+
+## Output To XHTML
+
+Knockoff's XHTMLWriter uses match expressions on it's object model to create a
+very similar XHTML-style XML document.
+
+Customization involves overriding one of these methods. At times, I've found it
+easier to completely re-write or adjust the output method, so this technique may
+not be 100% finished.
+
+*/
+
 package com.tristanhunt.knockoff
 
 import scala.util.{ Random }

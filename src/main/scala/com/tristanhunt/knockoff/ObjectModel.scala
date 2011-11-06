@@ -1,3 +1,21 @@
+/*
+
+## The Object Model ##
+
+The object model for Knockoff of course models the components of a Markdown
+document. If you have to extend these, you will run into complexity issues with
+any conversion format you want to extend into. Each new output format will need
+to take care of those new types.
+
+### Spanning Elements
+
+Spanning elements either are strings that are simply tagged with specific
+meaning, which make them simple, or they are composed of sequences of those
+strings.
+
+Links can be direct or indirect, or tagged as image variations of those links.
+
+*/
 package com.tristanhunt.knockoff
 
 import scala.io.{ Source }
@@ -25,6 +43,19 @@ extends Span
 case class IndirectImageLink( children : Seq[Span],
                               definition : LinkDefinition )
 extends Span
+
+
+/*
+
+### Block Elements
+
+Most of the block elements contain sequences of spanning elements, and
+importantly, their parsing Position.
+
+This position cannot currently be used to rebuild the actual source document,
+just mark where we found the start of the block.
+
+*/
 
 trait Block { def position : Position }
 

@@ -1,3 +1,13 @@
+/* 
+
+The utility of plain text is mostly to get the text without any markup, useful
+in cases where you're doing something like pulling the header into a title
+field, etc.
+
+**TODO** HTML is currently bypassed, we should parse it and strip out the text.
+
+*/
+
 package com.tristanhunt.knockoff
 
 import java.io.{ StringWriter, Writer }

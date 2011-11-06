@@ -1,12 +1,10 @@
 knockoff.tmproj
 lib_managed
-target
-project/boot
-*/project/boot
-src_managed
-test-output
+target/
 *~
 #*#
 .classpath
 .project
 .scala_dependencies
+*.sublime-project
+*.sublime-workspace

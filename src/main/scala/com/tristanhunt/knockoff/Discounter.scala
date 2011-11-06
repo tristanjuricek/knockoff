@@ -1,3 +1,14 @@
+/*
+
+## Converting Markdown to HTML ##
+
+The `Discounter` is what grabs the "knockoff" of a markdown string. For simple usage,
+you can use the `DefaultDiscounter` object.
+
+    import com.tristanhunt.knockoff.DefaultDiscounter._
+    toXHTML( knockoff( markdownString ) )
+
+*/
 package com.tristanhunt.knockoff
 
 import scala.collection.mutable.ListBuffer
@@ -46,6 +57,21 @@ trait Discounter extends ChunkStreamFactory with XHTMLWriter with TextWriter {
     combine( input.tail, output )
   }
 }
+
+/*
+
+### The Default Discounter
+
+Provides an object along with a main method for the "good enough to script" kind of
+usage. Note that a major aim of this discounter is to mimic the usage of
+`Markdown.pl`.
+
+    Markdown.pl [ −−html4tags ] [ −−version ] [ −shortversion ] [ file ... ]
+
+The `--html4tags` argument will just do nothing, but not be processed as a file.
+
+
+*/
 
 import java.io.File
 import scala.util.logging.ConsoleLogger

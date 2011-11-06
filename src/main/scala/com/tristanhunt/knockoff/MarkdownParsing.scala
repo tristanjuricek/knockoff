@@ -1,3 +1,49 @@
+/*
+
+# Part 2.B. Markdown Parsing #
+
+Parsing is done in three steps:
+
+1. Chunking - The document is converted to a series of Chunk objects, each
+eventually mapping to a block. This is kicked off by the `ChunkStreamFactory`. A
+`Chunk` is generally a "block-level" element, but the final determination of
+what is a block level element isn't complete until step 3.
+
+2. Spanning - The spans of each chunk are identified.
+
+3. Object model creation.
+
+Note that things like block quotes and more complex lists turn into "documents
+within documents".
+
+### A Bit Of History To Satisfy Myself
+
+In my first attempt, I tried building one big parser combinator, and then,
+slowly, some part of my brain fell down a well. So that's why there's those
+steps 2 and 3, it's not because I'm super smart, it's because it got the job
+done.
+
+
+## Chunking ##
+
+Breaks the markdown document into a Stream of `Chunk`s, so that later
+recognition can function. This means this
+
+* Identifies the major boundaries of block elments
+* Figures out the `LinkDefinition`s. Those are needed for Span recognition.
+
+When we run into something we can't parse, there's a simple rule; go on. If I
+detect that there will be more and more problems, well. Hm.
+
+Notably, this remembers the position of each chunk in the input.
+
+### The Chunk Stream Factory
+
+The whole process is wrapped by a "factory" which mostly handles continuing past
+any errors in the document if possible. Errors are logged and we move ahead.
+
+*/
+
 package com.tristanhunt.knockoff
 
 import scala.util.parsing.combinator.Parsers
@@ -33,6 +79,15 @@ trait ChunkStreamFactory extends Logged {
     }
   }
 }
+
+/*
+
+# The Chunk Parsers #
+
+Mostly, this is a series of regular expressions built to find the next chunk in
+a markdown document.
+
+*/
 
 import scala.util.parsing.combinator.RegexParsers
 
@@ -181,6 +236,17 @@ class ChunkParser extends RegexParsers with StringExtras {
     ( "" /: texts )( (current, text) => current + text.content )
 }
 
+/*
+
+
+### The Chunks
+
+Chunks are used to capture the major blocks in the early stage, and then once
+we've grabbed the spanning elements of each block, to construct the final
+`Block` model.
+
+*/
+
 import scala.collection.mutable.{ Buffer, ListBuffer }
 
 trait Chunk {
@@ -194,6 +260,15 @@ trait Chunk {
                       discounter : Discounter )
 }
 
+/*
+
+### Blockquoted Chunk
+
+Represents a single level of blockquoted material. That means that it could also
+contain content, which is then reparsed, recursively.
+
+*/
+
 case class BlockquotedChunk( content : String ) extends Chunk {
 
   /** @param content The material, not parsed, but also not containing this
@@ -206,6 +281,18 @@ case class BlockquotedChunk( content : String ) extends Chunk {
     list += Blockquote( blocks, position )
   }
 }
+
+/*
+
+### Empty Space Chunk
+
+Empty space only matters in cases where the lines are indented, which is a way
+of dealing with editors that like to do things like strip out whitespace at the
+end of a line.
+
+This does not cover forced line brakes.
+
+*/
 
 case class EmptySpace( val content : String ) extends Chunk {
 
@@ -249,6 +336,21 @@ case object HorizontalRuleChunk extends Chunk {
     list += HorizontalRule( position )
   }
 }
+
+/*
+
+### Indented Chunk
+
+This represents a group of lines that have at least 4 spaces or 1 tab preceding
+the line.
+
+If the block before is a list, we append this to the end of that list.
+Otherwise, append it as a new code block. Two code blocks will get combined here
+(because it's common to have an empty line not be indented in many editors).
+Appending to the end of a list means that we strip out the first indent and
+reparse things.
+
+*/
 
 case class IndentedChunk( val content : String ) extends Chunk {
 
@@ -325,6 +427,17 @@ case class NumberedLineChunk( val content : String ) extends Chunk {
   }
 }
 
+/*
+
+### Text Chunk
+
+Here is where I can apply hard breaks in the middle of paragraphs. If we've
+recognized a `Text` span that contains two spaces and a newline, we split the
+span sequence at this point into two lists, and then append two blocks. One of
+them will be an `HTMLSpan(<br/>)`
+
+*/
+
 case class TextChunk( val content : String ) extends Chunk {
 
   def appendNewBlock( list : ListBuffer[Block],
@@ -383,11 +496,42 @@ case class BulletLineChunk( val content : String ) extends Chunk {
   }
 }
 
+/*
+
+## Spanning ##
+
+Our little spanning matching system is broken up into a tail-recursive system
+that slowly puts together our strings by:
+
+1. Trying out all alternatives of the next significant spanning element from the
+current point.
+
+2. Picking the best match based on earliest first location.
+
+3. Processing current content if it can.
+
+4. Processing the rest of the tail content.
+
+### Span Converter
+
+The converter implements the tail-recursive methods for spinning through the
+content. Note that this recurses in two directions. One, when we find the next
+spanning element, this will call itself to work on the tail, iterating "down"
+the string. But on certain elements, the element itself contains a Span, so this
+converter configures that matcher to kick off another parsing run on the
+substring of that span.
+
+*/
+
 import scala.util.matching.Regex.Match
 
 class SpanConverter( definitions : Seq[LinkDefinitionChunk] )
 extends Function1[ Chunk, Seq[Span] ] with StringExtras {
 
+  /*
+    The primary result returned by a `SpanMatcher`. It's `index` will become an
+    ordering attribute for determining the "best" match.
+  */
   case class SpanMatch( index : Int, before : Option[Text], current : Span,
                         after : Option[ String ] )
 
@@ -486,6 +630,21 @@ extends Function1[ Chunk, Seq[Span] ] with StringExtras {
     new DelimMatcher( "`", s => CodeSpan( s.first.asInstanceOf[Text].content ),
                       false, None )
     
+
+  /*
+
+    ### HTML Matching
+
+    If we find any kind of HTML/XML-like element within the content, and it's
+    not a single element, we try to find the ending element. If that segment 
+    isn't well-formed, we just ignore the element, and treat it like text.
+
+    Any sequences of HTML in content are matched by the `InlineHTMLMatcher`.
+    Note that this uses a recursive method `hasMatchedClose` to deal with the
+    situations where one span contains other spans - it's basically like 
+    parenthesis matching.
+
+  */
  
   private val startElement = """<[ ]*([a-zA-Z0-9:_]+)[ \t]*[^>]*?(/?+)>""".r
   
