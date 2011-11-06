@@ -13,7 +13,7 @@ import scala.xml.{ Node, XML }
 class KnockoffIntegrationTests extends Spec with ShouldMatchers {
   
   
-  val basedir = "knockoff/src/test/resources/tests"
+  val basedir = "src/test/resources/tests"
   
   val jtidy = {
     val tidy = new Tidy
