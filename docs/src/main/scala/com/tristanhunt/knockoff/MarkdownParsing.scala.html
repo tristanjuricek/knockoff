@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>MarkdownParsing.scala</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" href="../../../../../../res/style.css"></style>
+  <script type="text/javascript" 
+    src="../../../../../../res/jquery.js"></script>
+</head>
+<body>
+  <div id="container">
+    <h1 class="title">MarkdownParsing.scala&nbsp;<span class="change-link">Change</span></h1>
+    <ul id="nav-list" class="hidden">
+                    
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/Discounter.scala.html">src/main/scala/com/tristanhunt/knockoff/Discounter.scala</a></li>
+                                
+                <li class="active">src/main/scala/com/tristanhunt/knockoff/MarkdownParsing.scala</li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/ObjectModel.scala.html">src/main/scala/com/tristanhunt/knockoff/ObjectModel.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/StringExtras.scala.html">src/main/scala/com/tristanhunt/knockoff/StringExtras.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/TextWriter.scala.html">src/main/scala/com/tristanhunt/knockoff/TextWriter.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/XHTMLWriter.scala.html">src/main/scala/com/tristanhunt/knockoff/XHTMLWriter.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/ChunkParsersSpec.scala.html">src/test/scala/com/tristanhunt/knockoff/ChunkParsersSpec.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/KnockoffIntegrationTests.scala.html">src/test/scala/com/tristanhunt/knockoff/KnockoffIntegrationTests.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/SpanConverterSpec.scala.html">src/test/scala/com/tristanhunt/knockoff/SpanConverterSpec.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/StringExtrasSpec.scala.html">src/test/scala/com/tristanhunt/knockoff/StringExtrasSpec.scala</a></li>
+                        </ul>
+    <table><tbody><tr><td><h1>Part 2.B. Markdown Parsing</h1><p>Parsing is done in three steps:
+</p><ol><li>Chunking - The document is converted to a series of Chunk objects, each
+eventually mapping to a block. This is kicked off by the <code>ChunkStreamFactory</code>. A
+<code>Chunk</code> is generally a &quot;block-level&quot; element, but the final determination of
+what is a block level element isn't complete until step 3.
+</li><li>Spanning - The spans of each chunk are identified.
+</li><li>Object model creation.
+</li></ol><p>Note that things like block quotes and more complex lists turn into &quot;documents
+within documents&quot;.
+</p><h3>A Bit Of History To Satisfy Myself</h3><p>In my first attempt, I tried building one big parser combinator, and then,
+slowly, some part of my brain fell down a well. So that's why there's those
+steps 2 and 3, it's not because I'm super smart, it's because it got the job
+done.
+</p><h2>Chunking</h2><p>Breaks the markdown document into a Stream of <code>Chunk</code>s, so that later
+recognition can function. This means this
+</p><ul><li>Identifies the major boundaries of block elments
+</li><li>Figures out the <code>LinkDefinition</code>s. Those are needed for Span recognition.
+</li></ul><p>When we run into something we can't parse, there's a simple rule; go on. If I
+detect that there will be more and more problems, well. Hm.
+</p><p>Notably, this remembers the position of each chunk in the input.
+</p><h3>The Chunk Stream Factory</h3><p>The whole process is wrapped by a &quot;factory&quot; which mostly handles continuing past
+any errors in the document if possible. Errors are logged and we move ahead.
+</p></td><td><div class="highlight"><pre><span class="k">package</span> <span class="nn">com.tristanhunt.knockoff</span>
+
+<span class="k">import</span> <span class="nn">scala.util.parsing.combinator.Parsers</span>
+<span class="k">import</span> <span class="nn">scala.util.parsing.input.</span><span class="o">{</span> <span class="nc">CharSequenceReader</span><span class="o">,</span> <span class="nc">Position</span><span class="o">,</span> <span class="nc">Reader</span> <span class="o">}</span>
+<span class="k">import</span> <span class="nn">scala.util.logging.Logged</span>
+
+<span class="k">trait</span> <span class="nc">ChunkStreamFactory</span> <span class="k">extends</span> <span class="nc">Logged</span> <span class="o">{</span>
+
+  
+</pre></div>
+</td></tr><tr><td><p>Overridable factory method.
+</p></td><td><div class="highlight"><pre>  <span class="k">def</span> <span class="n">newChunkParser</span> <span class="k">:</span> <span class="kt">ChunkParser</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ChunkParser</span>
+
+  <span class="k">lazy</span> <span class="k">val</span> <span class="n">chunkParser</span> <span class="k">:</span> <span class="kt">ChunkParser</span> <span class="o">=</span> <span class="n">newChunkParser</span>
+
+  <span class="k">def</span> <span class="n">createChunkStream</span><span class="o">(</span> <span class="n">str</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">Stream</span><span class="o">[(</span><span class="kt">Chunk</span>, <span class="kt">Position</span><span class="o">)]</span> <span class="k">=</span>
+    <span class="n">createChunkStream</span><span class="o">(</span> <span class="k">new</span> <span class="nc">CharSequenceReader</span><span class="o">(</span> <span class="n">str</span><span class="o">,</span> <span class="mi">0</span> <span class="o">)</span> <span class="o">)</span>
+  
+  <span class="k">def</span> <span class="n">createChunkStream</span><span class="o">(</span> <span class="n">reader</span> <span class="k">:</span> <span class="kt">Reader</span><span class="o">[</span><span class="kt">Char</span><span class="o">]</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">Stream</span><span class="o">[(</span><span class="kt">Chunk</span>, <span class="kt">Position</span><span class="o">)]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span> <span class="n">reader</span><span class="o">.</span><span class="n">atEnd</span> <span class="o">)</span> <span class="k">return</span> <span class="nc">Stream</span><span class="o">.</span><span class="n">empty</span>
+    <span class="n">chunkParser</span><span class="o">.</span><span class="n">parse</span><span class="o">(</span> <span class="n">chunkParser</span><span class="o">.</span><span class="n">chunk</span><span class="o">,</span> <span class="n">reader</span> <span class="o">)</span> <span class="k">match</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="n">chunkParser</span><span class="o">.</span><span class="nc">Error</span><span class="o">(</span> <span class="n">msg</span><span class="o">,</span> <span class="n">next</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="o">{</span>
+        <span class="n">log</span><span class="o">(</span> <span class="n">msg</span> <span class="o">)</span>
+        <span class="n">log</span><span class="o">(</span> <span class="s">&quot;next == reader : &quot;</span> <span class="o">+</span> <span class="o">(</span><span class="n">next</span> <span class="o">==</span> <span class="n">reader</span><span class="o">)</span> <span class="o">)</span>
+        <span class="n">createChunkStream</span><span class="o">(</span> <span class="n">next</span> <span class="o">)</span>
+      <span class="o">}</span>
+      <span class="k">case</span> <span class="n">chunkParser</span><span class="o">.</span><span class="nc">Failure</span><span class="o">(</span> <span class="n">msg</span><span class="o">,</span> <span class="n">next</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="o">{</span>
+        <span class="n">log</span><span class="o">(</span> <span class="n">msg</span> <span class="o">)</span>
+        <span class="n">log</span><span class="o">(</span> <span class="s">&quot;next == reader : &quot;</span> <span class="o">+</span> <span class="o">(</span><span class="n">next</span> <span class="o">==</span> <span class="n">reader</span><span class="o">)</span> <span class="o">)</span>
+        <span class="n">createChunkStream</span><span class="o">(</span> <span class="n">next</span> <span class="o">)</span>
+      <span class="o">}</span>
+      <span class="k">case</span> <span class="n">chunkParser</span><span class="o">.</span><span class="nc">Success</span><span class="o">(</span> <span class="n">result</span><span class="o">,</span> <span class="n">next</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="o">{</span>
+        <span class="nc">Stream</span><span class="o">.</span><span class="n">cons</span><span class="o">(</span> <span class="o">(</span> <span class="n">result</span><span class="o">,</span> <span class="n">reader</span><span class="o">.</span><span class="n">pos</span> <span class="o">),</span> <span class="n">createChunkStream</span><span class="o">(</span> <span class="n">next</span> <span class="o">)</span> <span class="o">)</span>
+      <span class="o">}</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+</td></tr><tr><td><h1>The Chunk Parsers</h1><p>Mostly, this is a series of regular expressions built to find the next chunk in
+a markdown document.
+</p></td><td><div class="highlight"><pre><span class="k">import</span> <span class="nn">scala.util.parsing.combinator.RegexParsers</span>
+
+<span class="k">class</span> <span class="nc">ChunkParser</span> <span class="k">extends</span> <span class="nc">RegexParsers</span> <span class="k">with</span> <span class="nc">StringExtras</span> <span class="o">{</span>
+    
+  <span class="k">override</span> <span class="k">def</span> <span class="n">skipWhitespace</span> <span class="k">=</span> <span class="kc">false</span>
+  
+  <span class="k">def</span> <span class="n">chunk</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="n">horizontalRule</span> <span class="o">|</span> <span class="n">leadingStrongTextBlock</span> <span class="o">|</span> <span class="n">leadingEmTextBlock</span> <span class="o">|</span> <span class="n">bulletItem</span> <span class="o">|</span>
+    <span class="n">numberedItem</span> <span class="o">|</span> <span class="n">indentedChunk</span> <span class="o">|</span> <span class="n">header</span> <span class="o">|</span> <span class="n">blockquote</span> <span class="o">|</span> <span class="n">linkDefinition</span> <span class="o">|</span>
+    <span class="n">textBlockWithBreak</span> <span class="o">|</span> <span class="n">textBlock</span> <span class="o">|</span> <span class="n">emptyLines</span>
+  <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">emptyLines</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="n">rep1</span><span class="o">(</span> <span class="n">emptyLine</span> <span class="o">)</span> <span class="o">^^</span> <span class="o">(</span> <span class="n">str</span> <span class="k">=&gt;</span> <span class="nc">EmptySpace</span><span class="o">(</span> <span class="n">foldedString</span><span class="o">(</span> <span class="n">str</span> <span class="o">)</span> <span class="o">)</span> <span class="o">)</span>
+  
+  <span class="k">def</span> <span class="n">emptyLine</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="s">&quot;&quot;&quot;[\t ]*\r?\n&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span> <span class="o">^^</span> <span class="o">(</span> <span class="n">str</span> <span class="k">=&gt;</span> <span class="nc">EmptySpace</span><span class="o">(</span> <span class="n">str</span> <span class="o">)</span> <span class="o">)</span>
+
+  <span class="k">def</span> <span class="n">textBlockWithBreak</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="n">rep</span><span class="o">(</span> <span class="n">textLineWithEnd</span> <span class="o">)</span> <span class="o">~</span> <span class="n">hardBreakTextLine</span> <span class="o">^^</span> <span class="o">{</span> <span class="k">case</span> <span class="n">seq</span> <span class="o">~</span> <span class="n">break</span> <span class="k">=&gt;</span> <span class="nc">TextChunk</span><span class="o">(</span> <span class="n">foldedString</span><span class="o">(</span><span class="n">seq</span><span class="o">)</span> <span class="o">+</span> <span class="n">break</span><span class="o">.</span><span class="n">content</span> <span class="o">)</span> <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">textBlock</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="n">rep1</span><span class="o">(</span> <span class="n">textLine</span> <span class="o">)</span> <span class="o">^^</span> <span class="o">{</span> <span class="n">seq</span> <span class="k">=&gt;</span> <span class="nc">TextChunk</span><span class="o">(</span> <span class="n">foldedString</span><span class="o">(</span><span class="n">seq</span><span class="o">)</span> <span class="o">)</span> <span class="o">}</span>
+  
+  
+</pre></div>
+</td></tr><tr><td><p>Match any line up until it ends with a newline.
+</p></td><td><div class="highlight"><pre>  <span class="k">def</span> <span class="n">textLine</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="s">&quot;&quot;&quot;[\t ]*\S[^\n]*\n?&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span> <span class="o">^^</span> <span class="o">{</span> <span class="n">str</span> <span class="k">=&gt;</span> <span class="nc">TextChunk</span><span class="o">(</span><span class="n">str</span><span class="o">)</span> <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">textLineWithEnd</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span><span class="kt">Chunk</span><span class="o">]</span> <span class="k">=</span>
+    <span class="s">&quot;&quot;&quot;[\t ]*\S[^\n]*[^ \n][ ]?\n&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span> <span class="o">^^</span> <span class="o">{</span> <span class="n">str</span> <span class="k">=&gt;</span> <span class="nc">TextChunk</span><span class="o">(</span><span class="n">str</span><span class="o">)</span> <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">hardBreakTextLine</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span><span class="kt">Chunk</span><span class="o">]</span> <span class="k">=</span>
+    <span class="s">&quot;&quot;&quot;[\t ]*\S[^\n]*[ ]{2}\n&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span> <span class="o">^^</span> <span class="o">{</span> <span class="n">s</span> <span class="k">=&gt;</span> <span class="nc">TextChunk</span><span class="o">(</span><span class="n">s</span><span class="o">)</span> <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">bulletItem</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="n">bulletLead</span> <span class="o">~</span> <span class="n">rep</span><span class="o">(</span> <span class="n">trailingLine</span> <span class="o">)</span> <span class="o">^^</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="o">~(</span><span class="n">lead</span><span class="o">,</span> <span class="n">texts</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nc">BulletLineChunk</span><span class="o">(</span> <span class="n">foldedString</span><span class="o">(</span> <span class="n">lead</span> <span class="o">::</span> <span class="n">texts</span> <span class="o">)</span> <span class="o">)</span> <span class="o">}</span>
+  
+  
+</pre></div>
+</td></tr><tr><td><p>Match a single line that is likely a bullet item.
+</p></td><td><div class="highlight"><pre>  <span class="k">def</span> <span class="n">bulletLead</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    
+</pre></div>
+</td></tr><tr><td><p>&quot;&quot;&quot;[ ]{0,3}[<em>-+](\t|[ ]{0,4})&quot;&quot;&quot;.r ~&gt; not(&quot;[</em>-+]&quot;.r) ~&gt; textLine ^^ {</p></td><td><div class="highlight"><pre>    <span class="s">&quot;&quot;&quot;[ ]{0,3}[*\-+](\t|[ ]{0,4})&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span> <span class="o">~&gt;</span> <span class="n">textLine</span> <span class="o">^^</span> <span class="o">{</span>
+      <span class="n">textChunk</span> <span class="k">=&gt;</span> <span class="nc">BulletLineChunk</span><span class="o">(</span> <span class="n">textChunk</span><span class="o">.</span><span class="n">content</span> <span class="o">)</span> <span class="o">}</span>
+  
+  
+</pre></div>
+</td></tr><tr><td><p>A special case where an emphasis marker, using an asterix, on the first word
+in a text block doesn't make the block a list item. We'll only catch lines
+here that have an even number of asterixes, because if it's odd, well, you
+probably have an asterix line indicator followed by an emphasis.
+</p></td><td><div class="highlight"><pre>  <span class="k">def</span> <span class="n">leadingEmTextBlock</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="s">&quot;&quot;&quot;[ ]{0,3}\*&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span> <span class="o">~</span> <span class="n">notEvenAsterixes</span> <span class="o">~</span> <span class="n">rep</span><span class="o">(</span> <span class="n">textLine</span> <span class="o">)</span> <span class="o">^^</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="o">~(~(</span><span class="n">emLine</span><span class="o">,</span> <span class="n">s</span><span class="o">),</span> <span class="n">textSeq</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nc">TextChunk</span><span class="o">(</span> <span class="n">emLine</span> <span class="o">+</span> <span class="n">s</span> <span class="o">+</span> <span class="n">foldedString</span><span class="o">(</span><span class="n">textSeq</span><span class="o">)</span> <span class="o">)</span> <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">notEvenAsterixes</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">Parser</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="o">{</span>
+
+    <span class="k">def</span> <span class="n">apply</span><span class="o">(</span> <span class="n">in</span> <span class="k">:</span> <span class="kt">Reader</span><span class="o">[</span><span class="kt">Char</span><span class="o">]</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">ParseResult</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="o">(</span><span class="n">line</span><span class="o">,</span> <span class="n">asterixCount</span><span class="o">,</span> <span class="n">remaining</span><span class="o">)</span> <span class="k">=</span> <span class="n">readLine</span><span class="o">(</span> <span class="n">in</span><span class="o">,</span> <span class="k">new</span> <span class="nc">StringBuilder</span><span class="o">,</span> <span class="mi">0</span> <span class="o">)</span>
+      <span class="k">if</span> <span class="o">(</span> <span class="n">asterixCount</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="o">&amp;&amp;</span> <span class="n">asterixCount</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span> <span class="o">)</span> <span class="k">return</span> <span class="nc">Success</span><span class="o">(</span> <span class="n">line</span><span class="o">,</span> <span class="n">remaining</span> <span class="o">)</span>
+      <span class="k">else</span> <span class="nc">Failure</span><span class="o">(</span> <span class="s">&quot;Odd number of asterixes, skipping.&quot;</span><span class="o">,</span> <span class="n">in</span> <span class="o">)</span>
+    <span class="o">}</span>
+    
+    <span class="k">def</span> <span class="n">readLine</span><span class="o">(</span> <span class="n">in</span> <span class="k">:</span> <span class="kt">Reader</span><span class="o">[</span><span class="kt">Char</span><span class="o">],</span> <span class="n">sb</span> <span class="k">:</span> <span class="kt">StringBuilder</span><span class="o">,</span> <span class="n">count</span> <span class="k">:</span> <span class="kt">Int</span> <span class="o">)</span>
+                <span class="k">:</span> <span class="o">(</span><span class="kt">String</span><span class="o">,</span> <span class="kt">Int</span><span class="o">,</span> <span class="nc">Reader</span><span class="o">[</span><span class="kt">Char</span><span class="o">])</span> <span class="k">=</span> <span class="o">{</span>
+      <span class="k">if</span> <span class="o">(</span> <span class="o">!</span> <span class="n">in</span><span class="o">.</span><span class="n">atEnd</span> <span class="o">)</span> <span class="n">sb</span><span class="o">.</span><span class="n">append</span><span class="o">(</span> <span class="n">in</span><span class="o">.</span><span class="n">first</span> <span class="o">)</span>
+      <span class="k">if</span> <span class="o">(</span> <span class="n">in</span><span class="o">.</span><span class="n">atEnd</span> <span class="o">||</span> <span class="n">in</span><span class="o">.</span><span class="n">first</span> <span class="o">==</span> <span class="sc">&#39;\n&#39;</span> <span class="o">)</span> <span class="k">return</span> <span class="o">(</span><span class="n">sb</span><span class="o">.</span><span class="n">toString</span><span class="o">,</span> <span class="n">count</span><span class="o">,</span> <span class="n">in</span><span class="o">.</span><span class="n">rest</span><span class="o">)</span>
+      <span class="k">if</span> <span class="o">(</span> <span class="n">in</span><span class="o">.</span><span class="n">first</span> <span class="o">==</span> <span class="sc">&#39;*&#39;</span> <span class="o">)</span> <span class="n">readLine</span><span class="o">(</span> <span class="n">in</span><span class="o">.</span><span class="n">rest</span><span class="o">,</span> <span class="n">sb</span><span class="o">,</span> <span class="n">count</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">)</span>
+      <span class="k">else</span> <span class="n">readLine</span><span class="o">(</span> <span class="n">in</span><span class="o">.</span><span class="n">rest</span><span class="o">,</span> <span class="n">sb</span><span class="o">,</span> <span class="n">count</span> <span class="o">)</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+      
+  
+</pre></div>
+</td></tr><tr><td><p>A special case where an emphasis marker on a word on a text block doesn't
+make the block a list item.
+</p></td><td><div class="highlight"><pre>  <span class="k">def</span> <span class="n">leadingStrongTextBlock</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="s">&quot;&quot;&quot;[ ]{0,3}\*\*[^*\n]+\*\*[^\n]*\n?&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span> <span class="o">~</span> <span class="n">rep</span><span class="o">(</span> <span class="n">textLine</span> <span class="o">)</span> <span class="o">^^</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="o">~(</span><span class="n">strLine</span><span class="o">,</span> <span class="n">textSeq</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nc">TextChunk</span><span class="o">(</span> <span class="n">strLine</span> <span class="o">+</span> <span class="n">foldedString</span><span class="o">(</span><span class="n">textSeq</span><span class="o">)</span> <span class="o">)</span> <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">numberedItem</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="n">numberedLead</span> <span class="o">~</span> <span class="n">rep</span><span class="o">(</span> <span class="n">trailingLine</span> <span class="o">)</span> <span class="o">^^</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="o">~(</span><span class="n">lead</span><span class="o">,</span> <span class="n">texts</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nc">NumberedLineChunk</span><span class="o">(</span> <span class="n">foldedString</span><span class="o">(</span> <span class="n">lead</span> <span class="o">::</span> <span class="n">texts</span> <span class="o">))</span> <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">numberedLead</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="s">&quot;&quot;&quot;[ ]{0,3}\d+\.(\t|[ ]{0,4})&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span> <span class="o">~&gt;</span> <span class="n">textLine</span> <span class="o">^^</span> <span class="o">{</span>
+      <span class="n">textChunk</span> <span class="k">=&gt;</span> <span class="nc">NumberedLineChunk</span><span class="o">(</span> <span class="n">textChunk</span><span class="o">.</span><span class="n">content</span> <span class="o">)</span> <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">trailingLine</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="s">&quot;&quot;&quot;\t|[ ]{0,4}&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span> <span class="o">~&gt;</span> <span class="s">&quot;&quot;&quot;[\S&amp;&amp;[^*\-+]&amp;&amp;[^\d]][^\n]*\n?&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span> <span class="o">^^</span> <span class="o">(</span>
+      <span class="n">s</span> <span class="k">=&gt;</span> <span class="nc">TextChunk</span><span class="o">(</span><span class="n">s</span><span class="o">)</span> <span class="o">)</span>
+  
+  <span class="k">def</span> <span class="n">header</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="o">(</span> <span class="n">setextHeaderEquals</span> <span class="o">|</span> <span class="n">setextHeaderDashes</span> <span class="o">|</span> <span class="n">atxHeader</span> <span class="o">)</span>
+
+  <span class="k">def</span> <span class="n">setextHeaderEquals</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="n">textLine</span> <span class="o">&lt;~</span> <span class="n">equalsLine</span> <span class="o">^^</span> <span class="o">(</span> <span class="n">s</span> <span class="k">=&gt;</span> <span class="nc">HeaderChunk</span><span class="o">(</span> <span class="mi">1</span><span class="o">,</span> <span class="n">s</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">trim</span> <span class="o">)</span> <span class="o">)</span>
+
+  <span class="k">def</span> <span class="n">setextHeaderDashes</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="n">textLine</span> <span class="o">&lt;~</span> <span class="n">dashesLine</span> <span class="o">^^</span> <span class="o">(</span> <span class="n">s</span> <span class="k">=&gt;</span> <span class="nc">HeaderChunk</span><span class="o">(</span> <span class="mi">2</span><span class="o">,</span> <span class="n">s</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">trim</span> <span class="o">)</span> <span class="o">)</span>
+
+  <span class="k">def</span> <span class="n">equalsLine</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span><span class="kt">Any</span><span class="o">]</span> <span class="k">=</span> <span class="s">&quot;&quot;&quot;=+\n&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span>
+
+  <span class="k">def</span> <span class="n">dashesLine</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span><span class="kt">Any</span><span class="o">]</span> <span class="k">=</span> <span class="s">&quot;&quot;&quot;-+\n&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span>
+
+  <span class="k">def</span> <span class="n">atxHeader</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="s">&quot;&quot;&quot;#+ .*\n?&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span> <span class="o">^^</span> <span class="o">(</span>
+      <span class="n">s</span> <span class="k">=&gt;</span> <span class="nc">HeaderChunk</span><span class="o">(</span> <span class="n">s</span><span class="o">.</span><span class="n">countLeading</span><span class="o">(</span><span class="sc">&#39;#&#39;</span><span class="o">),</span> <span class="n">s</span><span class="o">.</span><span class="n">trimChars</span><span class="o">(</span><span class="sc">&#39;#&#39;</span><span class="o">).</span><span class="n">trim</span> <span class="o">)</span> <span class="o">)</span>
+  
+  <span class="k">def</span> <span class="n">horizontalRule</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="s">&quot;&quot;&quot;[ ]{0,3}[*\-_][\t ]?[*\-_][\t ]?[*\-_][\t *\-_]*\n&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span> <span class="o">^^</span> <span class="o">{</span>
+      <span class="n">s</span> <span class="k">=&gt;</span> <span class="nc">HorizontalRuleChunk</span> <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">indentedChunk</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="n">rep1</span><span class="o">(</span> <span class="n">indentedLine</span> <span class="o">)</span> <span class="o">^^</span> <span class="o">(</span> <span class="n">lines</span> <span class="k">=&gt;</span> <span class="nc">IndentedChunk</span><span class="o">(</span> <span class="n">foldedString</span><span class="o">(</span> <span class="n">lines</span> <span class="o">)</span> <span class="o">)</span> <span class="o">)</span>
+  
+  <span class="k">def</span> <span class="n">indentedLine</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="s">&quot;&quot;&quot;\t|[ ]{4}&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span> <span class="o">~&gt;</span> <span class="o">(</span> <span class="n">textLine</span> <span class="o">|</span> <span class="n">emptyLine</span> <span class="o">|</span> <span class="n">emptyString</span> <span class="o">)</span>
+
+  <span class="k">def</span> <span class="n">emptyString</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span> <span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">r</span> <span class="o">^^</span> <span class="o">(</span> <span class="n">s</span> <span class="k">=&gt;</span> <span class="nc">EmptySpace</span><span class="o">(</span><span class="n">s</span><span class="o">)</span> <span class="o">)</span>
+  
+  <span class="k">def</span> <span class="n">blockquote</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="n">blockquotedLine</span> <span class="o">~</span> <span class="n">rep</span><span class="o">(</span> <span class="n">blockquotedLine</span> <span class="o">|</span> <span class="n">textLine</span> <span class="o">)</span> <span class="o">^^</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="o">~(</span><span class="n">lead</span><span class="o">,</span> <span class="n">trailing</span><span class="o">)</span> <span class="k">=&gt;</span>
+        <span class="nc">BlockquotedChunk</span><span class="o">(</span> <span class="n">foldedString</span><span class="o">(</span> <span class="n">lead</span> <span class="o">::</span> <span class="n">trailing</span> <span class="o">)</span> <span class="o">)</span> <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">blockquotedLine</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="s">&quot;&quot;&quot;^&gt;[\t ]?&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span> <span class="o">~&gt;</span> <span class="o">(</span> <span class="n">textLine</span> <span class="o">|</span> <span class="n">emptyLine</span> <span class="o">)</span>
+
+  <span class="k">def</span> <span class="n">linkDefinition</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">Chunk</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="n">linkIDAndURL</span> <span class="o">~</span> <span class="n">opt</span><span class="o">(</span> <span class="n">linkTitle</span> <span class="o">)</span> <span class="o">&lt;~</span> <span class="s">&quot;&quot;&quot;[ ]*\n?&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span> <span class="o">^^</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="o">~(</span> <span class="n">idAndURL</span><span class="o">,</span> <span class="n">titleOpt</span> <span class="o">)</span> <span class="k">=&gt;</span>
+        <span class="nc">LinkDefinitionChunk</span><span class="o">(</span> <span class="n">idAndURL</span><span class="o">.</span><span class="n">_1</span><span class="o">,</span> <span class="n">idAndURL</span><span class="o">.</span><span class="n">_2</span><span class="o">,</span> <span class="n">titleOpt</span> <span class="o">)</span> <span class="o">}</span>
+
+  <span class="k">private</span> <span class="k">def</span> <span class="n">linkIDAndURL</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="o">(</span><span class="kt">String</span>, <span class="kt">String</span><span class="o">)</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="s">&quot;&quot;&quot;[ ]{0,3}\[[^\[\]]*\]:[ ]+&lt;?[\w\p{Punct}]+&gt;?&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span> <span class="o">^^</span> <span class="o">{</span> <span class="n">linkString</span> <span class="k">=&gt;</span>
+      <span class="k">val</span> <span class="n">linkMatch</span> <span class="k">=</span> <span class="s">&quot;&quot;&quot;^\[([^\[\]]+)\]:[ ]+&lt;?([\w\p{Punct}]+)&gt;?$&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span>
+                        <span class="o">.</span><span class="n">findFirstMatchIn</span><span class="o">(</span> <span class="n">linkString</span><span class="o">.</span><span class="n">trim</span> <span class="o">).</span><span class="n">get</span><span class="o">;</span>
+      <span class="o">(</span> <span class="n">linkMatch</span><span class="o">.</span><span class="n">group</span><span class="o">(</span><span class="mi">1</span><span class="o">),</span> <span class="n">linkMatch</span><span class="o">.</span><span class="n">group</span><span class="o">(</span><span class="mi">2</span><span class="o">)</span> <span class="o">)</span>
+    <span class="o">}</span>
+
+  <span class="k">private</span> <span class="k">def</span> <span class="n">linkTitle</span> <span class="k">:</span> <span class="kt">Parser</span><span class="o">[</span> <span class="kt">String</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="s">&quot;&quot;&quot;\s*&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span> <span class="o">~&gt;</span> <span class="s">&quot;&quot;&quot;[&quot;&#39;(].*[&quot;&#39;)]&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span> <span class="o">^^</span> <span class="o">(</span> 
+</pre></div>
+</td></tr><tr><td><p>&quot; &lt;- My TextMate bundle fails here
+      str =&gt; str.substring( 1, str.length - 1 ) )
+</p><p>  // Utility Methods
+</p><p>  /** Take a series of very similar chunks and group them. */
+  private def foldedString( texts : List[ Chunk ] ) : String =
+    ( &quot;&quot; /: texts )( (current, text) =&gt; current + text.content )
+}
+</p><p>/*
+</p><h3>The Chunks</h3><p>Chunks are used to capture the major blocks in the early stage, and then once
+we've grabbed the spanning elements of each block, to construct the final
+<code>Block</code> model.
+</p><ul><li>/
+</li></ul><p>import scala.collection.mutable.{ Buffer, ListBuffer }
+</p><p>trait Chunk {
+  def content : String
+  def isLinkDefinition = false
+</p><p>  /** Create the Block and append to the list. */
+  def appendNewBlock( list : ListBuffer[Block],
+                      remaining : List[ (Chunk, Seq[Span], Position) ],
+                      spans : Seq[Span], position : Position,
+                      discounter : Discounter )
+}
+</p><p>/*
+</p><h3>Blockquoted Chunk</h3><p>Represents a single level of blockquoted material. That means that it could also
+contain content, which is then reparsed, recursively.
+</p><ul><li>/
+</li></ul><p>case class BlockquotedChunk( content : String ) extends Chunk {
+</p><p>  /** @param content The material, not parsed, but also not containing this
+                     level's '&gt;' characters. */
+  def appendNewBlock( list : ListBuffer[Block],
+                      remaining : List[ (Chunk, Seq[Span], Position) ],
+                      spans : Seq[Span], position : Position,
+                      discounter : Discounter ) {
+    val blocks = discounter.knockoff( content )
+    list += Blockquote( blocks, position )
+  }
+}
+</p><p>/*
+</p><h3>Empty Space Chunk</h3><p>Empty space only matters in cases where the lines are indented, which is a way
+of dealing with editors that like to do things like strip out whitespace at the
+end of a line.
+</p><p>This does not cover forced line brakes.
+</p><ul><li>/
+</li></ul><p>case class EmptySpace( val content : String ) extends Chunk {
+</p><p>  def appendNewBlock( list : ListBuffer[Block],
+                      remaining : List[ (Chunk, Seq[Span], Position) ],
+                      spans : Seq[Span], position : Position,
+                      discounter : Discounter ) {
+    if ( remaining.isEmpty ) return
+    if ( list.isEmpty ) return
+    list.last match {
+      case lastCB : CodeBlock =&gt;
+        remaining.head.<em>1 match {
+          case ice : IndentedChunk =&gt;
+            list.update( list.length - 1,
+                         CodeBlock( Text( lastCB.text.content + &quot;\n&quot; ),
+                                    lastCB.position ) )
+          case </em> =&gt; {}
+        }
+      case _ =&gt; {}
+    }
+  }
+}
+</p><p>case class HeaderChunk( val level : Int, val content : String ) extends Chunk {
+</p><p>  def appendNewBlock( list : ListBuffer[Block],
+                      remaining : List[ (Chunk, Seq[Span], Position) ],
+                      spans : Seq[Span], position : Position,
+                      discounter : Discounter ) {
+    list += Header( level, spans, position )
+  }
+}
+</p><p>case object HorizontalRuleChunk extends Chunk {
+  val content = &quot;<em> </em> *\n&quot;
+</p><p>  def appendNewBlock( list : ListBuffer[Block],
+                      remaining : List[ (Chunk, Seq[Span], Position) ],
+                      spans : Seq[Span], position : Position,
+                      discounter : Discounter ) {
+    list += HorizontalRule( position )
+  }
+}
+</p><p>/*
+</p><h3>Indented Chunk</h3><p>This represents a group of lines that have at least 4 spaces or 1 tab preceding
+the line.
+</p><p>If the block before is a list, we append this to the end of that list.
+Otherwise, append it as a new code block. Two code blocks will get combined here
+(because it's common to have an empty line not be indented in many editors).
+Appending to the end of a list means that we strip out the first indent and
+reparse things.
+</p><ul><li>/
+</li></ul><p>case class IndentedChunk( val content : String ) extends Chunk {
+</p><p>  def appendNewBlock( list : ListBuffer[Block],
+                      remaining : List[ (Chunk, Seq[Span], Position) ],
+                      spans : Seq[Span], position : Position,
+                      discounter : Discounter ) {
+    if ( list.isEmpty ) {
+      spans.first match {
+        case text : Text =&gt; list += CodeBlock( text, position )
+      }
+    } else {
+      list.last match {
+        case OrderedList( items ) =&gt;
+          val blocks = discounter.knockoff( content )
+          val li = OrderedItem( items.last.children ++ blocks, items.last.position )
+          list.update( list.length - 1, OrderedList( items.take( items.length - 1) ++ List(li) ) )
+</p><pre><code>    case UnorderedList( items ) =&gt;
+      val blocks = discounter.knockoff( content )
+      val li =
+        UnorderedItem( items.last.children ++ blocks, items.last.position )
+      list.update( list.length - 1, UnorderedList( items.take( items.length - 1) ++ List(li) ) )
+
+    case CodeBlock( text, position ) =&gt;
+      spans.first match {
+        case next : Text =&gt;
+          list.update( list.length - 1,
+                       CodeBlock(Text(text.content + next.content), position) )
+      }
+    
+    case _ =&gt;
+      spans.first match {
+        case text : Text =&gt; list += CodeBlock( text, position )
+      }
+  }
+}
+</code></pre><p>  }
+}
+</p><p>case class LinkDefinitionChunk( val id : String, val url : String,
+                                val title : Option[ String ] )
+extends Chunk {
+</p><p>  override def isLinkDefinition = true
+</p><p>  def content : String =
+    &quot;[&quot; + id + &quot;]: &quot; + url + title.map( &quot; \&quot;&quot; + _ + &quot;\&quot;&quot; ).getOrElse(&quot;&quot;)</p></td><td><div class="highlight"><pre>  
+  <span class="k">def</span> <span class="n">appendNewBlock</span><span class="o">(</span> <span class="n">list</span> <span class="k">:</span> <span class="kt">ListBuffer</span><span class="o">[</span><span class="kt">Block</span><span class="o">],</span>
+                      <span class="n">remaining</span> <span class="k">:</span> <span class="kt">List</span><span class="o">[</span> <span class="o">(</span><span class="kt">Chunk</span>, <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">]</span>, <span class="kt">Position</span><span class="o">)</span> <span class="o">],</span>
+                      <span class="n">spans</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">],</span> <span class="n">position</span> <span class="k">:</span> <span class="kt">Position</span><span class="o">,</span>
+                      <span class="n">discounter</span> <span class="k">:</span> <span class="kt">Discounter</span> <span class="o">)</span> <span class="o">{</span>
+    <span class="n">list</span> <span class="o">+=</span> <span class="nc">LinkDefinition</span><span class="o">(</span> <span class="n">id</span><span class="o">,</span> <span class="n">url</span><span class="o">,</span> <span class="n">title</span><span class="o">,</span> <span class="n">position</span> <span class="o">)</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">NumberedLineChunk</span><span class="o">(</span> <span class="k">val</span> <span class="n">content</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">)</span> <span class="k">extends</span> <span class="nc">Chunk</span> <span class="o">{</span>
+
+  <span class="k">def</span> <span class="n">appendNewBlock</span><span class="o">(</span> <span class="n">list</span> <span class="k">:</span> <span class="kt">ListBuffer</span><span class="o">[</span><span class="kt">Block</span><span class="o">],</span>
+                      <span class="n">remaining</span> <span class="k">:</span> <span class="kt">List</span><span class="o">[</span> <span class="o">(</span><span class="kt">Chunk</span>, <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">]</span>, <span class="kt">Position</span><span class="o">)</span> <span class="o">],</span>
+                      <span class="n">spans</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">],</span> <span class="n">position</span> <span class="k">:</span> <span class="kt">Position</span><span class="o">,</span>
+                      <span class="n">discounter</span> <span class="k">:</span> <span class="kt">Discounter</span> <span class="o">)</span> <span class="o">{</span>
+    <span class="k">val</span> <span class="n">li</span> <span class="k">=</span> <span class="nc">OrderedItem</span><span class="o">(</span> <span class="nc">List</span><span class="o">(</span><span class="nc">Paragraph</span><span class="o">(</span><span class="n">spans</span><span class="o">,</span> <span class="n">position</span><span class="o">)),</span> <span class="n">position</span> <span class="o">)</span>
+    <span class="k">if</span> <span class="o">(</span> <span class="n">list</span><span class="o">.</span><span class="n">isEmpty</span> <span class="o">)</span> <span class="o">{</span>
+      <span class="n">list</span> <span class="o">+=</span> <span class="nc">OrderedList</span><span class="o">(</span> <span class="nc">List</span><span class="o">(</span><span class="n">li</span><span class="o">)</span> <span class="o">)</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+      <span class="n">list</span><span class="o">.</span><span class="n">last</span> <span class="k">match</span> <span class="o">{</span>
+        <span class="k">case</span> <span class="n">ol</span> <span class="k">:</span> <span class="kt">OrderedList</span> <span class="o">=&gt;</span>
+          <span class="n">list</span><span class="o">.</span><span class="n">update</span><span class="o">(</span> <span class="n">list</span><span class="o">.</span><span class="n">length</span> <span class="o">-</span> <span class="mi">1</span><span class="o">,</span> <span class="nc">OrderedList</span><span class="o">(</span> <span class="n">ol</span><span class="o">.</span><span class="n">items</span> <span class="o">++</span> <span class="nc">List</span><span class="o">(</span><span class="n">li</span><span class="o">)</span> <span class="o">)</span> <span class="o">)</span>
+        <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="n">list</span> <span class="o">+=</span> <span class="nc">OrderedList</span><span class="o">(</span> <span class="nc">List</span><span class="o">(</span><span class="n">li</span><span class="o">)</span> <span class="o">)</span>
+      <span class="o">}</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+</td></tr><tr><td><h3>Text Chunk</h3><p>Here is where I can apply hard breaks in the middle of paragraphs. If we've
+recognized a <code>Text</code> span that contains two spaces and a newline, we split the
+span sequence at this point into two lists, and then append two blocks. One of
+them will be an <code>HTMLSpan(&lt;br/&gt;)</code>
+</p></td><td><div class="highlight"><pre><span class="k">case</span> <span class="k">class</span> <span class="nc">TextChunk</span><span class="o">(</span> <span class="k">val</span> <span class="n">content</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">)</span> <span class="k">extends</span> <span class="nc">Chunk</span> <span class="o">{</span>
+
+  <span class="k">def</span> <span class="n">appendNewBlock</span><span class="o">(</span> <span class="n">list</span> <span class="k">:</span> <span class="kt">ListBuffer</span><span class="o">[</span><span class="kt">Block</span><span class="o">],</span>
+                      <span class="n">remaining</span> <span class="k">:</span> <span class="kt">List</span><span class="o">[</span> <span class="o">(</span><span class="kt">Chunk</span>, <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">]</span>, <span class="kt">Position</span><span class="o">)</span> <span class="o">],</span>
+                      <span class="n">spans</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">],</span> <span class="n">position</span> <span class="k">:</span> <span class="kt">Position</span><span class="o">,</span>
+                      <span class="n">discounter</span> <span class="k">:</span> <span class="kt">Discounter</span> <span class="o">)</span> <span class="o">{</span>
+    <span class="k">def</span> <span class="n">appendList</span> <span class="k">=</span> <span class="n">list</span> <span class="o">+=</span> <span class="nc">Paragraph</span><span class="o">(</span><span class="n">spans</span><span class="o">,</span> <span class="n">position</span><span class="o">)</span>
+	
+    <span class="k">if</span> <span class="o">(</span><span class="n">list</span><span class="o">.</span><span class="n">isEmpty</span><span class="o">)</span> <span class="o">{</span>
+    	<span class="n">appendList</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+		<span class="n">list</span><span class="o">.</span><span class="n">last</span> <span class="k">match</span> <span class="o">{</span>
+			<span class="k">case</span> <span class="n">p</span> <span class="k">:</span> <span class="kt">Paragraph</span> <span class="o">=&gt;</span>
+			  <span class="k">if</span> <span class="o">(</span><span class="n">endsWithBreak</span><span class="o">(</span><span class="n">p</span><span class="o">.</span><span class="n">spans</span><span class="o">))</span> <span class="o">{</span>
+			 	<span class="n">list</span><span class="o">.</span><span class="n">trimEnd</span><span class="o">(</span><span class="mi">1</span><span class="o">)</span>
+			    <span class="n">list</span> <span class="o">+=</span> <span class="n">appendBreakAndSpans</span><span class="o">(</span><span class="n">p</span><span class="o">.</span><span class="n">spans</span><span class="o">,</span> <span class="n">spans</span><span class="o">,</span> <span class="n">position</span><span class="o">)</span>
+			  <span class="o">}</span>
+			  <span class="k">else</span> <span class="n">appendList</span>
+					
+			<span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="n">appendList</span>
+		<span class="o">}</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">endsWithBreak</span><span class="o">(</span><span class="n">spans</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">])</span> <span class="k">:</span> <span class="kt">Boolean</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">spans</span><span class="o">.</span><span class="n">isEmpty</span><span class="o">)</span> <span class="k">return</span> <span class="kc">false</span>
+    <span class="n">spans</span><span class="o">.</span><span class="n">last</span> <span class="k">match</span> <span class="o">{</span>
+    	<span class="k">case</span> <span class="n">text</span> <span class="k">:</span> <span class="kt">Text</span> <span class="o">=&gt;</span>
+    		<span class="n">text</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">endsWith</span><span class="o">(</span><span class="s">&quot;  \n&quot;</span><span class="o">)</span>
+    	<span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="kc">false</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">appendBreakAndSpans</span><span class="o">(</span><span class="n">preSpans</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">],</span> <span class="n">tailSpans</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">],</span>
+		                  <span class="n">position</span> <span class="k">:</span> <span class="kt">Position</span><span class="o">)</span> <span class="k">:</span> <span class="kt">Paragraph</span> <span class="o">=</span> <span class="o">{</span>
+	<span class="nc">Paragraph</span><span class="o">(</span><span class="n">preSpans</span> <span class="o">++</span> <span class="nc">List</span><span class="o">(</span><span class="nc">HTMLSpan</span><span class="o">(</span><span class="s">&quot;&lt;br/&gt;\n&quot;</span><span class="o">))</span> <span class="o">++</span> <span class="n">tailSpans</span><span class="o">,</span> <span class="n">position</span><span class="o">)</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">BulletLineChunk</span><span class="o">(</span> <span class="k">val</span> <span class="n">content</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">)</span> <span class="k">extends</span> <span class="nc">Chunk</span> <span class="o">{</span>
+
+  <span class="k">def</span> <span class="n">appendNewBlock</span><span class="o">(</span> <span class="n">list</span> <span class="k">:</span> <span class="kt">ListBuffer</span><span class="o">[</span><span class="kt">Block</span><span class="o">],</span>
+                      <span class="n">remaining</span> <span class="k">:</span> <span class="kt">List</span><span class="o">[</span> <span class="o">(</span><span class="kt">Chunk</span>, <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">]</span>, <span class="kt">Position</span><span class="o">)</span> <span class="o">],</span>
+                      <span class="n">spans</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">],</span> <span class="n">position</span> <span class="k">:</span> <span class="kt">Position</span><span class="o">,</span>
+                      <span class="n">discounter</span> <span class="k">:</span> <span class="kt">Discounter</span> <span class="o">)</span> <span class="o">{</span>
+    <span class="k">val</span> <span class="n">li</span> <span class="k">=</span> <span class="nc">UnorderedItem</span><span class="o">(</span> <span class="nc">List</span><span class="o">(</span><span class="nc">Paragraph</span><span class="o">(</span><span class="n">spans</span><span class="o">,</span> <span class="n">position</span><span class="o">)),</span> <span class="n">position</span> <span class="o">)</span>
+    <span class="k">if</span> <span class="o">(</span> <span class="n">list</span><span class="o">.</span><span class="n">isEmpty</span> <span class="o">)</span> <span class="o">{</span>
+      <span class="n">list</span> <span class="o">+=</span> <span class="nc">UnorderedList</span><span class="o">(</span> <span class="nc">List</span><span class="o">(</span><span class="n">li</span><span class="o">)</span> <span class="o">)</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+      <span class="n">list</span><span class="o">.</span><span class="n">last</span> <span class="k">match</span> <span class="o">{</span>
+        <span class="k">case</span> <span class="n">ul</span> <span class="k">:</span> <span class="kt">UnorderedList</span> <span class="o">=&gt;</span>
+          <span class="n">list</span><span class="o">.</span><span class="n">update</span><span class="o">(</span> <span class="n">list</span><span class="o">.</span><span class="n">length</span> <span class="o">-</span> <span class="mi">1</span><span class="o">,</span> <span class="nc">UnorderedList</span><span class="o">(</span> <span class="n">ul</span><span class="o">.</span><span class="n">items</span> <span class="o">++</span> <span class="nc">List</span><span class="o">(</span><span class="n">li</span><span class="o">)</span> <span class="o">)</span> <span class="o">)</span>
+        <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="n">list</span> <span class="o">+=</span> <span class="nc">UnorderedList</span><span class="o">(</span> <span class="nc">List</span><span class="o">(</span><span class="n">li</span><span class="o">)</span> <span class="o">)</span>
+      <span class="o">}</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+</td></tr><tr><td><h2>Spanning</h2><p>Our little spanning matching system is broken up into a tail-recursive system
+that slowly puts together our strings by:
+</p><ol><li>Trying out all alternatives of the next significant spanning element from the
+current point.
+</li><li>Picking the best match based on earliest first location.
+</li><li>Processing current content if it can.
+</li><li>Processing the rest of the tail content.
+</li></ol><h3>Span Converter</h3><p>The converter implements the tail-recursive methods for spinning through the
+content. Note that this recurses in two directions. One, when we find the next
+spanning element, this will call itself to work on the tail, iterating &quot;down&quot;
+the string. But on certain elements, the element itself contains a Span, so this
+converter configures that matcher to kick off another parsing run on the
+substring of that span.
+</p></td><td><div class="highlight"><pre><span class="k">import</span> <span class="nn">scala.util.matching.Regex.Match</span>
+
+<span class="k">class</span> <span class="nc">SpanConverter</span><span class="o">(</span> <span class="n">definitions</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">LinkDefinitionChunk</span><span class="o">]</span> <span class="o">)</span>
+<span class="k">extends</span> <span class="nc">Function1</span><span class="o">[</span> <span class="kt">Chunk</span>, <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">]</span> <span class="o">]</span> <span class="k">with</span> <span class="nc">StringExtras</span> <span class="o">{</span>
+
+  
+</pre></div>
+</td></tr><tr><td><p>The primary result returned by a <code>SpanMatcher</code>. It's <code>index</code> will become an
+ordering attribute for determining the &quot;best&quot; match.
+</p></td><td><div class="highlight"><pre>  <span class="k">case</span> <span class="k">class</span> <span class="nc">SpanMatch</span><span class="o">(</span> <span class="n">index</span> <span class="k">:</span> <span class="kt">Int</span><span class="o">,</span> <span class="n">before</span> <span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">Text</span><span class="o">],</span> <span class="n">current</span> <span class="k">:</span> <span class="kt">Span</span><span class="o">,</span>
+                        <span class="n">after</span> <span class="k">:</span> <span class="kt">Option</span><span class="o">[</span> <span class="kt">String</span> <span class="o">]</span> <span class="o">)</span>
+
+  
+  
+</pre></div>
+</td></tr><tr><td><p>@param delim The delimiter string to match the next 2 sequences of.
+@param toSpanMatch Factory to create the actual SpanMatch.
+@param recursive If you want the contained element to be reconverted.
+@param escape If set, how you can escape this sequence.
+</p></td><td><div class="highlight"><pre>  <span class="k">class</span> <span class="nc">DelimMatcher</span><span class="o">(</span> <span class="n">delim</span> <span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">toSpan</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">]</span> <span class="k">=&gt;</span> <span class="nc">Span</span><span class="o">,</span>
+                      <span class="n">recursive</span> <span class="k">:</span> <span class="kt">Boolean</span><span class="o">,</span> <span class="n">escape</span> <span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">Char</span><span class="o">]</span> <span class="o">)</span>
+  <span class="k">extends</span> <span class="nc">Function1</span><span class="o">[</span> <span class="kt">String</span>, <span class="kt">Option</span><span class="o">[</span><span class="kt">SpanMatch</span><span class="o">]</span> <span class="o">]</span> <span class="o">{</span>
+    
+    <span class="k">def</span> <span class="n">apply</span><span class="o">(</span> <span class="n">source</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">SpanMatch</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+      
+      <span class="n">source</span><span class="o">.</span><span class="n">nextNIndicesOf</span><span class="o">(</span> <span class="mi">2</span><span class="o">,</span> <span class="n">delim</span><span class="o">,</span> <span class="n">escape</span> <span class="o">)</span> <span class="k">match</span> <span class="o">{</span>
+        <span class="k">case</span> <span class="nc">List</span><span class="o">(</span> <span class="n">start</span><span class="o">,</span> <span class="n">end</span> <span class="o">)</span> <span class="k">=&gt;</span>
+          <span class="k">if</span> <span class="o">(</span> <span class="n">start</span> <span class="o">+</span> <span class="n">delim</span><span class="o">.</span><span class="n">length</span> <span class="o">&gt;=</span> <span class="n">end</span> <span class="o">)</span> <span class="k">return</span> <span class="nc">None</span>
+          <span class="k">val</span> <span class="n">contained</span> <span class="k">=</span> <span class="n">source</span><span class="o">.</span><span class="n">substring</span><span class="o">(</span> <span class="n">start</span> <span class="o">+</span> <span class="n">delim</span><span class="o">.</span><span class="n">length</span><span class="o">,</span> <span class="n">end</span> <span class="o">)</span>
+          <span class="k">val</span> <span class="n">content</span> <span class="k">=</span> <span class="k">if</span> <span class="o">(</span> <span class="n">recursive</span> <span class="o">)</span> <span class="n">convert</span><span class="o">(</span> <span class="n">contained</span><span class="o">,</span> <span class="nc">Nil</span> <span class="o">)</span>
+                        <span class="k">else</span> <span class="nc">List</span><span class="o">(</span> <span class="nc">Text</span><span class="o">(</span><span class="n">contained</span><span class="o">)</span> <span class="o">)</span>
+          <span class="k">val</span> <span class="n">before</span> <span class="k">=</span> <span class="n">source</span><span class="o">.</span><span class="n">substringOption</span><span class="o">(</span> <span class="mi">0</span><span class="o">,</span> <span class="n">start</span> <span class="o">).</span><span class="n">map</span><span class="o">(</span> <span class="nc">Text</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span>
+          <span class="k">val</span> <span class="n">after</span> <span class="k">=</span> <span class="n">source</span><span class="o">.</span><span class="n">substringOption</span><span class="o">(</span> <span class="n">end</span> <span class="o">+</span> <span class="n">delim</span><span class="o">.</span><span class="n">length</span><span class="o">,</span> <span class="n">source</span><span class="o">.</span><span class="n">length</span> <span class="o">)</span>
+          <span class="k">val</span> <span class="n">mapped</span> <span class="k">=</span> <span class="n">toSpan</span><span class="o">(</span> <span class="n">content</span> <span class="o">)</span>
+          <span class="nc">Some</span><span class="o">(</span> <span class="nc">SpanMatch</span><span class="o">(</span> <span class="n">start</span><span class="o">,</span> <span class="n">before</span><span class="o">,</span> <span class="n">mapped</span><span class="o">,</span> <span class="n">after</span> <span class="o">)</span> <span class="o">)</span>
+        <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="nc">None</span>
+      <span class="o">}</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">apply</span><span class="o">(</span> <span class="n">chunk</span> <span class="k">:</span> <span class="kt">Chunk</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="n">chunk</span> <span class="k">match</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="nc">IndentedChunk</span><span class="o">(</span> <span class="n">content</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="nc">List</span><span class="o">(</span> <span class="k">new</span> <span class="nc">Text</span><span class="o">(</span><span class="n">content</span><span class="o">)</span> <span class="o">)</span>
+      <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="n">convert</span><span class="o">(</span> <span class="n">chunk</span><span class="o">.</span><span class="n">content</span><span class="o">,</span> <span class="nc">Nil</span> <span class="o">)</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+  
+  
+</pre></div>
+</td></tr><tr><td><p>Tail-recursive method halts when the content argument is empty.
+</p></td><td><div class="highlight"><pre>  <span class="k">protected</span> <span class="k">def</span> <span class="n">convert</span><span class="o">(</span> <span class="n">content</span> <span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">current</span> <span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">Span</span><span class="o">]</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+
+    <span class="k">if</span> <span class="o">(</span> <span class="n">content</span><span class="o">.</span><span class="n">isEmpty</span> <span class="o">)</span> <span class="k">return</span> <span class="n">current</span>
+
+    <span class="k">val</span> <span class="n">textOnly</span> <span class="k">=</span> <span class="nc">SpanMatch</span><span class="o">(</span> <span class="n">content</span><span class="o">.</span><span class="n">length</span><span class="o">,</span> <span class="nc">None</span><span class="o">,</span> <span class="nc">Text</span><span class="o">(</span> <span class="n">content</span> <span class="o">),</span> <span class="nc">None</span> <span class="o">)</span>
+
+    <span class="k">val</span> <span class="n">best</span> <span class="k">=</span> <span class="o">(</span> <span class="n">textOnly</span> <span class="o">/:</span> <span class="n">matchers</span> <span class="o">){</span> <span class="o">(</span><span class="n">current</span><span class="o">,</span> <span class="n">findMatch</span><span class="o">)</span> <span class="k">=&gt;</span>
+      <span class="n">findMatch</span><span class="o">(</span> <span class="n">content</span> <span class="o">)</span> <span class="k">match</span> <span class="o">{</span>
+        <span class="k">case</span> <span class="nc">None</span> <span class="k">=&gt;</span> <span class="n">current</span>
+        <span class="k">case</span> <span class="nc">Some</span><span class="o">(</span> <span class="n">nextMatch</span> <span class="o">)</span> <span class="k">=&gt;</span>
+          <span class="k">if</span> <span class="o">(</span> <span class="n">nextMatch</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;</span> <span class="n">current</span><span class="o">.</span><span class="n">index</span> <span class="o">)</span> <span class="n">nextMatch</span>
+          <span class="k">else</span> <span class="n">current</span>
+      <span class="o">}</span>
+    <span class="o">}</span>
+  
+    <span class="k">val</span> <span class="n">updated</span> <span class="k">=</span> <span class="n">current</span> <span class="o">:::</span> <span class="n">best</span><span class="o">.</span><span class="n">before</span><span class="o">.</span><span class="n">toList</span> <span class="o">:::</span> <span class="nc">List</span><span class="o">(</span> <span class="n">best</span><span class="o">.</span><span class="n">current</span> <span class="o">)</span>
+  
+    <span class="n">best</span><span class="o">.</span><span class="n">after</span> <span class="k">match</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="nc">None</span>              <span class="k">=&gt;</span> <span class="n">updated</span>
+      <span class="k">case</span> <span class="nc">Some</span><span class="o">(</span> <span class="n">remaining</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">convert</span><span class="o">(</span> <span class="n">remaining</span><span class="o">,</span> <span class="n">updated</span> <span class="o">)</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">matchers</span> <span class="k">:</span> <span class="kt">List</span><span class="o">[</span> <span class="kt">String</span> <span class="k">=&gt;</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">SpanMatch</span><span class="o">]</span> <span class="o">]</span> <span class="k">=</span> <span class="nc">List</span><span class="o">(</span>
+    <span class="n">matchDoubleCodes</span><span class="o">,</span> <span class="n">matchSingleCodes</span><span class="o">,</span> <span class="n">findReferenceMatch</span><span class="o">,</span> <span class="n">findAutomaticMatch</span><span class="o">,</span>
+    <span class="n">findNormalMatch</span><span class="o">,</span> <span class="n">matchHTMLComment</span><span class="o">,</span>
+    <span class="n">matchEntity</span><span class="o">,</span> <span class="n">matchHTMLSpan</span><span class="o">,</span> <span class="n">matchUnderscoreStrongAndEm</span><span class="o">,</span>
+    <span class="n">matchAsterixStrongAndEm</span><span class="o">,</span> <span class="n">matchUnderscoreStrong</span><span class="o">,</span> <span class="n">matchAsterixStrong</span><span class="o">,</span>
+    <span class="n">matchUnderscoreEmphasis</span><span class="o">,</span> <span class="n">matchAsterixEmphasis</span>
+  <span class="o">)</span>
+  
+  <span class="k">val</span> <span class="n">matchUnderscoreEmphasis</span> <span class="k">=</span>
+    <span class="k">new</span> <span class="nc">DelimMatcher</span><span class="o">(</span> <span class="s">&quot;_&quot;</span><span class="o">,</span> <span class="nc">Emphasis</span><span class="o">(</span><span class="n">_</span><span class="o">),</span> <span class="kc">true</span><span class="o">,</span> <span class="nc">Some</span><span class="o">(</span><span class="sc">&#39;\\&#39;</span><span class="o">)</span> <span class="o">)</span>
+  
+  <span class="k">val</span> <span class="n">matchAsterixEmphasis</span> <span class="k">=</span>
+    <span class="k">new</span> <span class="nc">DelimMatcher</span><span class="o">(</span> <span class="s">&quot;*&quot;</span><span class="o">,</span> <span class="nc">Emphasis</span><span class="o">(</span><span class="n">_</span><span class="o">),</span> <span class="kc">true</span><span class="o">,</span> <span class="nc">Some</span><span class="o">(</span><span class="sc">&#39;\\&#39;</span><span class="o">)</span> <span class="o">)</span>
+  
+  
+  <span class="k">val</span> <span class="n">matchUnderscoreStrong</span> <span class="k">=</span>
+      <span class="k">new</span> <span class="nc">DelimMatcher</span><span class="o">(</span> <span class="s">&quot;__&quot;</span><span class="o">,</span> <span class="nc">Strong</span><span class="o">(</span><span class="n">_</span><span class="o">),</span> <span class="kc">true</span><span class="o">,</span> <span class="nc">Some</span><span class="o">(</span><span class="sc">&#39;\\&#39;</span><span class="o">)</span> <span class="o">)</span>
+  
+  <span class="k">val</span> <span class="n">matchAsterixStrong</span> <span class="k">=</span>
+      <span class="k">new</span> <span class="nc">DelimMatcher</span><span class="o">(</span> <span class="s">&quot;**&quot;</span><span class="o">,</span> <span class="nc">Strong</span><span class="o">(</span><span class="n">_</span><span class="o">),</span> <span class="kc">true</span><span class="o">,</span> <span class="nc">Some</span><span class="o">(</span><span class="sc">&#39;\\&#39;</span><span class="o">)</span> <span class="o">)</span>
+  
+  
+  <span class="k">val</span> <span class="n">matchUnderscoreStrongAndEm</span> <span class="k">=</span> 
+    <span class="k">new</span> <span class="nc">DelimMatcher</span><span class="o">(</span> <span class="s">&quot;___&quot;</span><span class="o">,</span> <span class="n">seq</span> <span class="k">=&gt;</span> <span class="nc">Strong</span><span class="o">(</span> <span class="nc">List</span><span class="o">(</span><span class="nc">Emphasis</span><span class="o">(</span><span class="n">seq</span><span class="o">))</span> <span class="o">),</span> <span class="kc">true</span><span class="o">,</span>
+                      <span class="nc">Some</span><span class="o">(</span><span class="sc">&#39;\\&#39;</span><span class="o">)</span> <span class="o">)</span>
+  
+  <span class="k">val</span> <span class="n">matchAsterixStrongAndEm</span> <span class="k">=</span>
+    <span class="k">new</span> <span class="nc">DelimMatcher</span><span class="o">(</span> <span class="s">&quot;***&quot;</span><span class="o">,</span> <span class="n">seq</span> <span class="k">=&gt;</span> <span class="nc">Strong</span><span class="o">(</span> <span class="nc">List</span><span class="o">(</span><span class="nc">Emphasis</span><span class="o">(</span><span class="n">seq</span><span class="o">))</span> <span class="o">),</span> <span class="kc">true</span><span class="o">,</span>
+                      <span class="nc">Some</span><span class="o">(</span><span class="sc">&#39;\\&#39;</span><span class="o">)</span> <span class="o">)</span>
+  
+  <span class="k">val</span> <span class="n">matchDoubleCodes</span> <span class="k">=</span>
+    <span class="k">new</span> <span class="nc">DelimMatcher</span><span class="o">(</span> <span class="s">&quot;``&quot;</span><span class="o">,</span> <span class="n">s</span> <span class="k">=&gt;</span> <span class="nc">CodeSpan</span><span class="o">(</span> <span class="n">s</span><span class="o">.</span><span class="n">first</span><span class="o">.</span><span class="n">asInstanceOf</span><span class="o">[</span><span class="kt">Text</span><span class="o">].</span><span class="n">content</span> <span class="o">),</span>
+                      <span class="kc">false</span><span class="o">,</span> <span class="nc">None</span> <span class="o">)</span>
+  
+  <span class="k">val</span> <span class="n">matchSingleCodes</span> <span class="k">=</span> 
+    <span class="k">new</span> <span class="nc">DelimMatcher</span><span class="o">(</span> <span class="s">&quot;`&quot;</span><span class="o">,</span> <span class="n">s</span> <span class="k">=&gt;</span> <span class="nc">CodeSpan</span><span class="o">(</span> <span class="n">s</span><span class="o">.</span><span class="n">first</span><span class="o">.</span><span class="n">asInstanceOf</span><span class="o">[</span><span class="kt">Text</span><span class="o">].</span><span class="n">content</span> <span class="o">),</span>
+                      <span class="kc">false</span><span class="o">,</span> <span class="nc">None</span> <span class="o">)</span>
+    
+
+  
+</pre></div>
+</td></tr><tr><td><h3>HTML Matching</h3><p>If we find any kind of HTML/XML-like element within the content, and it's
+not a single element, we try to find the ending element. If that segment
+isn't well-formed, we just ignore the element, and treat it like text.
+</p><p>Any sequences of HTML in content are matched by the <code>InlineHTMLMatcher</code>.
+Note that this uses a recursive method <code>hasMatchedClose</code> to deal with the
+situations where one span contains other spans - it's basically like
+parenthesis matching.
+</p></td><td><div class="highlight"><pre> 
+  <span class="k">private</span> <span class="k">val</span> <span class="n">startElement</span> <span class="k">=</span> <span class="s">&quot;&quot;&quot;&lt;[ ]*([a-zA-Z0-9:_]+)[ \t]*[^&gt;]*?(/?+)&gt;&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span>
+  
+  <span class="k">def</span> <span class="n">matchHTMLSpan</span><span class="o">(</span> <span class="n">source</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">SpanMatch</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="n">startElement</span><span class="o">.</span><span class="n">findFirstMatchIn</span><span class="o">(</span> <span class="n">source</span> <span class="o">).</span><span class="n">map</span> <span class="o">{</span> <span class="n">open</span> <span class="k">=&gt;</span>
+      <span class="k">val</span> <span class="n">hasEnd</span> <span class="k">=</span> <span class="n">open</span><span class="o">.</span><span class="n">group</span><span class="o">(</span><span class="mi">2</span><span class="o">)</span> <span class="o">==</span> <span class="s">&quot;/&quot;</span>
+      <span class="k">val</span> <span class="n">before</span> <span class="k">=</span> <span class="n">open</span><span class="o">.</span><span class="n">before</span><span class="o">.</span><span class="n">toOption</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="nc">Text</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span>
+      <span class="k">val</span> <span class="n">noEnd</span> <span class="k">=</span> <span class="nc">SpanMatch</span><span class="o">(</span> <span class="n">open</span><span class="o">.</span><span class="n">start</span><span class="o">,</span> <span class="n">before</span><span class="o">,</span> <span class="nc">HTMLSpan</span><span class="o">(</span> <span class="n">open</span><span class="o">.</span><span class="n">matched</span> <span class="o">),</span>
+                             <span class="n">open</span><span class="o">.</span><span class="n">after</span><span class="o">.</span><span class="n">toOption</span> <span class="o">)</span>
+      <span class="k">if</span> <span class="o">(</span> <span class="o">!</span> <span class="n">hasEnd</span> <span class="o">)</span> <span class="o">{</span>
+        <span class="n">hasMatchedClose</span><span class="o">(</span> <span class="n">source</span><span class="o">,</span> <span class="n">open</span><span class="o">.</span><span class="n">group</span><span class="o">(</span><span class="mi">1</span><span class="o">),</span> <span class="n">open</span><span class="o">.</span><span class="n">end</span><span class="o">,</span> <span class="mi">1</span> <span class="o">)</span> <span class="k">match</span> <span class="o">{</span>
+          <span class="k">case</span> <span class="nc">Some</span><span class="o">((</span><span class="n">close</span><span class="o">,</span> <span class="n">after</span><span class="o">))</span> <span class="k">=&gt;</span>
+            <span class="k">val</span> <span class="n">before</span> <span class="k">=</span> <span class="n">open</span><span class="o">.</span><span class="n">before</span><span class="o">.</span><span class="n">toOption</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="nc">Text</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span>
+            <span class="k">val</span> <span class="n">html</span> <span class="k">=</span> <span class="nc">HTMLSpan</span><span class="o">(</span> <span class="n">source</span><span class="o">.</span><span class="n">substring</span><span class="o">(</span> <span class="n">open</span><span class="o">.</span><span class="n">start</span><span class="o">,</span> <span class="n">close</span> <span class="o">)</span> <span class="o">)</span>
+            <span class="nc">SpanMatch</span><span class="o">(</span> <span class="n">open</span><span class="o">.</span><span class="n">start</span><span class="o">,</span> <span class="n">before</span><span class="o">,</span> <span class="n">html</span><span class="o">,</span> <span class="n">after</span><span class="o">.</span><span class="n">toOption</span> <span class="o">)</span>
+          
+</pre></div>
+</td></tr><tr><td><p>Let no html-like thing go unpunished.</p></td><td><div class="highlight"><pre>          <span class="k">case</span> <span class="nc">None</span> <span class="k">=&gt;</span> <span class="n">noEnd</span>
+        <span class="o">}</span>
+      <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+        <span class="n">noEnd</span>
+      <span class="o">}</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+  
+  <span class="k">private</span> <span class="k">def</span> <span class="n">hasMatchedClose</span><span class="o">(</span> <span class="n">source</span> <span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">tag</span> <span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">from</span> <span class="k">:</span> <span class="kt">Int</span><span class="o">,</span>
+                               <span class="n">opens</span> <span class="k">:</span> <span class="kt">Int</span> <span class="o">)</span>
+                             <span class="k">:</span> <span class="kt">Option</span><span class="o">[</span> <span class="o">(</span><span class="kt">Int</span>, <span class="kt">CharSequence</span><span class="o">)</span> <span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+  
+    <span class="k">val</span> <span class="n">opener</span> <span class="k">=</span> <span class="o">(</span><span class="s">&quot;(?i)&lt;[ ]*&quot;</span> <span class="o">+</span> <span class="n">tag</span> <span class="o">+</span> <span class="s">&quot;[ \t]*[^&gt;]*?(/?+)*&gt;&quot;</span><span class="o">).</span><span class="n">r</span>
+    <span class="k">val</span> <span class="n">closer</span> <span class="k">=</span> <span class="o">(</span><span class="s">&quot;(?i)&lt;/[ ]*&quot;</span> <span class="o">+</span> <span class="n">tag</span> <span class="o">+</span> <span class="s">&quot;[ ]*&gt;&quot;</span><span class="o">).</span><span class="n">r</span>
+    
+    <span class="k">val</span> <span class="n">nextOpen</span>  <span class="k">=</span> <span class="n">opener</span><span class="o">.</span><span class="n">findFirstMatchIn</span><span class="o">(</span> <span class="n">source</span><span class="o">.</span><span class="n">substring</span><span class="o">(</span><span class="n">from</span><span class="o">)</span> <span class="o">)</span>
+    <span class="k">val</span> <span class="n">nextClose</span> <span class="k">=</span> <span class="n">closer</span><span class="o">.</span><span class="n">findFirstMatchIn</span><span class="o">(</span> <span class="n">source</span><span class="o">.</span><span class="n">substring</span><span class="o">(</span><span class="n">from</span><span class="o">)</span> <span class="o">)</span>
+  
+    <span class="k">if</span> <span class="o">(</span> <span class="o">!</span> <span class="n">nextClose</span><span class="o">.</span><span class="n">isDefined</span> <span class="o">)</span> <span class="k">return</span> <span class="nc">None</span>
+    
+    <span class="k">if</span> <span class="o">(</span> <span class="n">nextOpen</span><span class="o">.</span><span class="n">isDefined</span> <span class="o">&amp;&amp;</span> <span class="o">(</span> <span class="n">nextOpen</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">start</span> <span class="o">&lt;</span> <span class="n">nextClose</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">start</span> <span class="o">)</span> <span class="o">)</span> <span class="o">{</span>
+      <span class="n">hasMatchedClose</span><span class="o">(</span> <span class="n">source</span><span class="o">,</span> <span class="n">tag</span><span class="o">,</span> <span class="n">from</span> <span class="o">+</span> <span class="n">nextOpen</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">end</span><span class="o">,</span> <span class="n">opens</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">)</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(</span> <span class="n">opens</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="o">)</span> <span class="o">{</span>
+      <span class="n">hasMatchedClose</span><span class="o">(</span> <span class="n">source</span><span class="o">,</span> <span class="n">tag</span><span class="o">,</span> <span class="n">from</span> <span class="o">+</span> <span class="n">nextClose</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">end</span><span class="o">,</span> <span class="n">opens</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">)</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+      <span class="nc">Some</span><span class="o">(</span> <span class="o">(</span> <span class="n">from</span> <span class="o">+</span> <span class="n">nextClose</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">end</span><span class="o">,</span> <span class="n">nextClose</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">after</span> <span class="o">)</span> <span class="o">)</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+  
+  <span class="k">private</span> <span class="k">val</span> <span class="n">matchEntityRE</span> <span class="k">=</span> <span class="s">&quot;&quot;&quot;&amp;\w+;&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span>
+  
+  <span class="k">def</span> <span class="n">matchEntity</span><span class="o">(</span> <span class="n">source</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">Option</span><span class="o">[</span> <span class="kt">SpanMatch</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="n">matchEntityRE</span><span class="o">.</span><span class="n">findFirstMatchIn</span><span class="o">(</span> <span class="n">source</span> <span class="o">).</span><span class="n">map</span> <span class="o">{</span> <span class="n">entityMatch</span> <span class="k">=&gt;</span>
+      <span class="k">val</span> <span class="n">before</span> <span class="k">=</span> <span class="n">entityMatch</span><span class="o">.</span><span class="n">before</span><span class="o">.</span><span class="n">toOption</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="nc">Text</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span>
+      <span class="k">val</span> <span class="n">html</span> <span class="k">=</span> <span class="nc">HTMLSpan</span><span class="o">(</span> <span class="n">entityMatch</span><span class="o">.</span><span class="n">matched</span> <span class="o">)</span>
+      <span class="nc">SpanMatch</span><span class="o">(</span> <span class="n">entityMatch</span><span class="o">.</span><span class="n">start</span><span class="o">,</span> <span class="n">before</span><span class="o">,</span> <span class="n">html</span><span class="o">,</span> <span class="n">entityMatch</span><span class="o">.</span><span class="n">after</span><span class="o">.</span><span class="n">toOption</span> <span class="o">)</span>
+    <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">matchHTMLComment</span><span class="o">(</span> <span class="n">source</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">)</span> <span class="k">:</span><span class="kt">Option</span><span class="o">[</span> <span class="kt">SpanMatch</span> <span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="k">val</span> <span class="n">open</span> <span class="k">=</span> <span class="n">source</span><span class="o">.</span><span class="n">indexOf</span><span class="o">(</span><span class="s">&quot;&lt;!--&quot;</span><span class="o">)</span>
+    <span class="k">if</span> <span class="o">(</span> <span class="n">open</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span> <span class="o">)</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">close</span> <span class="k">=</span> <span class="n">source</span><span class="o">.</span><span class="n">indexOf</span><span class="o">(</span> <span class="s">&quot;--&gt;&quot;</span><span class="o">,</span> <span class="n">open</span> <span class="o">)</span>
+      <span class="k">if</span> <span class="o">(</span> <span class="n">close</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span> <span class="o">)</span> <span class="o">{</span>
+        <span class="k">val</span> <span class="n">before</span> <span class="k">=</span> <span class="n">source</span><span class="o">.</span><span class="n">substring</span><span class="o">(</span> <span class="mi">0</span><span class="o">,</span> <span class="n">open</span> <span class="o">).</span><span class="n">toOption</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="nc">Text</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span>
+        <span class="k">val</span> <span class="n">html</span> <span class="k">=</span> <span class="nc">HTMLSpan</span><span class="o">(</span> <span class="n">source</span><span class="o">.</span><span class="n">substring</span><span class="o">(</span> <span class="n">open</span><span class="o">,</span> <span class="n">close</span> <span class="o">+</span> <span class="s">&quot;--&gt;&quot;</span><span class="o">.</span><span class="n">length</span> <span class="o">)</span> <span class="o">)</span>
+        <span class="k">val</span> <span class="n">after</span> <span class="k">=</span> <span class="n">source</span><span class="o">.</span><span class="n">substring</span><span class="o">(</span> <span class="n">close</span> <span class="o">+</span> <span class="s">&quot;--&gt;&quot;</span><span class="o">.</span><span class="n">length</span> <span class="o">).</span><span class="n">toOption</span>
+        <span class="k">return</span> <span class="nc">Some</span><span class="o">(</span> <span class="nc">SpanMatch</span><span class="o">(</span> <span class="n">open</span><span class="o">,</span> <span class="n">before</span><span class="o">,</span> <span class="n">html</span><span class="o">,</span> <span class="n">after</span> <span class="o">)</span> <span class="o">)</span>
+      <span class="o">}</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="nc">None</span>
+  <span class="o">}</span>
+  
+  
+  <span class="k">private</span> <span class="k">val</span> <span class="n">automaticLinkRE</span> <span class="k">=</span> <span class="s">&quot;&quot;&quot;&lt;((http:|mailto:|https:)\S+)&gt;&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span>
+  
+  <span class="k">def</span> <span class="n">findAutomaticMatch</span><span class="o">(</span> <span class="n">source</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">Option</span><span class="o">[</span> <span class="kt">SpanMatch</span> <span class="o">]</span> <span class="k">=</span>
+    <span class="n">automaticLinkRE</span><span class="o">.</span><span class="n">findFirstMatchIn</span><span class="o">(</span> <span class="n">source</span> <span class="o">).</span><span class="n">map</span> <span class="o">{</span> <span class="n">aMatch</span> <span class="k">=&gt;</span>
+      <span class="k">val</span> <span class="n">url</span> <span class="k">=</span> <span class="n">aMatch</span><span class="o">.</span><span class="n">group</span><span class="o">(</span><span class="mi">1</span><span class="o">)</span>
+      <span class="k">val</span> <span class="n">before</span> <span class="k">=</span> <span class="n">aMatch</span><span class="o">.</span><span class="n">before</span><span class="o">.</span><span class="n">toOption</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="nc">Text</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span>
+      <span class="k">val</span> <span class="n">link</span> <span class="k">=</span> <span class="nc">Link</span><span class="o">(</span> <span class="nc">List</span><span class="o">(</span> <span class="nc">Text</span><span class="o">(</span><span class="n">url</span><span class="o">)</span> <span class="o">),</span> <span class="n">url</span><span class="o">,</span> <span class="nc">None</span> <span class="o">)</span>
+      <span class="nc">SpanMatch</span><span class="o">(</span> <span class="n">aMatch</span><span class="o">.</span><span class="n">start</span><span class="o">,</span> <span class="n">before</span><span class="o">,</span> <span class="n">link</span><span class="o">,</span> <span class="n">aMatch</span><span class="o">.</span><span class="n">after</span><span class="o">.</span><span class="n">toOption</span> <span class="o">)</span>
+    <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">findNormalMatch</span><span class="o">(</span> <span class="n">source</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">SpanMatch</span><span class="o">]</span> <span class="k">=</span>
+    <span class="n">normalLinks</span><span class="o">.</span><span class="n">findFirstMatchIn</span><span class="o">(</span> <span class="n">source</span> <span class="o">)</span>
+               <span class="o">.</span><span class="n">flatMap</span> <span class="o">{</span> <span class="n">matchr</span> <span class="k">=&gt;</span> <span class="n">findNormalMatch</span><span class="o">(</span> <span class="n">source</span><span class="o">,</span> <span class="n">matchr</span> <span class="o">)</span> <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">findNormalMatch</span><span class="o">(</span> <span class="n">source</span> <span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">matchr</span> <span class="k">:</span> <span class="kt">Match</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">Option</span><span class="o">[</span> <span class="kt">SpanMatch</span> <span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="k">val</span> <span class="n">isImage</span>     <span class="k">=</span> <span class="n">matchr</span><span class="o">.</span><span class="n">group</span><span class="o">(</span><span class="mi">1</span><span class="o">)</span> <span class="o">==</span> <span class="s">&quot;!&quot;</span> <span class="o">||</span> <span class="n">matchr</span><span class="o">.</span><span class="n">group</span><span class="o">(</span><span class="mi">4</span><span class="o">)</span> <span class="o">==</span> <span class="s">&quot;!&quot;</span>
+    <span class="k">val</span> <span class="n">hasTitle</span>    <span class="k">=</span> <span class="n">matchr</span><span class="o">.</span><span class="n">group</span><span class="o">(</span><span class="mi">7</span><span class="o">)</span> <span class="o">!=</span> <span class="kc">null</span>
+    <span class="k">val</span> <span class="n">wrapped</span>     <span class="k">=</span> <span class="k">if</span><span class="o">(</span> <span class="n">hasTitle</span> <span class="o">)</span> <span class="n">matchr</span><span class="o">.</span><span class="n">group</span><span class="o">(</span><span class="mi">5</span><span class="o">)</span> <span class="k">else</span> <span class="n">matchr</span><span class="o">.</span><span class="n">group</span><span class="o">(</span><span class="mi">2</span><span class="o">)</span>
+    <span class="k">val</span> <span class="n">url</span>         <span class="k">=</span> <span class="k">if</span><span class="o">(</span> <span class="n">hasTitle</span> <span class="o">)</span> <span class="n">matchr</span><span class="o">.</span><span class="n">group</span><span class="o">(</span><span class="mi">6</span><span class="o">)</span> <span class="k">else</span> <span class="n">matchr</span><span class="o">.</span><span class="n">group</span><span class="o">(</span><span class="mi">3</span><span class="o">)</span>
+    <span class="k">val</span> <span class="n">titleOption</span> <span class="k">=</span> <span class="k">if</span> <span class="o">(</span> <span class="n">hasTitle</span> <span class="o">)</span> <span class="nc">Some</span><span class="o">(</span> <span class="n">matchr</span><span class="o">.</span><span class="n">group</span><span class="o">(</span><span class="mi">7</span><span class="o">)</span> <span class="o">)</span> <span class="k">else</span> <span class="nc">None</span>
+    <span class="k">val</span> <span class="n">before</span> <span class="k">=</span> <span class="n">matchr</span><span class="o">.</span><span class="n">before</span><span class="o">.</span><span class="n">toOption</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="nc">Text</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span>
+    <span class="k">val</span> <span class="n">link</span> <span class="k">=</span> <span class="k">if</span> <span class="o">(</span> <span class="n">isImage</span> <span class="o">)</span> <span class="nc">ImageLink</span><span class="o">(</span> <span class="n">convert</span><span class="o">(</span><span class="n">wrapped</span><span class="o">,</span> <span class="nc">Nil</span><span class="o">),</span> <span class="n">url</span><span class="o">,</span> <span class="n">titleOption</span> <span class="o">)</span>
+               <span class="k">else</span> <span class="nc">Link</span><span class="o">(</span> <span class="n">convert</span><span class="o">(</span><span class="n">wrapped</span><span class="o">,</span> <span class="nc">Nil</span><span class="o">),</span> <span class="n">url</span><span class="o">,</span> <span class="n">titleOption</span> <span class="o">)</span>
+    <span class="nc">Some</span><span class="o">(</span> <span class="nc">SpanMatch</span><span class="o">(</span> <span class="n">matchr</span><span class="o">.</span><span class="n">start</span><span class="o">,</span> <span class="n">before</span><span class="o">,</span> <span class="n">link</span><span class="o">,</span> <span class="n">matchr</span><span class="o">.</span><span class="n">after</span><span class="o">.</span><span class="n">toOption</span> <span class="o">)</span> <span class="o">)</span>
+  <span class="o">}</span>
+    
+  <span class="k">val</span> <span class="n">normalLinks</span> <span class="k">=</span>
+    <span class="o">(</span> <span class="s">&quot;&quot;&quot;(!?)\[([^\]]*)\][\t ]*\(&lt;?([\S&amp;&amp;[^)&gt;]]*)&gt;?\)|&quot;&quot;&quot;</span> <span class="o">+</span>
+      <span class="s">&quot;&quot;&quot;(!?)\[([^\]]*)\][\t ]*\(&lt;?([\S&amp;&amp;[^)&gt;]]*)&gt;?[\t ]+&quot;([^)]*)&quot;\)&quot;&quot;&quot;</span> <span class="o">).</span><span class="n">r</span>
+  
+    
+  
+</pre></div>
+</td></tr><tr><td><p>We have to match parens, to support this stuff: [wr [app] ed] [thing]
+</p></td><td><div class="highlight"><pre>  <span class="k">def</span> <span class="n">findReferenceMatch</span><span class="o">(</span> <span class="n">source</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">SpanMatch</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="k">val</span> <span class="n">firstOpen</span> <span class="k">=</span> <span class="n">source</span><span class="o">.</span><span class="n">indexOf</span><span class="o">(</span><span class="sc">&#39;[&#39;</span><span class="o">)</span>
+    <span class="k">if</span> <span class="o">(</span> <span class="n">firstOpen</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="o">)</span> <span class="k">return</span> <span class="nc">None</span>
+    
+    <span class="k">val</span> <span class="n">firstClose</span> <span class="k">=</span>
+      <span class="n">source</span><span class="o">.</span><span class="n">findBalanced</span><span class="o">(</span><span class="sc">&#39;[&#39;</span><span class="o">,</span> <span class="sc">&#39;]&#39;</span><span class="o">,</span> <span class="n">firstOpen</span><span class="o">).</span><span class="n">getOrElse</span><span class="o">(</span> <span class="k">return</span> <span class="nc">None</span> <span class="o">)</span>
+  
+    <span class="k">val</span> <span class="n">secondPart</span> <span class="k">=</span> <span class="n">source</span><span class="o">.</span><span class="n">substring</span><span class="o">(</span> <span class="n">firstClose</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">)</span>
+  
+    <span class="k">val</span> <span class="n">secondMatch</span> <span class="k">=</span>
+      <span class="s">&quot;&quot;&quot;^\s*(\[)&quot;&quot;&quot;</span><span class="o">.</span><span class="n">r</span><span class="o">.</span><span class="n">findFirstMatchIn</span><span class="o">(</span> <span class="n">secondPart</span> <span class="o">).</span><span class="n">getOrElse</span><span class="o">(</span> <span class="k">return</span> <span class="nc">None</span> <span class="o">)</span>
+  
+    <span class="k">val</span> <span class="n">secondClose</span> <span class="k">=</span>
+      <span class="n">secondPart</span><span class="o">.</span><span class="n">findBalanced</span><span class="o">(</span> <span class="sc">&#39;[&#39;</span><span class="o">,</span> <span class="sc">&#39;]&#39;</span><span class="o">,</span> <span class="n">secondMatch</span><span class="o">.</span><span class="n">start</span><span class="o">(</span><span class="mi">1</span><span class="o">)</span> <span class="o">).</span><span class="n">get</span>
+    <span class="k">if</span> <span class="o">(</span> <span class="n">secondClose</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="o">)</span> <span class="k">return</span> <span class="nc">None</span>
+  
+    <span class="k">val</span> <span class="n">refID</span> <span class="k">=</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">no2</span> <span class="k">=</span> <span class="n">secondPart</span><span class="o">.</span><span class="n">substring</span><span class="o">(</span> <span class="n">secondMatch</span><span class="o">.</span><span class="n">start</span><span class="o">(</span><span class="mi">1</span><span class="o">)</span> <span class="o">+</span> <span class="mi">1</span><span class="o">,</span> <span class="n">secondClose</span> <span class="o">)</span>
+      <span class="k">if</span> <span class="o">(</span> <span class="n">no2</span><span class="o">.</span><span class="n">isEmpty</span> <span class="o">)</span> <span class="n">source</span><span class="o">.</span><span class="n">substring</span><span class="o">(</span> <span class="n">firstOpen</span> <span class="o">+</span> <span class="mi">1</span><span class="o">,</span> <span class="n">firstClose</span> <span class="o">)</span> <span class="k">else</span> <span class="n">no2</span>
+    <span class="o">}</span>
+    <span class="k">val</span> <span class="n">precedingText</span> <span class="k">=</span> <span class="n">source</span><span class="o">.</span><span class="n">substring</span><span class="o">(</span> <span class="mi">0</span><span class="o">,</span> <span class="n">firstOpen</span> <span class="o">).</span><span class="n">toOption</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="nc">Text</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span>
+    
+    <span class="n">definitions</span><span class="o">.</span><span class="n">find</span><span class="o">(</span> <span class="n">_</span><span class="o">.</span><span class="n">id</span> <span class="n">equalsIgnoreCase</span> <span class="n">refID</span> <span class="o">).</span><span class="n">map</span> <span class="o">{</span>
+      <span class="n">definition</span> <span class="k">:</span> <span class="kt">LinkDefinitionChunk</span> <span class="o">=&gt;</span>
+        <span class="k">val</span> <span class="n">link</span> <span class="k">=</span> <span class="nc">Link</span><span class="o">(</span> <span class="nc">List</span><span class="o">(</span> <span class="nc">Text</span><span class="o">(</span><span class="n">source</span><span class="o">.</span><span class="n">substring</span><span class="o">(</span><span class="n">firstOpen</span> <span class="o">+</span> <span class="mi">1</span><span class="o">,</span> <span class="n">firstClose</span><span class="o">))</span> <span class="o">),</span>
+                         <span class="n">definition</span><span class="o">.</span><span class="n">url</span><span class="o">,</span> <span class="n">definition</span><span class="o">.</span><span class="n">title</span> <span class="o">)</span>
+        <span class="k">val</span> <span class="n">after</span> <span class="k">=</span> <span class="n">source</span><span class="o">.</span><span class="n">substring</span><span class="o">(</span> <span class="n">firstClose</span> <span class="o">+</span> <span class="n">secondClose</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">).</span><span class="n">toOption</span>
+        <span class="nc">SpanMatch</span><span class="o">(</span> <span class="n">firstOpen</span><span class="o">,</span> <span class="n">precedingText</span><span class="o">,</span> <span class="n">link</span><span class="o">,</span> <span class="n">after</span> <span class="o">)</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+</td></tr></tbody></table>
+  </div>
+<script type="text/javascript">
+$(function() {
+    var $navList = $("#nav-list"),
+        $change = $(".title .change-link");
+    
+    $change.click(function() { $navList.toggleClass("hidden") });
+});
+</script>
+</body>
+</html>

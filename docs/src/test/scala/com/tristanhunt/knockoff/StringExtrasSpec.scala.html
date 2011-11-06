@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>StringExtrasSpec.scala</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" href="../../../../../../res/style.css"></style>
+  <script type="text/javascript" 
+    src="../../../../../../res/jquery.js"></script>
+</head>
+<body>
+  <div id="container">
+    <h1 class="title">StringExtrasSpec.scala&nbsp;<span class="change-link">Change</span></h1>
+    <ul id="nav-list" class="hidden">
+                    
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/Discounter.scala.html">src/main/scala/com/tristanhunt/knockoff/Discounter.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/MarkdownParsing.scala.html">src/main/scala/com/tristanhunt/knockoff/MarkdownParsing.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/ObjectModel.scala.html">src/main/scala/com/tristanhunt/knockoff/ObjectModel.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/StringExtras.scala.html">src/main/scala/com/tristanhunt/knockoff/StringExtras.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/TextWriter.scala.html">src/main/scala/com/tristanhunt/knockoff/TextWriter.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/XHTMLWriter.scala.html">src/main/scala/com/tristanhunt/knockoff/XHTMLWriter.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/ChunkParsersSpec.scala.html">src/test/scala/com/tristanhunt/knockoff/ChunkParsersSpec.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/KnockoffIntegrationTests.scala.html">src/test/scala/com/tristanhunt/knockoff/KnockoffIntegrationTests.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/SpanConverterSpec.scala.html">src/test/scala/com/tristanhunt/knockoff/SpanConverterSpec.scala</a></li>
+                                
+                <li class="active">src/test/scala/com/tristanhunt/knockoff/StringExtrasSpec.scala</li>
+                        </ul>
+    <table><tbody><tr><td></td><td><div class="highlight"><pre><span class="k">package</span> <span class="nn">com.tristanhunt.knockoff</span>
+</pre></div>
+</td></tr><tr><td><p>import org.junit.runner.RunWith</p></td><td><div class="highlight"><pre><span class="k">import</span> <span class="nn">org.scalatest.junit.JUnitRunner</span>
+<span class="k">import</span> <span class="nn">org.scalatest._</span>
+<span class="k">import</span> <span class="nn">org.scalatest.matchers._</span>
+</pre></div>
+</td></tr><tr><td><p>@RunWith(classOf[JUnitRunner])</p></td><td><div class="highlight"><pre><span class="k">class</span> <span class="nc">StringExtrasSpec</span> <span class="k">extends</span> <span class="nc">Spec</span> <span class="k">with</span> <span class="nc">ShouldMatchers</span> <span class="k">with</span> <span class="nc">StringExtras</span> <span class="o">{</span>
+    
+  <span class="n">describe</span><span class="o">(</span><span class="s">&quot;StringExtras&quot;</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">it</span><span class="o">(</span> <span class="s">&quot;should find two different groups of the same time&quot;</span> <span class="o">)</span> <span class="o">{</span>
+      <span class="s">&quot;a `foo` b `bar`&quot;</span><span class="o">.</span><span class="n">nextNIndicesOf</span><span class="o">(</span><span class="mi">2</span><span class="o">,</span><span class="s">&quot;`&quot;</span><span class="o">,</span> <span class="nc">None</span><span class="o">)</span> <span class="n">should</span> <span class="n">equal</span> <span class="o">(</span> <span class="nc">List</span><span class="o">(</span><span class="mi">2</span><span class="o">,</span> <span class="mi">6</span><span class="o">)</span> <span class="o">)</span>
+    <span class="o">}</span>
+
+    <span class="n">it</span><span class="o">(</span> <span class="s">&quot;should deal with only one index&quot;</span> <span class="o">)</span> <span class="o">{</span>
+      <span class="s">&quot;a `foo with nothin&#39;&quot;</span><span class="o">.</span><span class="n">nextNIndicesOf</span><span class="o">(</span><span class="mi">2</span><span class="o">,</span> <span class="s">&quot;`&quot;</span><span class="o">,</span> <span class="nc">None</span><span class="o">)</span> <span class="n">should</span> <span class="n">equal</span> <span class="o">(</span><span class="nc">Nil</span><span class="o">)</span>
+    <span class="o">}</span>
+    
+    <span class="n">it</span><span class="o">(</span><span class="s">&quot;should ignore escaped sequences&quot;</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">actual</span> <span class="k">=</span> <span class="s">&quot;&quot;&quot;a ** normal \**escaped ** normal&quot;&quot;&quot;</span>
+                      <span class="o">.</span><span class="n">nextNIndicesOf</span><span class="o">(</span> <span class="mi">2</span><span class="o">,</span> <span class="s">&quot;**&quot;</span><span class="o">,</span> <span class="nc">Some</span><span class="o">(</span><span class="sc">&#39;\\&#39;</span><span class="o">)</span> <span class="o">)</span>
+      <span class="n">actual</span> <span class="n">should</span> <span class="n">equal</span><span class="o">(</span> <span class="nc">List</span><span class="o">(</span><span class="mi">2</span><span class="o">,</span> <span class="mi">23</span><span class="o">)</span> <span class="o">)</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+  
+  <span class="n">describe</span><span class="o">(</span><span class="s">&quot;StringExtras.countLeading&quot;</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">it</span><span class="o">(</span><span class="s">&quot;should be ok with nothing to match&quot;</span><span class="o">)</span> <span class="o">{</span>
+      <span class="s">&quot;no leading&quot;</span><span class="o">.</span><span class="n">countLeading</span><span class="o">(</span><span class="sc">&#39;#&#39;</span><span class="o">)</span> <span class="n">should</span> <span class="n">equal</span> <span class="o">(</span><span class="mi">0</span><span class="o">)</span>
+      <span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">countLeading</span><span class="o">(</span><span class="sc">&#39;#&#39;</span><span class="o">)</span> <span class="n">should</span> <span class="n">equal</span> <span class="o">(</span><span class="mi">0</span><span class="o">)</span>
+    <span class="o">}</span>
+    
+    <span class="n">it</span><span class="o">(</span><span class="s">&quot;should be fine with only these characters&quot;</span><span class="o">)</span> <span class="o">{</span>
+      <span class="s">&quot;###&quot;</span><span class="o">.</span><span class="n">countLeading</span><span class="o">(</span><span class="sc">&#39;#&#39;</span><span class="o">)</span> <span class="n">should</span> <span class="n">equal</span> <span class="o">(</span><span class="mi">3</span><span class="o">)</span>
+    <span class="o">}</span>
+    
+    <span class="n">it</span><span class="o">(</span><span class="s">&quot;should handle only the characters up front&quot;</span><span class="o">)</span> <span class="o">{</span>
+      <span class="s">&quot;## unbalanced #&quot;</span><span class="o">.</span><span class="n">countLeading</span><span class="o">(</span><span class="sc">&#39;#&#39;</span><span class="o">)</span> <span class="n">should</span> <span class="n">equal</span> <span class="o">(</span><span class="mi">2</span><span class="o">)</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+  
+  <span class="n">describe</span><span class="o">(</span><span class="s">&quot;StringExtras.trimChars(ch)&quot;</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">it</span><span class="o">(</span><span class="s">&quot;should remove likely headers with the match char inside&quot;</span><span class="o">)</span> <span class="o">{</span>
+      <span class="s">&quot;## Who does #2 work for? #&quot;</span><span class="o">.</span><span class="n">trimChars</span><span class="o">(</span><span class="sc">&#39;#&#39;</span><span class="o">).</span><span class="n">trim</span> <span class="n">should</span> <span class="n">equal</span> <span class="o">(</span>
+        <span class="s">&quot;Who does #2 work for?&quot;</span> <span class="o">)</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+  
+  <span class="n">describe</span><span class="o">(</span><span class="s">&quot;StringExtras.findBalanced&quot;</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">it</span><span class="o">(</span><span class="s">&quot;should find balanced brackets&quot;</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">src</span> <span class="k">=</span> <span class="s">&quot;With [embedded [brackets]] [b].&quot;</span>
+      <span class="k">val</span> <span class="n">firstSpan</span> <span class="k">=</span> <span class="n">src</span><span class="o">.</span><span class="n">indexOf</span><span class="o">(</span><span class="sc">&#39;[&#39;</span><span class="o">)</span>
+      <span class="n">src</span><span class="o">.</span><span class="n">findBalanced</span><span class="o">(</span> <span class="sc">&#39;[&#39;</span><span class="o">,</span> <span class="sc">&#39;]&#39;</span><span class="o">,</span> <span class="n">firstSpan</span> <span class="o">).</span><span class="n">get</span> <span class="n">should</span> <span class="n">equal</span> <span class="o">(</span>
+        <span class="s">&quot;With [embedded [brackets]&quot;</span><span class="o">.</span><span class="n">length</span> <span class="o">)</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+</td></tr></tbody></table>
+  </div>
+<script type="text/javascript">
+$(function() {
+    var $navList = $("#nav-list"),
+        $change = $(".title .change-link");
+    
+    $change.click(function() { $navList.toggleClass("hidden") });
+});
+</script>
+</body>
+</html>

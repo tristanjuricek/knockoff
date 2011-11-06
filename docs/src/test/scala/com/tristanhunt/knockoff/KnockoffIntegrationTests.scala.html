@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>KnockoffIntegrationTests.scala</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" href="../../../../../../res/style.css"></style>
+  <script type="text/javascript" 
+    src="../../../../../../res/jquery.js"></script>
+</head>
+<body>
+  <div id="container">
+    <h1 class="title">KnockoffIntegrationTests.scala&nbsp;<span class="change-link">Change</span></h1>
+    <ul id="nav-list" class="hidden">
+                    
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/Discounter.scala.html">src/main/scala/com/tristanhunt/knockoff/Discounter.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/MarkdownParsing.scala.html">src/main/scala/com/tristanhunt/knockoff/MarkdownParsing.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/ObjectModel.scala.html">src/main/scala/com/tristanhunt/knockoff/ObjectModel.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/StringExtras.scala.html">src/main/scala/com/tristanhunt/knockoff/StringExtras.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/TextWriter.scala.html">src/main/scala/com/tristanhunt/knockoff/TextWriter.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/XHTMLWriter.scala.html">src/main/scala/com/tristanhunt/knockoff/XHTMLWriter.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/ChunkParsersSpec.scala.html">src/test/scala/com/tristanhunt/knockoff/ChunkParsersSpec.scala</a></li>
+                                
+                <li class="active">src/test/scala/com/tristanhunt/knockoff/KnockoffIntegrationTests.scala</li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/SpanConverterSpec.scala.html">src/test/scala/com/tristanhunt/knockoff/SpanConverterSpec.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/StringExtrasSpec.scala.html">src/test/scala/com/tristanhunt/knockoff/StringExtrasSpec.scala</a></li>
+                        </ul>
+    <table><tbody><tr><td></td><td><div class="highlight"><pre><span class="k">package</span> <span class="nn">com.tristanhunt.knockoff</span>
+
+<span class="k">import</span> <span class="nn">java.io._</span>
+</pre></div>
+</td></tr><tr><td><p>import org.junit.runner.RunWith</p></td><td><div class="highlight"><pre><span class="k">import</span> <span class="nn">org.scalatest.matchers._</span>
+<span class="k">import</span> <span class="nn">org.scalatest._</span>
+<span class="k">import</span> <span class="nn">org.scalatest.junit.JUnitRunner</span>
+<span class="k">import</span> <span class="nn">org.w3c.tidy.Tidy</span>
+<span class="k">import</span> <span class="nn">scala.collection.mutable.ListBuffer</span>
+<span class="k">import</span> <span class="nn">scala.xml.</span><span class="o">{</span> <span class="nc">Node</span><span class="o">,</span> <span class="nc">XML</span> <span class="o">}</span>
+</pre></div>
+</td></tr><tr><td><p>@RunWith(classOf[JUnitRunner])</p></td><td><div class="highlight"><pre><span class="k">class</span> <span class="nc">KnockoffIntegrationTests</span> <span class="k">extends</span> <span class="nc">Spec</span> <span class="k">with</span> <span class="nc">ShouldMatchers</span> <span class="o">{</span>
+  
+  
+  <span class="k">val</span> <span class="n">basedir</span> <span class="k">=</span> <span class="s">&quot;src/test/resources/tests&quot;</span>
+  
+  <span class="k">val</span> <span class="n">jtidy</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="k">val</span> <span class="n">tidy</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">Tidy</span>
+    <span class="n">tidy</span><span class="o">.</span><span class="n">setXmlOut</span><span class="o">(</span><span class="kc">true</span><span class="o">)</span>
+    <span class="n">tidy</span><span class="o">.</span><span class="n">setShowWarnings</span><span class="o">(</span> <span class="kc">false</span> <span class="o">)</span>
+    <span class="n">tidy</span><span class="o">.</span><span class="n">setShowErrors</span><span class="o">(</span> <span class="mi">0</span> <span class="o">)</span>
+    <span class="n">tidy</span><span class="o">.</span><span class="n">setQuiet</span><span class="o">(</span> <span class="kc">true</span> <span class="o">)</span>
+    <span class="n">tidy</span><span class="o">.</span><span class="n">setForceOutput</span><span class="o">(</span> <span class="kc">true</span> <span class="o">)</span>
+    <span class="n">tidy</span>
+  <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">file</span><span class="o">(</span> <span class="n">src</span> <span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">child</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">)</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">File</span><span class="o">(</span> <span class="n">src</span><span class="o">,</span> <span class="n">child</span> <span class="o">)</span>
+  
+  <span class="k">def</span> <span class="n">writeString</span><span class="o">(</span> <span class="n">node</span> <span class="k">:</span> <span class="kt">Node</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="k">val</span> <span class="n">sw</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">StringWriter</span>
+    <span class="nc">XML</span><span class="o">.</span><span class="n">write</span><span class="o">(</span> <span class="n">sw</span><span class="o">,</span> <span class="n">node</span><span class="o">,</span> <span class="s">&quot;UTF-8&quot;</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="kc">null</span> <span class="o">)</span>
+    <span class="n">sw</span><span class="o">.</span><span class="n">toString</span>
+  <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">tidy</span><span class="o">(</span> <span class="n">src</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">)</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="k">val</span> <span class="n">reader</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">StringReader</span><span class="o">(</span> <span class="n">src</span> <span class="o">)</span>
+    <span class="k">val</span> <span class="n">writer</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">StringWriter</span>
+    <span class="n">jtidy</span><span class="o">.</span><span class="n">parse</span><span class="o">(</span> <span class="n">reader</span><span class="o">,</span> <span class="n">writer</span> <span class="o">)</span>
+    <span class="nc">XML</span><span class="o">.</span><span class="n">loadString</span><span class="o">(</span> <span class="n">writer</span><span class="o">.</span><span class="n">toString</span> <span class="o">)</span>
+  <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">normalizeSpace</span><span class="o">(</span> <span class="n">str</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">=</span>
+    <span class="n">str</span><span class="o">.</span><span class="n">replaceAll</span><span class="o">(</span> <span class="s">&quot;\\s+&quot;</span><span class="o">,</span> <span class="s">&quot; &quot;</span> <span class="o">)</span>
+  
+  <span class="k">class</span> <span class="nc">FileHelper</span><span class="o">(</span> <span class="n">wrapped</span> <span class="k">:</span> <span class="kt">File</span> <span class="o">)</span> <span class="o">{</span>
+    
+    
+</pre></div>
+</td></tr><tr><td><p>Try to match files based on the fromExt to the toExt.
+</p></td><td><div class="highlight"><pre>    <span class="k">def</span> <span class="n">listTests</span><span class="o">(</span> <span class="n">fromExt</span> <span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">toExt</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span> <span class="o">(</span><span class="kt">File</span>, <span class="kt">File</span><span class="o">)</span> <span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">endsWithFrom</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">FileFilter</span> <span class="o">{</span>
+        <span class="k">def</span> <span class="n">accept</span><span class="o">(</span> <span class="n">f</span> <span class="k">:</span> <span class="kt">File</span> <span class="o">)</span> <span class="k">=</span> <span class="n">f</span><span class="o">.</span><span class="n">getName</span> <span class="n">endsWith</span> <span class="n">fromExt</span>
+      <span class="o">}</span>
+      <span class="k">val</span> <span class="n">files</span> <span class="k">=</span> <span class="n">wrapped</span><span class="o">.</span><span class="n">listFiles</span><span class="o">(</span> <span class="n">endsWithFrom</span> <span class="o">)</span>
+      <span class="k">val</span> <span class="n">mapName</span> <span class="k">:</span> <span class="kt">File</span> <span class="o">=&gt;</span> <span class="nc">File</span> <span class="k">=</span>
+        <span class="n">from</span> <span class="k">=&gt;</span> <span class="n">file</span><span class="o">(</span> <span class="n">from</span><span class="o">.</span><span class="n">getParent</span><span class="o">,</span>
+                      <span class="n">from</span><span class="o">.</span><span class="n">getName</span><span class="o">.</span><span class="n">replace</span><span class="o">(</span> <span class="n">fromExt</span><span class="o">,</span> <span class="n">toExt</span> <span class="o">)</span> <span class="o">)</span>
+      <span class="n">files</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="n">f</span> <span class="k">=&gt;</span> <span class="o">(</span><span class="n">f</span><span class="o">,</span> <span class="n">mapName</span><span class="o">(</span><span class="n">f</span><span class="o">))</span> <span class="o">)</span>
+    <span class="o">}</span>
+    
+    
+</pre></div>
+</td></tr><tr><td><p>A version that will actually compile under 2.8.
+</p></td><td><div class="highlight"><pre>    <span class="k">def</span> <span class="n">text</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">reader</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">BufferedReader</span><span class="o">(</span> <span class="k">new</span> <span class="nc">FileReader</span><span class="o">(</span> <span class="n">wrapped</span> <span class="o">)</span> <span class="o">)</span>
+      <span class="k">var</span> <span class="n">lines</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">ListBuffer</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span>
+      <span class="k">try</span> <span class="o">{</span>
+        <span class="k">var</span> <span class="n">line</span> <span class="k">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">readLine</span>
+        <span class="k">while</span><span class="o">(</span> <span class="n">line</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">)</span> <span class="o">{</span>
+          <span class="n">lines</span> <span class="o">+=</span> <span class="n">line</span>
+          <span class="n">line</span> <span class="k">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">readLine</span>
+        <span class="o">}</span>
+      <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+        <span class="n">reader</span><span class="o">.</span><span class="n">close</span>
+      <span class="o">}</span>
+      <span class="n">lines</span><span class="o">.</span><span class="n">mkString</span><span class="o">(</span><span class="s">&quot;\n&quot;</span><span class="o">)</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+  
+  <span class="k">implicit</span> <span class="k">def</span> <span class="nc">FileHelper</span><span class="o">(</span> <span class="n">f</span> <span class="k">:</span> <span class="kt">File</span> <span class="o">)</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">FileHelper</span><span class="o">(</span> <span class="n">f</span> <span class="o">)</span>
+  
+  
+  <span class="n">describe</span><span class="o">(</span> <span class="s">&quot;Discounter&quot;</span> <span class="o">)</span> <span class="o">{</span>
+    <span class="k">import</span> <span class="nn">DefaultDiscounter._</span>
+    <span class="n">it</span><span class="o">(</span> <span class="s">&quot;should convert tests from Markdown to XHTML&quot;</span> <span class="o">)</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">dir</span> <span class="k">=</span> <span class="n">file</span><span class="o">(</span> <span class="n">basedir</span><span class="o">,</span> <span class="s">&quot;discounter_markdown-xhtml&quot;</span> <span class="o">)</span>
+      <span class="n">dir</span><span class="o">.</span><span class="n">listTests</span><span class="o">(</span><span class="s">&quot;.text&quot;</span><span class="o">,</span> <span class="s">&quot;.html&quot;</span><span class="o">).</span><span class="n">foreach</span> <span class="o">{</span> <span class="k">case</span> <span class="o">(</span><span class="n">from</span><span class="o">,</span> <span class="n">to</span><span class="o">)</span> <span class="k">=&gt;</span>
+        <span class="n">from</span> <span class="n">should</span> <span class="n">be</span> <span class="o">(</span><span class="-Symbol">&#39;exists</span><span class="o">)</span>
+        <span class="n">to</span> <span class="n">should</span> <span class="n">be</span> <span class="o">(</span><span class="-Symbol">&#39;exists</span><span class="o">)</span>
+        <span class="n">println</span><span class="o">(</span> <span class="s">&quot;Test: &quot;</span> <span class="o">+</span> <span class="n">from</span><span class="o">.</span><span class="n">getName</span> <span class="o">)</span>
+        <span class="k">val</span> <span class="n">fromXHTML</span> <span class="k">=</span> <span class="n">writeString</span><span class="o">(</span> <span class="n">toXHTML</span><span class="o">(</span> <span class="n">knockoff</span><span class="o">(</span> <span class="n">from</span><span class="o">.</span><span class="n">text</span> <span class="o">)</span> <span class="o">)</span> <span class="o">)</span>
+        <span class="n">tidy</span><span class="o">(</span> <span class="n">fromXHTML</span> <span class="o">)</span> <span class="n">should</span> <span class="n">equal</span> <span class="o">(</span> <span class="n">tidy</span><span class="o">(</span> <span class="n">to</span><span class="o">.</span><span class="n">text</span> <span class="o">)</span> <span class="o">)</span>
+      <span class="o">}</span>
+    <span class="o">}</span>
+    
+    <span class="n">it</span><span class="o">(</span> <span class="s">&quot;should convert tests from Markdown to plain text&quot;</span> <span class="o">)</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">dir</span> <span class="k">=</span> <span class="n">file</span><span class="o">(</span> <span class="n">basedir</span><span class="o">,</span> <span class="s">&quot;discounter_markdown-text&quot;</span> <span class="o">)</span>
+      <span class="n">dir</span><span class="o">.</span><span class="n">listTests</span><span class="o">(</span><span class="s">&quot;.markdown&quot;</span><span class="o">,</span> <span class="s">&quot;.txt&quot;</span><span class="o">).</span><span class="n">foreach</span> <span class="o">{</span> <span class="k">case</span> <span class="o">(</span><span class="n">from</span><span class="o">,</span> <span class="n">to</span><span class="o">)</span> <span class="k">=&gt;</span>
+        <span class="n">from</span> <span class="n">should</span> <span class="n">be</span> <span class="o">(</span><span class="-Symbol">&#39;exists</span><span class="o">)</span>
+        <span class="n">to</span> <span class="n">should</span> <span class="n">be</span> <span class="o">(</span><span class="-Symbol">&#39;exists</span><span class="o">)</span>
+        <span class="n">println</span><span class="o">(</span> <span class="s">&quot;Test: &quot;</span> <span class="o">+</span> <span class="n">from</span><span class="o">.</span><span class="n">getName</span> <span class="o">)</span>
+        <span class="k">val</span> <span class="n">fromText</span> <span class="k">=</span> <span class="n">normalizeSpace</span><span class="o">(</span> <span class="n">toText</span><span class="o">(</span> <span class="n">knockoff</span><span class="o">(</span> <span class="n">from</span><span class="o">.</span><span class="n">text</span> <span class="o">)</span> <span class="o">)</span> <span class="o">)</span>
+        <span class="n">fromText</span> <span class="n">should</span> <span class="n">equal</span> <span class="o">(</span> <span class="n">normalizeSpace</span><span class="o">(</span> <span class="n">to</span><span class="o">.</span><span class="n">text</span> <span class="o">)</span> <span class="o">)</span>
+      <span class="o">}</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+</td></tr></tbody></table>
+  </div>
+<script type="text/javascript">
+$(function() {
+    var $navList = $("#nav-list"),
+        $change = $(".title .change-link");
+    
+    $change.click(function() { $navList.toggleClass("hidden") });
+});
+</script>
+</body>
+</html>

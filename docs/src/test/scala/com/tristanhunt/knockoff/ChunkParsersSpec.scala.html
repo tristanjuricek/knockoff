@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>ChunkParsersSpec.scala</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" href="../../../../../../res/style.css"></style>
+  <script type="text/javascript" 
+    src="../../../../../../res/jquery.js"></script>
+</head>
+<body>
+  <div id="container">
+    <h1 class="title">ChunkParsersSpec.scala&nbsp;<span class="change-link">Change</span></h1>
+    <ul id="nav-list" class="hidden">
+                    
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/Discounter.scala.html">src/main/scala/com/tristanhunt/knockoff/Discounter.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/MarkdownParsing.scala.html">src/main/scala/com/tristanhunt/knockoff/MarkdownParsing.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/ObjectModel.scala.html">src/main/scala/com/tristanhunt/knockoff/ObjectModel.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/StringExtras.scala.html">src/main/scala/com/tristanhunt/knockoff/StringExtras.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/TextWriter.scala.html">src/main/scala/com/tristanhunt/knockoff/TextWriter.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/XHTMLWriter.scala.html">src/main/scala/com/tristanhunt/knockoff/XHTMLWriter.scala</a></li>
+                                
+                <li class="active">src/test/scala/com/tristanhunt/knockoff/ChunkParsersSpec.scala</li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/KnockoffIntegrationTests.scala.html">src/test/scala/com/tristanhunt/knockoff/KnockoffIntegrationTests.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/SpanConverterSpec.scala.html">src/test/scala/com/tristanhunt/knockoff/SpanConverterSpec.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/StringExtrasSpec.scala.html">src/test/scala/com/tristanhunt/knockoff/StringExtrasSpec.scala</a></li>
+                        </ul>
+    <table><tbody><tr><td></td><td><div class="highlight"><pre><span class="k">package</span> <span class="nn">com.tristanhunt.knockoff</span>
+</pre></div>
+</td></tr><tr><td><p>import org.junit.runner.RunWith</p></td><td><div class="highlight"><pre><span class="k">import</span> <span class="nn">org.scalatest.junit.JUnitRunner</span>
+<span class="k">import</span> <span class="nn">org.scalatest.matchers._</span>
+<span class="k">import</span> <span class="nn">org.scalatest._</span>
+</pre></div>
+</td></tr><tr><td><p>@RunWith(classOf[JUnitRunner])</p></td><td><div class="highlight"><pre><span class="k">class</span> <span class="nc">ChunkParsersSpec</span> <span class="k">extends</span> <span class="nc">ChunkParser</span> <span class="k">with</span> <span class="nc">Spec</span> <span class="k">with</span> <span class="nc">ShouldMatchers</span> <span class="o">{</span>
+
+  <span class="n">describe</span><span class="o">(</span><span class="s">&quot;ChunkParser&quot;</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">it</span><span class="o">(</span><span class="s">&quot;should handle simple bullet items&quot;</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">src</span> <span class="k">=</span> <span class="s">&quot;* item 1\n* item 2\n&quot;</span>
+      <span class="n">parse</span><span class="o">(</span> <span class="n">chunk</span><span class="o">,</span> <span class="n">src</span> <span class="o">).</span><span class="n">get</span> <span class="n">should</span> <span class="n">equal</span> <span class="o">(</span> <span class="nc">BulletLineChunk</span><span class="o">(</span><span class="s">&quot;item 1\n&quot;</span><span class="o">)</span> <span class="o">)</span>
+    <span class="o">}</span>
+    
+    <span class="n">it</span><span class="o">(</span><span class="s">&quot;should group a second line that&#39;s not a bullet&quot;</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">src</span> <span class="k">=</span> <span class="s">&quot;*   item 1\n    more\n&quot;</span>
+      <span class="n">parse</span><span class="o">(</span> <span class="n">chunk</span><span class="o">,</span> <span class="n">src</span> <span class="o">).</span><span class="n">get</span> <span class="n">should</span> <span class="n">equal</span> <span class="o">(</span>
+        <span class="nc">BulletLineChunk</span><span class="o">(</span><span class="s">&quot;item 1\nmore\n&quot;</span><span class="o">)</span>
+      <span class="o">)</span>
+    <span class="o">}</span>
+    
+    <span class="n">it</span><span class="o">(</span><span class="s">&quot;should ignore whitespace around headers&quot;</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">src</span> <span class="k">=</span> <span class="s">&quot;# Header 1 #&quot;</span>
+      <span class="n">parse</span><span class="o">(</span> <span class="n">chunk</span><span class="o">,</span> <span class="n">src</span> <span class="o">).</span><span class="n">get</span> <span class="n">should</span> <span class="n">equal</span> <span class="o">{</span> <span class="nc">HeaderChunk</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="s">&quot;Header 1&quot;</span><span class="o">)</span> <span class="o">}</span>
+    <span class="o">}</span>
+    
+    <span class="n">it</span><span class="o">(</span><span class="s">&quot;should be ok with empty code blocks&quot;</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">src</span> <span class="k">=</span> <span class="s">&quot;    &quot;</span>
+      <span class="n">parse</span><span class="o">(</span> <span class="n">chunk</span><span class="o">,</span> <span class="n">src</span> <span class="o">).</span><span class="n">get</span> <span class="n">should</span> <span class="n">equal</span> <span class="o">{</span> <span class="nc">IndentedChunk</span><span class="o">(</span><span class="s">&quot;&quot;</span><span class="o">)</span> <span class="o">}</span>
+    <span class="o">}</span>
+    
+    <span class="n">it</span><span class="o">(</span><span class="s">&quot;should not explode on a code block with a trailing line&quot;</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">line</span> <span class="k">=</span> <span class="s">&quot;    line\n    &quot;</span>
+      <span class="n">parse</span><span class="o">(</span> <span class="n">chunk</span><span class="o">,</span> <span class="n">line</span> <span class="o">).</span><span class="n">get</span> <span class="n">should</span> <span class="n">equal</span> <span class="o">{</span> <span class="nc">IndentedChunk</span><span class="o">(</span><span class="s">&quot;line\n&quot;</span><span class="o">)</span> <span class="o">}</span>
+    <span class="o">}</span>
+    
+    <span class="n">it</span><span class="o">(</span><span class="s">&quot;should handle nothin&#39; but code&quot;</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">src</span> <span class="k">=</span> <span class="s">&quot;    This is just a code block.\n&quot;</span> <span class="o">+</span>
+                <span class="s">&quot;    \n&quot;</span> <span class="o">+</span>
+                <span class="s">&quot;    And it has a trailing whitespace line... that&#39;s also indented.\n&quot;</span> <span class="o">+</span>
+                <span class="s">&quot;    &quot;</span>
+      <span class="n">parse</span><span class="o">(</span> <span class="n">chunk</span><span class="o">,</span> <span class="n">src</span> <span class="o">).</span><span class="n">get</span> <span class="n">should</span> <span class="n">equal</span> <span class="o">{</span> <span class="nc">IndentedChunk</span><span class="o">(</span>
+        <span class="s">&quot;This is just a code block.\n&quot;</span> <span class="o">+</span>
+        <span class="s">&quot;\n&quot;</span> <span class="o">+</span>
+        <span class="s">&quot;And it has a trailing whitespace line... that&#39;s also indented.\n&quot;</span>
+      <span class="o">)</span> <span class="o">}</span>
+    <span class="o">}</span>
+    
+    <span class="n">it</span><span class="o">(</span><span class="s">&quot;should deal with a CRLF&quot;</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">src</span> <span class="k">=</span> <span class="s">&quot;This is a line \r\nthat is broken in\r\n a couple places.\r\n&quot;</span>
+      <span class="n">parse</span><span class="o">(</span> <span class="n">chunk</span><span class="o">,</span> <span class="n">src</span> <span class="o">).</span><span class="n">get</span> <span class="n">should</span> <span class="n">equal</span> <span class="o">{</span> <span class="nc">TextChunk</span><span class="o">(</span><span class="n">src</span><span class="o">)</span> <span class="o">}</span>
+    <span class="o">}</span>
+    
+    <span class="n">it</span><span class="o">(</span><span class="s">&quot;should deal with just a CRLF&quot;</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">src</span> <span class="k">=</span> <span class="s">&quot;\u000d\u000a&quot;</span>
+      <span class="n">parse</span><span class="o">(</span> <span class="n">chunk</span><span class="o">,</span> <span class="n">src</span> <span class="o">).</span><span class="n">get</span> <span class="n">should</span> <span class="n">equal</span> <span class="o">{</span> <span class="nc">EmptySpace</span><span class="o">(</span><span class="n">src</span><span class="o">)</span> <span class="o">}</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+</td></tr></tbody></table>
+  </div>
+<script type="text/javascript">
+$(function() {
+    var $navList = $("#nav-list"),
+        $change = $(".title .change-link");
+    
+    $change.click(function() { $navList.toggleClass("hidden") });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,498 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+        <head>
+          <title>com.tristanhunt.knockoff</title>
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link type="text/css" media="screen" rel="stylesheet" href="../../../lib/template.css" />
+      <script type="text/javascript" src="../../../lib/jquery.js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img src="../../../lib/package_big.png" />
+        <p id="owner"><a name="com" class="extype" href="../../package.html">com</a>.<a name="com.tristanhunt" class="extype" href="../package.html">tristanhunt</a></p>
+        <h1>knockoff</h1>
+      </div>
+
+      <h4 class="signature" id="signature">
+      <span class="kind">package</span>
+      <span class="symbol"> 
+        <span class="name">knockoff</span>
+        
+        
+      </span>
+      </h4>
+      
+          <div class="fullcommenttop" id="comment"></div>
+        
+
+      <div id="template">
+
+        <div id="mbrsel">
+          <div id="textfilter"><span class="pre"></span><span class="input"><input accesskey="/" type="text" /></span><span class="post"></span></div>
+          
+          
+          <div id="visbl">
+              <span class="filtertype">Visibility</span>
+              <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+            </div>
+        </div>
+
+        
+
+        <div class="types members" id="types">
+              <h3>Type Members</h3>
+              <ol><li visbl="pub" name="com.tristanhunt.knockoff.Block" data-isabs="true">
+      <a id="Block:Block"></a>
+      <h4 class="signature">
+      <span class="kind">trait</span>
+      <span class="symbol"> 
+        <a href="Block.html"><span class="name">Block</span></a>
+        
+        <span class="result"> extends AnyRef</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.Blockquote" data-isabs="false">
+      <a id="Blockquote:Blockquote"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="Blockquote.html"><span class="name">Blockquote</span></a>
+        
+        <span class="params">(<span name="children">children: Seq[Block]</span>, <span name="position">position: Position</span>)</span><span class="result"> extends Block with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.BlockquotedChunk" data-isabs="false">
+      <a id="BlockquotedChunk:BlockquotedChunk"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="BlockquotedChunk.html"><span class="name">BlockquotedChunk</span></a>
+        
+        <span class="params">(<span name="content">content: String</span>)</span><span class="result"> extends Chunk with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.BulletLineChunk" data-isabs="false">
+      <a id="BulletLineChunk:BulletLineChunk"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="BulletLineChunk.html"><span class="name">BulletLineChunk</span></a>
+        
+        <span class="params">(<span name="content">content: String</span>)</span><span class="result"> extends Chunk with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.Chunk" data-isabs="true">
+      <a id="Chunk:Chunk"></a>
+      <h4 class="signature">
+      <span class="kind">trait</span>
+      <span class="symbol"> 
+        <a href="Chunk.html"><span class="name">Chunk</span></a>
+        
+        <span class="result"> extends AnyRef</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.ChunkParser" data-isabs="false">
+      <a id="ChunkParser:ChunkParser"></a>
+      <h4 class="signature">
+      <span class="kind">class</span>
+      <span class="symbol"> 
+        <a href="ChunkParser.html"><span class="name">ChunkParser</span></a>
+        
+        <span class="result"> extends RegexParsers with StringExtras</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.ChunkStreamFactory" data-isabs="true">
+      <a id="ChunkStreamFactory:ChunkStreamFactory"></a>
+      <h4 class="signature">
+      <span class="kind">trait</span>
+      <span class="symbol"> 
+        <a href="ChunkStreamFactory.html"><span class="name">ChunkStreamFactory</span></a>
+        
+        <span class="result"> extends Logged</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.CodeBlock" data-isabs="false">
+      <a id="CodeBlock:CodeBlock"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="CodeBlock.html"><span class="name">CodeBlock</span></a>
+        
+        <span class="params">(<span name="text">text: Text</span>, <span name="position">position: Position</span>)</span><span class="result"> extends Block with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.CodeSpan" data-isabs="false">
+      <a id="CodeSpan:CodeSpan"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="CodeSpan.html"><span class="name">CodeSpan</span></a>
+        
+        <span class="params">(<span name="content">content: String</span>)</span><span class="result"> extends Span with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.Discounter" data-isabs="true">
+      <a id="Discounter:Discounter"></a>
+      <h4 class="signature">
+      <span class="kind">trait</span>
+      <span class="symbol"> 
+        <a href="Discounter.html"><span class="name">Discounter</span></a>
+        
+        <span class="result"> extends ChunkStreamFactory with XHTMLWriter with TextWriter</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.Emphasis" data-isabs="false">
+      <a id="Emphasis:Emphasis"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="Emphasis.html"><span class="name">Emphasis</span></a>
+        
+        <span class="params">(<span name="children">children: Seq[Span]</span>)</span><span class="result"> extends Span with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.EmptySpace" data-isabs="false">
+      <a id="EmptySpace:EmptySpace"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="EmptySpace.html"><span class="name">EmptySpace</span></a>
+        
+        <span class="params">(<span name="content">content: String</span>)</span><span class="result"> extends Chunk with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.HTMLSpan" data-isabs="false">
+      <a id="HTMLSpan:HTMLSpan"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="HTMLSpan.html"><span class="name">HTMLSpan</span></a>
+        
+        <span class="params">(<span name="html">html: String</span>)</span><span class="result"> extends Span with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.Header" data-isabs="false">
+      <a id="Header:Header"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="Header.html"><span class="name">Header</span></a>
+        
+        <span class="params">(<span name="level">level: Int</span>, <span name="spans">spans: Seq[Span]</span>, <span name="position">position: Position</span>)</span><span class="result"> extends Block with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.HeaderChunk" data-isabs="false">
+      <a id="HeaderChunk:HeaderChunk"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="HeaderChunk.html"><span class="name">HeaderChunk</span></a>
+        
+        <span class="params">(<span name="level">level: Int</span>, <span name="content">content: String</span>)</span><span class="result"> extends Chunk with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.HorizontalRule" data-isabs="false">
+      <a id="HorizontalRule:HorizontalRule"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="HorizontalRule.html"><span class="name">HorizontalRule</span></a>
+        
+        <span class="params">(<span name="position">position: Position</span>)</span><span class="result"> extends Block with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.ImageLink" data-isabs="false">
+      <a id="ImageLink:ImageLink"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="ImageLink.html"><span class="name">ImageLink</span></a>
+        
+        <span class="params">(<span name="children">children: Seq[Span]</span>, <span name="url">url: String</span>, <span name="title">title: Option[String]</span>)</span><span class="result"> extends Span with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.IndentedChunk" data-isabs="false">
+      <a id="IndentedChunk:IndentedChunk"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="IndentedChunk.html"><span class="name">IndentedChunk</span></a>
+        
+        <span class="params">(<span name="content">content: String</span>)</span><span class="result"> extends Chunk with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.IndirectImageLink" data-isabs="false">
+      <a id="IndirectImageLink:IndirectImageLink"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="IndirectImageLink.html"><span class="name">IndirectImageLink</span></a>
+        
+        <span class="params">(<span name="children">children: Seq[Span]</span>, <span name="definition">definition: LinkDefinition</span>)</span><span class="result"> extends Span with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.IndirectLink" data-isabs="false">
+      <a id="IndirectLink:IndirectLink"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="IndirectLink.html"><span class="name">IndirectLink</span></a>
+        
+        <span class="params">(<span name="children">children: Seq[Span]</span>, <span name="definition">definition: LinkDefinition</span>)</span><span class="result"> extends Span with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.Link" data-isabs="false">
+      <a id="Link:Link"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="Link.html"><span class="name">Link</span></a>
+        
+        <span class="params">(<span name="children">children: Seq[Span]</span>, <span name="url">url: String</span>, <span name="title">title: Option[String]</span>)</span><span class="result"> extends Span with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.LinkDefinition" data-isabs="false">
+      <a id="LinkDefinition:LinkDefinition"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="LinkDefinition.html"><span class="name">LinkDefinition</span></a>
+        
+        <span class="params">(<span name="id">id: String</span>, <span name="url">url: String</span>, <span name="title">title: Option[String]</span>, <span name="position">position: Position</span>)</span><span class="result"> extends Block with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.LinkDefinitionChunk" data-isabs="false">
+      <a id="LinkDefinitionChunk:LinkDefinitionChunk"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="LinkDefinitionChunk.html"><span class="name">LinkDefinitionChunk</span></a>
+        
+        <span class="params">(<span name="id">id: String</span>, <span name="url">url: String</span>, <span name="title">title: Option[String]</span>)</span><span class="result"> extends Chunk with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.NumberedLineChunk" data-isabs="false">
+      <a id="NumberedLineChunk:NumberedLineChunk"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="NumberedLineChunk.html"><span class="name">NumberedLineChunk</span></a>
+        
+        <span class="params">(<span name="content">content: String</span>)</span><span class="result"> extends Chunk with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.OrderedItem" data-isabs="false">
+      <a id="OrderedItem:OrderedItem"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="OrderedItem.html"><span class="name">OrderedItem</span></a>
+        
+        <span class="params">(<span name="children">children: Seq[Block]</span>, <span name="position">position: Position</span>)</span><span class="result"> extends Block with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.OrderedList" data-isabs="false">
+      <a id="OrderedList:OrderedList"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="OrderedList.html"><span class="name">OrderedList</span></a>
+        
+        <span class="params">(<span name="items">items: Seq[OrderedItem]</span>)</span><span class="result"> extends Block with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.Paragraph" data-isabs="false">
+      <a id="Paragraph:Paragraph"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="Paragraph.html"><span class="name">Paragraph</span></a>
+        
+        <span class="params">(<span name="spans">spans: Seq[Span]</span>, <span name="position">position: Position</span>)</span><span class="result"> extends Block with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.Span" data-isabs="true">
+      <a id="Span:Span"></a>
+      <h4 class="signature">
+      <span class="kind">trait</span>
+      <span class="symbol"> 
+        <a href="Span.html"><span class="name">Span</span></a>
+        
+        <span class="result"> extends AnyRef</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.SpanConverter" data-isabs="false">
+      <a id="SpanConverter:SpanConverter"></a>
+      <h4 class="signature">
+      <span class="kind">class</span>
+      <span class="symbol"> 
+        <a href="SpanConverter.html"><span class="name">SpanConverter</span></a>
+        
+        <span class="result"> extends (Chunk) ⇒ Seq[Span] with StringExtras</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.StringExtras" data-isabs="true">
+      <a id="StringExtras:StringExtras"></a>
+      <h4 class="signature">
+      <span class="kind">trait</span>
+      <span class="symbol"> 
+        <a href="StringExtras.html"><span class="name">StringExtras</span></a>
+        
+        <span class="result"> extends AnyRef</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.Strong" data-isabs="false">
+      <a id="Strong:Strong"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="Strong.html"><span class="name">Strong</span></a>
+        
+        <span class="params">(<span name="children">children: Seq[Span]</span>)</span><span class="result"> extends Span with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.Text" data-isabs="false">
+      <a id="Text:Text"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="Text.html"><span class="name">Text</span></a>
+        
+        <span class="params">(<span name="content">content: String</span>)</span><span class="result"> extends Span with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.TextChunk" data-isabs="false">
+      <a id="TextChunk:TextChunk"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="TextChunk.html"><span class="name">TextChunk</span></a>
+        
+        <span class="params">(<span name="content">content: String</span>)</span><span class="result"> extends Chunk with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.TextWriter" data-isabs="true">
+      <a id="TextWriter:TextWriter"></a>
+      <h4 class="signature">
+      <span class="kind">trait</span>
+      <span class="symbol"> 
+        <a href="TextWriter.html"><span class="name">TextWriter</span></a>
+        
+        <span class="result"> extends AnyRef</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.UnorderedItem" data-isabs="false">
+      <a id="UnorderedItem:UnorderedItem"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="UnorderedItem.html"><span class="name">UnorderedItem</span></a>
+        
+        <span class="params">(<span name="children">children: Seq[Block]</span>, <span name="position">position: Position</span>)</span><span class="result"> extends Block with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.UnorderedList" data-isabs="false">
+      <a id="UnorderedList:UnorderedList"></a>
+      <h4 class="signature">
+      <span class="kind">case class</span>
+      <span class="symbol"> 
+        <a href="UnorderedList.html"><span class="name">UnorderedList</span></a>
+        
+        <span class="params">(<span name="items">items: Seq[UnorderedItem]</span>)</span><span class="result"> extends Block with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.XHTMLWriter" data-isabs="true">
+      <a id="XHTMLWriter:XHTMLWriter"></a>
+      <h4 class="signature">
+      <span class="kind">trait</span>
+      <span class="symbol"> 
+        <a href="XHTMLWriter.html"><span class="name">XHTMLWriter</span></a>
+        
+        <span class="result"> extends AnyRef</span>
+      </span>
+      </h4>
+      
+    </li></ol>
+            </div>
+        
+        
+
+        <div class="values members" id="values">
+              <h3>Value Members</h3>
+              <ol><li visbl="pub" name="com.tristanhunt.knockoff.DefaultDiscounter" data-isabs="false">
+      <a id="DefaultDiscounter:DefaultDiscounter"></a>
+      <h4 class="signature">
+      <span class="kind">object</span>
+      <span class="symbol"> 
+        <a href="DefaultDiscounter$.html"><span class="name">DefaultDiscounter</span></a>
+        
+        <span class="result"> extends Discounter with ConsoleLogger</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" name="com.tristanhunt.knockoff.HorizontalRuleChunk" data-isabs="false">
+      <a id="HorizontalRuleChunk:HorizontalRuleChunk"></a>
+      <h4 class="signature">
+      <span class="kind">object</span>
+      <span class="symbol"> 
+        <a href="HorizontalRuleChunk$.html"><span class="name">HorizontalRuleChunk</span></a>
+        
+        <span class="result"> extends Chunk with Product with Serializable</span>
+      </span>
+      </h4>
+      
+    </li></ol>
+            </div>
+
+        
+
+        
+
+      </div>
+      
+      <div id="tooltip"></div>
+      
+    </body>
+      </html>

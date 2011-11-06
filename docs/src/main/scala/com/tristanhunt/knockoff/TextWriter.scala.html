@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>TextWriter.scala</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" href="../../../../../../res/style.css"></style>
+  <script type="text/javascript" 
+    src="../../../../../../res/jquery.js"></script>
+</head>
+<body>
+  <div id="container">
+    <h1 class="title">TextWriter.scala&nbsp;<span class="change-link">Change</span></h1>
+    <ul id="nav-list" class="hidden">
+                    
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/Discounter.scala.html">src/main/scala/com/tristanhunt/knockoff/Discounter.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/MarkdownParsing.scala.html">src/main/scala/com/tristanhunt/knockoff/MarkdownParsing.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/ObjectModel.scala.html">src/main/scala/com/tristanhunt/knockoff/ObjectModel.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/StringExtras.scala.html">src/main/scala/com/tristanhunt/knockoff/StringExtras.scala</a></li>
+                                
+                <li class="active">src/main/scala/com/tristanhunt/knockoff/TextWriter.scala</li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/XHTMLWriter.scala.html">src/main/scala/com/tristanhunt/knockoff/XHTMLWriter.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/ChunkParsersSpec.scala.html">src/test/scala/com/tristanhunt/knockoff/ChunkParsersSpec.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/KnockoffIntegrationTests.scala.html">src/test/scala/com/tristanhunt/knockoff/KnockoffIntegrationTests.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/SpanConverterSpec.scala.html">src/test/scala/com/tristanhunt/knockoff/SpanConverterSpec.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/StringExtrasSpec.scala.html">src/test/scala/com/tristanhunt/knockoff/StringExtrasSpec.scala</a></li>
+                        </ul>
+    <table><tbody><tr><td><p>The utility of plain text is mostly to get the text without any markup, useful
+in cases where you're doing something like pulling the header into a title
+field, etc.
+</p><p><strong>TODO</strong> HTML is currently bypassed, we should parse it and strip out the text.
+</p></td><td><div class="highlight"><pre><span class="k">package</span> <span class="nn">com.tristanhunt.knockoff</span>
+
+<span class="k">import</span> <span class="nn">java.io.</span><span class="o">{</span> <span class="nc">StringWriter</span><span class="o">,</span> <span class="nc">Writer</span> <span class="o">}</span>
+
+<span class="k">trait</span> <span class="nc">TextWriter</span> <span class="o">{</span>
+  
+  
+</pre></div>
+</td></tr><tr><td><p>Creates a Group representation of the document.
+</p></td><td><div class="highlight"><pre>  <span class="k">def</span> <span class="n">toText</span><span class="o">(</span> <span class="n">blocks</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Block</span><span class="o">]</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="k">implicit</span> <span class="k">val</span> <span class="n">writer</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">StringWriter</span>
+    <span class="n">blocksToText</span><span class="o">(</span> <span class="n">blocks</span> <span class="o">)</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">toString</span>
+  <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">blocksToText</span><span class="o">(</span> <span class="n">blocks</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Block</span><span class="o">]</span> <span class="o">)(</span> <span class="k">implicit</span> <span class="n">writer</span> <span class="k">:</span> <span class="kt">Writer</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span>
+    <span class="n">blocks</span><span class="o">.</span><span class="n">foreach</span><span class="o">(</span> <span class="n">blockToText</span> <span class="o">)</span>
+  
+  <span class="k">def</span> <span class="n">blockToText</span><span class="o">(</span> <span class="n">block</span> <span class="k">:</span> <span class="kt">Block</span> <span class="o">)(</span> <span class="k">implicit</span> <span class="n">writer</span> <span class="k">:</span> <span class="kt">Writer</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="n">block</span> <span class="k">match</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="nc">Paragraph</span><span class="o">(</span> <span class="n">spans</span><span class="o">,</span> <span class="k">_</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">spans</span><span class="o">.</span><span class="n">foreach</span><span class="o">(</span> <span class="n">spanToText</span> <span class="o">)</span>
+      <span class="k">case</span> <span class="nc">Header</span><span class="o">(</span> <span class="n">_</span><span class="o">,</span> <span class="n">spans</span><span class="o">,</span> <span class="k">_</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">spans</span><span class="o">.</span><span class="n">foreach</span><span class="o">(</span> <span class="n">spanToText</span> <span class="o">)</span>
+      <span class="k">case</span> <span class="nc">LinkDefinition</span><span class="o">(</span> <span class="n">_</span><span class="o">,</span> <span class="n">_</span><span class="o">,</span> <span class="n">_</span><span class="o">,</span> <span class="k">_</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="o">{}</span>
+      <span class="k">case</span> <span class="nc">Blockquote</span><span class="o">(</span> <span class="n">children</span><span class="o">,</span> <span class="k">_</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">children</span><span class="o">.</span><span class="n">foreach</span><span class="o">(</span> <span class="n">blockToText</span> <span class="o">)</span>
+      <span class="k">case</span> <span class="nc">CodeBlock</span><span class="o">(</span> <span class="n">text</span><span class="o">,</span> <span class="k">_</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="o">(</span> <span class="n">text</span><span class="o">.</span><span class="n">content</span> <span class="o">)</span>
+      <span class="k">case</span> <span class="nc">HorizontalRule</span><span class="o">(</span> <span class="k">_</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="o">{}</span>
+      <span class="k">case</span> <span class="nc">OrderedItem</span><span class="o">(</span> <span class="n">children</span><span class="o">,</span> <span class="k">_</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">children</span><span class="o">.</span><span class="n">foreach</span><span class="o">(</span> <span class="n">blockToText</span> <span class="o">)</span>
+      <span class="k">case</span> <span class="nc">UnorderedItem</span><span class="o">(</span> <span class="n">children</span><span class="o">,</span> <span class="k">_</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">children</span><span class="o">.</span><span class="n">foreach</span><span class="o">(</span> <span class="n">blockToText</span> <span class="o">)</span>
+      <span class="k">case</span> <span class="nc">OrderedList</span><span class="o">(</span> <span class="n">items</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">items</span><span class="o">.</span><span class="n">foreach</span><span class="o">(</span> <span class="n">blockToText</span> <span class="o">)</span>
+      <span class="k">case</span> <span class="nc">UnorderedList</span><span class="o">(</span> <span class="n">items</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">items</span><span class="o">.</span><span class="n">foreach</span><span class="o">(</span> <span class="n">blockToText</span> <span class="o">)</span>
+    <span class="o">}</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="o">(</span><span class="s">&quot; &quot;</span><span class="o">)</span>
+  <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">spanToText</span><span class="o">(</span> <span class="n">span</span> <span class="k">:</span> <span class="kt">Span</span> <span class="o">)(</span> <span class="k">implicit</span> <span class="n">writer</span> <span class="k">:</span> <span class="kt">Writer</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="n">span</span> <span class="k">match</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="nc">Text</span><span class="o">(</span> <span class="n">content</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="o">(</span> <span class="n">content</span> <span class="o">)</span>
+      <span class="k">case</span> <span class="nc">HTMLSpan</span><span class="o">(</span> <span class="n">html</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="o">{}</span> 
+      <span class="k">case</span> <span class="nc">CodeSpan</span><span class="o">(</span> <span class="n">code</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="o">(</span> <span class="n">code</span> <span class="o">)</span>
+      <span class="k">case</span> <span class="nc">Strong</span><span class="o">(</span> <span class="n">children</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">children</span><span class="o">.</span><span class="n">foreach</span><span class="o">(</span> <span class="n">spanToText</span> <span class="o">)</span>
+      <span class="k">case</span> <span class="nc">Emphasis</span><span class="o">(</span> <span class="n">children</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">children</span><span class="o">.</span><span class="n">foreach</span><span class="o">(</span> <span class="n">spanToText</span> <span class="o">)</span>
+      <span class="k">case</span> <span class="nc">Link</span><span class="o">(</span> <span class="n">children</span><span class="o">,</span> <span class="n">url</span><span class="o">,</span> <span class="n">title</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">children</span><span class="o">.</span><span class="n">foreach</span><span class="o">(</span> <span class="n">spanToText</span> <span class="o">)</span>
+      <span class="k">case</span> <span class="nc">IndirectLink</span><span class="o">(</span> <span class="n">children</span><span class="o">,</span> <span class="n">definition</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">children</span><span class="o">.</span><span class="n">foreach</span><span class="o">(</span> <span class="n">spanToText</span> <span class="o">)</span>
+      <span class="k">case</span> <span class="nc">ImageLink</span><span class="o">(</span> <span class="n">children</span><span class="o">,</span> <span class="n">url</span><span class="o">,</span> <span class="n">title</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">children</span><span class="o">.</span><span class="n">foreach</span><span class="o">(</span> <span class="n">spanToText</span> <span class="o">)</span>
+      <span class="k">case</span> <span class="nc">IndirectImageLink</span><span class="o">(</span> <span class="n">children</span><span class="o">,</span> <span class="n">definition</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">children</span><span class="o">.</span><span class="n">foreach</span><span class="o">(</span> <span class="n">spanToText</span> <span class="o">)</span>
+    <span class="o">}</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="o">(</span> <span class="s">&quot; &quot;</span> <span class="o">)</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+</td></tr></tbody></table>
+  </div>
+<script type="text/javascript">
+$(function() {
+    var $navList = $("#nav-list"),
+        $change = $(".title .change-link");
+    
+    $change.click(function() { $navList.toggleClass("hidden") });
+});
+</script>
+</body>
+</html>

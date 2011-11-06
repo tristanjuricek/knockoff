@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title> Knockoff </title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" href="docs/res/style.css"></link>
+<style type="text/css">
+.left {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: 230px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 30px 0 30px 30px;
+}
+
+.main {
+    position: relative;
+    width: 550px;
+    margin: 30px 0 30px 270px;
+}
+
+pre {
+  margin-bottom: 1.5em;
+}
+
+</style>
+</head>
+<body>
+
+<div class="left">
+
+<h4><a href="#About">Knockoff</a></h4>
+
+<h4><a href="#Running"> Examples </a></h4>
+
+<h4><a href="#Download">Download</a></h4>
+
+<h4><a href="docs/src/main/scala/com/tristanhunt/knockoff/Discounter.scala.html">Source</a></h4>
+
+<h4><a href="docs/scaladoc/index.html">API</a></h4>
+
+<h4><a href="http://github.com/tristanjuricek/knockoff">Github</a></h4>
+
+</div>
+
+<div class="main">
+
+<h1 id="About"> Knockoff </h1>
+
+<p> Knockoff is a <a href="http://daringfireball.net/projects/markdown/">Markdown</a> parser that doesn't just convert text to HTML. It
+converts the Markdown text to an object model, with an additional writer to
+output Scala's XHTML format.
+</p>
+
+<p> The approach allows for easy integration into Scala projects. You could
+whip up an <a href="https://github.com/n8han/posterous-sbt">SBT-plugin</a>, or create a <a href="http://tristanjuricek.github.com/sourcedown/">simple literate programming tool</a>. </p>
+
+<h2 id="Running"> Examples </h2>
+
+<h3> Convert Markdown to HTML </h3>
+
+<p> The default entry point is the <code>DefaultDiscounter</code> object. We'll
+import that and everything else in the main namespace. </p>
+
+<pre><code>import com.tristanhunt.knockoff.DefaultDiscounter._
+import com.tristanhunt.knockoff._
+
+toXHTML( knockoff(markdownString) )</code></pre>
+
+<h3> Mess around with Knockoff in the SBT console </h3>
+
+<p> Start sbt in your shell: </p>
+
+<pre> $ sbt</pre>
+
+<p> At the SBT prompt: </p>
+
+<pre>[info] Set current project to knockoff (in build file:...)
+&gt; console</pre>
+
+<p> And import the <code>DefaultDiscounter</code> </p>
+
+<pre>import com.tristanhunt.knockoff.DefaultDiscounter._</pre>
+
+<p> (You can use tab completion.) </p>
+
+<p> Use Scala's <code>"""</code> delimiter to create a markdown document as a 
+string for messing around. It should look like this: </p>
+
+<pre>scala&gt; val markdown = """# I'm the *title*
+     | 
+     | And I'm a paragraph"""</pre>
+
+<p> Kind of funky, but if you run into issues, this is really, really handy for
+helping me figure out how to reproduce. </p>
+
+<h3> Grab the title of the first header </h3>
+
+<p> I'm going to stop adding the SBT prompt in the examples. </p>
+
+<pre>val blocks = knockoff( markdown )
+
+val headers = blocks.filter(_.isInstanceOf[Header])</pre>
+
+<p> Keep in mind that the header can have lots of child elements. So if you just
+want the text of it, convert it: </p>
+
+<pre> toText(headers) </pre>
+
+<p> Or see it styled: </p>
+
+<pre> toXHTML(headers) </pre>
+
+<p> It's things like this that you might want to use to seed information in
+a templating system based on actual data within the markdown file. You know, 
+like the HTML title or a table of contents. </p>
+
+
+<h2 id="Download"> Download </h2>
+
+<p> Prebuilt binaries are available off of the scala-tools.org server. The easiest method is probably to let your build tool handle the work. </p>
+
+<h4> SBT (0.11.0) </h4>
+
+<pre>libraryDependencies += "com.tristanhunt" %% "knockoff" % "0.8.0-16"</pre>
+
+<h4> Maven </h4>
+
+<pre>&lt;dependency&gt;
+&lt;groupId&gt;com.tristanhunt&lt;/groupId&gt;
+&lt;artifactId&gt;knockoff_2.9.1&lt;/artifactId&gt;
+&lt;version&gt;0.8.0-16&lt;/version&gt;
+&lt;/dependency&gt;</pre>
+
+<p> You will probably need to set up the repository definition for Maven to point
+to <code>scala-tools.org/releases</code>.
+
+<h2 id="Building"> Building </h2>
+
+<p> Knockoff uses <a href="https://github.com/harrah/xsbt/wiki">SBT</a> as it's build system. To test and build the binary, run: </p>
+
+<pre>sbt test package</pre>
+
+<p> For more commands, please consult the SBT documentation. </p>
+
+</div>
+</body>
+</html>
+
+
+

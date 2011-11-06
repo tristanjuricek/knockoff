@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>XHTMLWriter.scala</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" href="../../../../../../res/style.css"></style>
+  <script type="text/javascript" 
+    src="../../../../../../res/jquery.js"></script>
+</head>
+<body>
+  <div id="container">
+    <h1 class="title">XHTMLWriter.scala&nbsp;<span class="change-link">Change</span></h1>
+    <ul id="nav-list" class="hidden">
+                    
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/Discounter.scala.html">src/main/scala/com/tristanhunt/knockoff/Discounter.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/MarkdownParsing.scala.html">src/main/scala/com/tristanhunt/knockoff/MarkdownParsing.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/ObjectModel.scala.html">src/main/scala/com/tristanhunt/knockoff/ObjectModel.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/StringExtras.scala.html">src/main/scala/com/tristanhunt/knockoff/StringExtras.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/TextWriter.scala.html">src/main/scala/com/tristanhunt/knockoff/TextWriter.scala</a></li>
+                                
+                <li class="active">src/main/scala/com/tristanhunt/knockoff/XHTMLWriter.scala</li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/ChunkParsersSpec.scala.html">src/test/scala/com/tristanhunt/knockoff/ChunkParsersSpec.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/KnockoffIntegrationTests.scala.html">src/test/scala/com/tristanhunt/knockoff/KnockoffIntegrationTests.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/SpanConverterSpec.scala.html">src/test/scala/com/tristanhunt/knockoff/SpanConverterSpec.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/StringExtrasSpec.scala.html">src/test/scala/com/tristanhunt/knockoff/StringExtrasSpec.scala</a></li>
+                        </ul>
+    <table><tbody><tr><td><h2>Output To XHTML</h2><p>Knockoff's XHTMLWriter uses match expressions on it's object model to create a
+very similar XHTML-style XML document.
+</p><p>Customization involves overriding one of these methods. At times, I've found it
+easier to completely re-write or adjust the output method, so this technique may
+not be 100% finished.
+</p></td><td><div class="highlight"><pre><span class="k">package</span> <span class="nn">com.tristanhunt.knockoff</span>
+
+<span class="k">import</span> <span class="nn">scala.util.</span><span class="o">{</span> <span class="nc">Random</span> <span class="o">}</span>
+<span class="k">import</span> <span class="nn">scala.xml.</span><span class="o">{</span> <span class="nc">Group</span><span class="o">,</span> <span class="nc">Node</span><span class="o">,</span> <span class="nc">Text</span> <span class="k">=&gt;</span> <span class="nc">XMLText</span><span class="o">,</span> <span class="nc">Unparsed</span> <span class="o">}</span>
+
+<span class="k">trait</span> <span class="nc">XHTMLWriter</span> <span class="o">{</span>
+
+  
+</pre></div>
+</td></tr><tr><td><p>Backwards compatibility? <em>cough</em>
+</p></td><td><div class="highlight"><pre>  <span class="k">def</span> <span class="n">toXML</span><span class="o">(</span> <span class="n">blocks</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Block</span><span class="o">]</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">Node</span> <span class="o">=</span> <span class="n">toXHTML</span><span class="o">(</span> <span class="n">blocks</span> <span class="o">)</span>
+  
+  
+</pre></div>
+</td></tr><tr><td><p>Creates a Group representation of the document.
+</p></td><td><div class="highlight"><pre>  <span class="k">def</span> <span class="n">toXHTML</span><span class="o">(</span> <span class="n">blocks</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Block</span><span class="o">]</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">Node</span> <span class="o">=</span>
+    <span class="nc">Group</span><span class="o">(</span> <span class="n">blocks</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="n">blockToXHTML</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span> <span class="o">)</span>
+  
+  <span class="k">def</span> <span class="n">blockToXHTML</span> <span class="k">:</span> <span class="kt">Block</span> <span class="o">=&gt;</span> <span class="nc">Node</span> <span class="k">=</span> <span class="n">block</span> <span class="k">=&gt;</span> <span class="n">block</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="nc">Paragraph</span><span class="o">(</span> <span class="n">spans</span><span class="o">,</span> <span class="k">_</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">paragraphToXHTML</span><span class="o">(</span> <span class="n">spans</span> <span class="o">)</span>
+    <span class="k">case</span> <span class="nc">Header</span><span class="o">(</span> <span class="n">level</span><span class="o">,</span> <span class="n">spans</span><span class="o">,</span> <span class="k">_</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">headerToXHTML</span><span class="o">(</span> <span class="n">level</span><span class="o">,</span> <span class="n">spans</span> <span class="o">)</span>
+    <span class="k">case</span> <span class="nc">LinkDefinition</span><span class="o">(</span> <span class="n">_</span><span class="o">,</span> <span class="n">_</span><span class="o">,</span> <span class="n">_</span><span class="o">,</span> <span class="k">_</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="nc">Group</span><span class="o">(</span> <span class="nc">Nil</span> <span class="o">)</span>
+    <span class="k">case</span> <span class="nc">Blockquote</span><span class="o">(</span> <span class="n">children</span><span class="o">,</span> <span class="k">_</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">blockquoteToXHTML</span><span class="o">(</span> <span class="n">children</span> <span class="o">)</span>
+    <span class="k">case</span> <span class="nc">CodeBlock</span><span class="o">(</span> <span class="n">text</span><span class="o">,</span> <span class="k">_</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">codeToXHTML</span><span class="o">(</span> <span class="n">text</span> <span class="o">)</span>
+    <span class="k">case</span> <span class="nc">HorizontalRule</span><span class="o">(</span> <span class="k">_</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">hrXHTML</span>
+    <span class="k">case</span> <span class="nc">OrderedItem</span><span class="o">(</span> <span class="n">children</span><span class="o">,</span> <span class="k">_</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">liToXHTML</span><span class="o">(</span> <span class="n">children</span> <span class="o">)</span>
+    <span class="k">case</span> <span class="nc">UnorderedItem</span><span class="o">(</span> <span class="n">children</span><span class="o">,</span> <span class="k">_</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">liToXHTML</span><span class="o">(</span> <span class="n">children</span> <span class="o">)</span>
+    <span class="k">case</span> <span class="nc">OrderedList</span><span class="o">(</span> <span class="n">items</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">olToXHTML</span><span class="o">(</span> <span class="n">items</span> <span class="o">)</span>
+    <span class="k">case</span> <span class="nc">UnorderedList</span><span class="o">(</span> <span class="n">items</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">ulToXHTML</span><span class="o">(</span> <span class="n">items</span> <span class="o">)</span>
+  <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">paragraphToXHTML</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">]</span> <span class="k">=&gt;</span> <span class="nc">Node</span> <span class="k">=</span> <span class="n">spans</span> <span class="k">=&gt;</span> <span class="o">{</span>
+    <span class="k">def</span> <span class="n">isHTML</span><span class="o">(</span> <span class="n">s</span> <span class="k">:</span> <span class="kt">Span</span> <span class="o">)</span> <span class="k">=</span> <span class="n">s</span> <span class="k">match</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="n">y</span> <span class="k">:</span> <span class="kt">HTMLSpan</span> <span class="o">=&gt;</span> <span class="kc">true</span>
+      <span class="k">case</span> <span class="nc">Text</span><span class="o">(</span> <span class="n">content</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="k">if</span> <span class="o">(</span> <span class="n">content</span><span class="o">.</span><span class="n">trim</span><span class="o">.</span><span class="n">isEmpty</span> <span class="o">)</span> <span class="kc">true</span> <span class="k">else</span> <span class="kc">false</span>
+      <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="kc">false</span>
+    <span class="o">}</span>
+    <span class="k">if</span> <span class="o">(</span> <span class="n">spans</span><span class="o">.</span><span class="n">forall</span><span class="o">(</span> <span class="n">isHTML</span> <span class="o">)</span> <span class="o">)</span>
+      <span class="nc">Group</span><span class="o">(</span> <span class="n">spans</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="n">spanToXHTML</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span> <span class="o">)</span>
+    <span class="k">else</span>
+      <span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;{</span> <span class="n">spans</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="n">spanToXHTML</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span> <span class="o">}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+  <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">headerToXHTML</span> <span class="k">:</span> <span class="o">(</span> <span class="kt">Int</span><span class="o">,</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">]</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="nc">Node</span> <span class="k">=</span> <span class="o">(</span><span class="n">level</span><span class="o">,</span> <span class="n">spans</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="o">{</span>
+    <span class="k">val</span> <span class="n">spanned</span> <span class="k">=</span> <span class="n">spans</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="n">spanToXHTML</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span>
+    <span class="n">level</span> <span class="k">match</span> <span class="o">{</span>
+      <span class="k">case</span> <span class="mi">1</span> <span class="k">=&gt;</span> <span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;{</span> <span class="n">spanned</span> <span class="o">}&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+      <span class="k">case</span> <span class="mi">2</span> <span class="k">=&gt;</span> <span class="o">&lt;</span><span class="n">h2</span><span class="o">&gt;{</span> <span class="n">spanned</span> <span class="o">}&lt;/</span><span class="n">h2</span><span class="o">&gt;</span>
+      <span class="k">case</span> <span class="mi">3</span> <span class="k">=&gt;</span> <span class="o">&lt;</span><span class="n">h3</span><span class="o">&gt;{</span> <span class="n">spanned</span> <span class="o">}&lt;/</span><span class="n">h3</span><span class="o">&gt;</span>
+      <span class="k">case</span> <span class="mi">4</span> <span class="k">=&gt;</span> <span class="o">&lt;</span><span class="n">h4</span><span class="o">&gt;{</span> <span class="n">spanned</span> <span class="o">}&lt;/</span><span class="n">h4</span><span class="o">&gt;</span>
+      <span class="k">case</span> <span class="mi">5</span> <span class="k">=&gt;</span> <span class="o">&lt;</span><span class="n">h5</span><span class="o">&gt;{</span> <span class="n">spanned</span> <span class="o">}&lt;/</span><span class="n">h5</span><span class="o">&gt;</span>
+      <span class="k">case</span> <span class="mi">6</span> <span class="k">=&gt;</span> <span class="o">&lt;</span><span class="n">h6</span><span class="o">&gt;{</span> <span class="n">spanned</span> <span class="o">}&lt;/</span><span class="n">h6</span><span class="o">&gt;</span>
+      <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="o">&lt;</span><span class="n">div</span> <span class="n">class</span><span class="o">={</span> <span class="s">&quot;header&quot;</span> <span class="o">+</span> <span class="n">level</span> <span class="o">}&gt;{</span> <span class="n">spanned</span> <span class="o">}&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">blockquoteToXHTML</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Block</span><span class="o">]</span> <span class="k">=&gt;</span> <span class="nc">Node</span> <span class="k">=</span>
+    <span class="n">children</span> <span class="k">=&gt;</span> <span class="o">&lt;</span><span class="n">blockquote</span><span class="o">&gt;{</span> <span class="n">children</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="n">blockToXHTML</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span> <span class="o">}&lt;/</span><span class="n">blockquote</span><span class="o">&gt;</span>
+  
+  <span class="k">def</span> <span class="n">codeToXHTML</span> <span class="k">:</span> <span class="kt">Text</span> <span class="o">=&gt;</span> <span class="nc">Node</span> <span class="k">=</span>
+    <span class="n">text</span> <span class="k">=&gt;</span> <span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;{</span> <span class="n">text</span><span class="o">.</span><span class="n">content</span> <span class="o">}&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+    
+  <span class="k">def</span> <span class="n">hrXHTML</span> <span class="k">:</span> <span class="kt">Node</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">hr</span><span class="o">/&gt;</span>
+  
+  <span class="k">def</span> <span class="n">liToXHTML</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Block</span><span class="o">]</span> <span class="k">=&gt;</span> <span class="nc">Node</span> <span class="k">=</span>
+    <span class="n">children</span> <span class="k">=&gt;</span> <span class="o">&lt;</span><span class="n">li</span><span class="o">&gt;{</span> <span class="n">simpleOrComplex</span><span class="o">(</span> <span class="n">children</span> <span class="o">)</span> <span class="o">}&lt;/</span><span class="n">li</span><span class="o">&gt;</span>
+
+  <span class="k">private</span> <span class="k">def</span> <span class="n">simpleOrComplex</span><span class="o">(</span> <span class="n">children</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Block</span><span class="o">]</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Node</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span> <span class="n">children</span><span class="o">.</span><span class="n">length</span> <span class="o">==</span> <span class="mi">1</span> <span class="o">)</span>
+      <span class="n">children</span><span class="o">.</span><span class="n">first</span> <span class="k">match</span> <span class="o">{</span>
+        <span class="k">case</span> <span class="nc">Paragraph</span><span class="o">(</span> <span class="n">spans</span><span class="o">,</span> <span class="k">_</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">spans</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="n">spanToXHTML</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span>
+        <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="n">children</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="n">blockToXHTML</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span>
+      <span class="o">}</span>
+    <span class="k">else</span>
+      <span class="n">children</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="n">blockToXHTML</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span>
+  <span class="o">}</span>
+
+  <span class="k">def</span> <span class="n">olToXHTML</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Block</span><span class="o">]</span> <span class="k">=&gt;</span> <span class="nc">Node</span> <span class="k">=</span>
+    <span class="n">items</span> <span class="k">=&gt;</span> <span class="o">&lt;</span><span class="n">ol</span><span class="o">&gt;{</span> <span class="n">items</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="n">blockToXHTML</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span> <span class="o">}&lt;/</span><span class="n">ol</span><span class="o">&gt;</span>
+
+  <span class="k">def</span> <span class="n">ulToXHTML</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Block</span><span class="o">]</span> <span class="k">=&gt;</span> <span class="nc">Node</span> <span class="k">=</span>
+    <span class="n">items</span> <span class="k">=&gt;</span> <span class="o">&lt;</span><span class="n">ul</span><span class="o">&gt;{</span> <span class="n">items</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="n">blockToXHTML</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span> <span class="o">}&lt;/</span><span class="n">ul</span><span class="o">&gt;</span>
+  
+  <span class="k">def</span> <span class="n">spanToXHTML</span> <span class="k">:</span> <span class="kt">Span</span> <span class="o">=&gt;</span> <span class="nc">Node</span> <span class="k">=</span> <span class="n">span</span> <span class="k">=&gt;</span> <span class="n">span</span> <span class="k">match</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="nc">Text</span><span class="o">(</span> <span class="n">content</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">textToXHTML</span><span class="o">(</span> <span class="n">content</span> <span class="o">)</span>
+    <span class="k">case</span> <span class="nc">HTMLSpan</span><span class="o">(</span> <span class="n">html</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">htmlSpanToXHTML</span><span class="o">(</span> <span class="n">html</span> <span class="o">)</span>
+    <span class="k">case</span> <span class="nc">CodeSpan</span><span class="o">(</span> <span class="n">code</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">codeSpanToXHTML</span><span class="o">(</span> <span class="n">code</span> <span class="o">)</span>
+    <span class="k">case</span> <span class="nc">Strong</span><span class="o">(</span> <span class="n">children</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">strongToXHTML</span><span class="o">(</span> <span class="n">children</span> <span class="o">)</span>
+    <span class="k">case</span> <span class="nc">Emphasis</span><span class="o">(</span> <span class="n">children</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">emphasisToXHTML</span><span class="o">(</span> <span class="n">children</span> <span class="o">)</span>
+    <span class="k">case</span> <span class="nc">Link</span><span class="o">(</span> <span class="n">children</span><span class="o">,</span> <span class="n">url</span><span class="o">,</span> <span class="n">title</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">linkToXHTML</span><span class="o">(</span> <span class="n">children</span><span class="o">,</span> <span class="n">url</span><span class="o">,</span> <span class="n">title</span> <span class="o">)</span>
+    <span class="k">case</span> <span class="nc">IndirectLink</span><span class="o">(</span> <span class="n">children</span><span class="o">,</span> <span class="n">definition</span> <span class="o">)</span> <span class="k">=&gt;</span>
+      <span class="n">linkToXHTML</span><span class="o">(</span> <span class="n">children</span><span class="o">,</span> <span class="n">definition</span><span class="o">.</span><span class="n">url</span><span class="o">,</span> <span class="n">definition</span><span class="o">.</span><span class="n">title</span> <span class="o">)</span>
+    <span class="k">case</span> <span class="nc">ImageLink</span><span class="o">(</span> <span class="n">children</span><span class="o">,</span> <span class="n">url</span><span class="o">,</span> <span class="n">title</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="n">imageLinkToXHTML</span><span class="o">(</span> <span class="n">children</span><span class="o">,</span> <span class="n">url</span><span class="o">,</span> <span class="n">title</span> <span class="o">)</span>
+    <span class="k">case</span> <span class="nc">IndirectImageLink</span><span class="o">(</span> <span class="n">children</span><span class="o">,</span> <span class="n">definition</span> <span class="o">)</span> <span class="k">=&gt;</span>
+      <span class="n">imageLinkToXHTML</span><span class="o">(</span> <span class="n">children</span><span class="o">,</span> <span class="n">definition</span><span class="o">.</span><span class="n">url</span><span class="o">,</span> <span class="n">definition</span><span class="o">.</span><span class="n">title</span> <span class="o">)</span>
+  <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">textToXHTML</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">=&gt;</span> <span class="nc">Node</span> <span class="k">=</span> <span class="n">content</span> <span class="k">=&gt;</span> <span class="nc">XMLText</span><span class="o">(</span> <span class="n">unescape</span><span class="o">(</span><span class="n">content</span><span class="o">)</span> <span class="o">)</span>
+  
+  <span class="k">def</span> <span class="n">htmlSpanToXHTML</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">=&gt;</span> <span class="nc">Node</span> <span class="k">=</span> <span class="n">html</span> <span class="k">=&gt;</span> <span class="nc">Unparsed</span><span class="o">(</span> <span class="n">html</span> <span class="o">)</span>
+  
+  <span class="k">def</span> <span class="n">codeSpanToXHTML</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">=&gt;</span> <span class="nc">Node</span> <span class="k">=</span> <span class="n">code</span> <span class="k">=&gt;</span> <span class="o">&lt;</span><span class="n">code</span><span class="o">&gt;{</span> <span class="n">code</span> <span class="o">}&lt;/</span><span class="n">code</span><span class="o">&gt;</span>
+  
+  <span class="k">def</span> <span class="n">strongToXHTML</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">]</span> <span class="k">=&gt;</span> <span class="nc">Node</span> <span class="k">=</span>
+    <span class="n">spans</span> <span class="k">=&gt;</span> <span class="o">&lt;</span><span class="n">strong</span><span class="o">&gt;{</span> <span class="n">spans</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="n">spanToXHTML</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span> <span class="o">}&lt;/</span><span class="n">strong</span><span class="o">&gt;</span>
+  
+  <span class="k">def</span> <span class="n">emphasisToXHTML</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">]</span> <span class="k">=&gt;</span> <span class="nc">Node</span> <span class="k">=</span>
+    <span class="n">spans</span> <span class="k">=&gt;</span> <span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;{</span> <span class="n">spans</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="n">spanToXHTML</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span> <span class="o">}&lt;/</span><span class="n">em</span><span class="o">&gt;</span>
+  
+  <span class="k">def</span> <span class="n">linkToXHTML</span> <span class="k">:</span> <span class="o">(</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">],</span> <span class="nc">String</span><span class="o">,</span> <span class="nc">Option</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="nc">Node</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="o">(</span> <span class="n">spans</span><span class="o">,</span> <span class="n">url</span><span class="o">,</span> <span class="n">title</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="o">&lt;</span><span class="n">a</span> <span class="n">href</span><span class="o">={</span> <span class="n">escapeURL</span><span class="o">(</span><span class="n">url</span><span class="o">)</span> <span class="o">}</span>
+                                   <span class="n">title</span><span class="o">={</span> <span class="n">title</span><span class="o">.</span><span class="n">getOrElse</span><span class="o">(</span><span class="kc">null</span><span class="o">)</span> <span class="o">}&gt;{</span>
+                                  <span class="n">spans</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="n">spanToXHTML</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span>
+                                <span class="o">}&lt;/</span><span class="n">a</span><span class="o">&gt;</span>
+  <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">imageLinkToXHTML</span> <span class="k">:</span> <span class="o">(</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">],</span> <span class="nc">String</span><span class="o">,</span> <span class="nc">Option</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="nc">Node</span> <span class="k">=</span> <span class="o">{</span>
+    <span class="o">(</span> <span class="n">spans</span><span class="o">,</span> <span class="n">url</span><span class="o">,</span> <span class="n">title</span> <span class="o">)</span> <span class="k">=&gt;</span> <span class="o">&lt;</span><span class="n">img</span> <span class="n">src</span><span class="o">={</span> <span class="n">url</span> <span class="o">}</span> <span class="n">title</span><span class="o">={</span> <span class="n">title</span><span class="o">.</span><span class="n">getOrElse</span><span class="o">(</span><span class="kc">null</span><span class="o">)</span> <span class="o">}</span>
+                                     <span class="n">alt</span><span class="o">={</span> <span class="n">spans</span><span class="o">.</span><span class="n">map</span><span class="o">(</span> <span class="n">spanToXHTML</span><span class="o">(</span><span class="n">_</span><span class="o">)</span> <span class="o">)</span> <span class="o">}</span> <span class="o">&gt;&lt;/</span><span class="n">img</span><span class="o">&gt;</span> 
+  <span class="o">}</span>
+  
+  <span class="k">def</span> <span class="n">escapeURL</span><span class="o">(</span> <span class="n">url</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">)</span> <span class="k">:</span> <span class="kt">Node</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span> <span class="n">url</span><span class="o">.</span><span class="n">startsWith</span><span class="o">(</span> <span class="s">&quot;mailto:&quot;</span> <span class="o">)</span> <span class="o">)</span> <span class="o">{</span>
+      <span class="k">val</span> <span class="n">rand</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">Random</span>
+      <span class="k">val</span> <span class="n">mixed</span> <span class="k">=</span> <span class="n">url</span><span class="o">.</span><span class="n">map</span> <span class="o">{</span> <span class="n">ch</span> <span class="k">=&gt;</span>
+        <span class="n">rand</span><span class="o">.</span><span class="n">nextInt</span><span class="o">(</span><span class="mi">2</span><span class="o">)</span> <span class="k">match</span> <span class="o">{</span>
+          <span class="k">case</span> <span class="mi">0</span> <span class="k">=&gt;</span> <span class="n">java</span><span class="o">.</span><span class="n">lang</span><span class="o">.</span><span class="nc">String</span><span class="o">.</span><span class="n">format</span><span class="o">(</span> <span class="s">&quot;&amp;#%d;&quot;</span><span class="o">,</span> <span class="n">int2Integer</span><span class="o">(</span> <span class="n">ch</span><span class="o">.</span><span class="n">toInt</span> <span class="o">)</span> <span class="o">)</span>
+          <span class="k">case</span> <span class="mi">1</span> <span class="k">=&gt;</span> <span class="n">java</span><span class="o">.</span><span class="n">lang</span><span class="o">.</span><span class="nc">String</span><span class="o">.</span><span class="n">format</span><span class="o">(</span> <span class="s">&quot;&amp;#x%s;&quot;</span><span class="o">,</span> <span class="n">ch</span><span class="o">.</span><span class="n">toInt</span><span class="o">.</span><span class="n">toHexString</span> <span class="o">)</span>
+        <span class="o">}</span>
+      <span class="o">}.</span><span class="n">mkString</span><span class="o">(</span><span class="s">&quot;&quot;</span><span class="o">)</span>
+      <span class="nc">Unparsed</span><span class="o">(</span> <span class="n">mixed</span> <span class="o">)</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+      <span class="nc">XMLText</span><span class="o">(</span> <span class="n">url</span> <span class="o">)</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+  
+  
+</pre></div>
+</td></tr><tr><td><p>TODO put this somewhere else</p></td><td><div class="highlight"><pre>  <span class="k">val</span> <span class="n">escapeableChars</span> <span class="k">=</span> <span class="nc">List</span><span class="o">(</span> <span class="s">&quot;\\&quot;</span><span class="o">,</span> <span class="s">&quot;`&quot;</span><span class="o">,</span> <span class="s">&quot;*&quot;</span><span class="o">,</span> <span class="s">&quot;_&quot;</span><span class="o">,</span> <span class="s">&quot;{&quot;</span><span class="o">,</span> <span class="s">&quot;}&quot;</span><span class="o">,</span> <span class="s">&quot;[&quot;</span><span class="o">,</span> <span class="s">&quot;]&quot;</span><span class="o">,</span> <span class="s">&quot;(&quot;</span><span class="o">,</span> <span class="s">&quot;)&quot;</span><span class="o">,</span> 
+                              <span class="s">&quot;#&quot;</span><span class="o">,</span> <span class="s">&quot;+&quot;</span><span class="o">,</span> <span class="s">&quot;-&quot;</span><span class="o">,</span> <span class="s">&quot;.&quot;</span><span class="o">,</span> <span class="s">&quot;!&quot;</span><span class="o">,</span> <span class="s">&quot;&gt;&quot;</span> <span class="o">)</span>
+
+  <span class="k">def</span> <span class="n">unescape</span><span class="o">(</span><span class="n">source</span><span class="k">:</span><span class="kt">String</span><span class="o">)</span><span class="k">:</span><span class="kt">String</span> <span class="o">=</span> <span class="o">{</span>
+      <span class="k">var</span> <span class="n">buf</span><span class="k">:</span><span class="kt">String</span> <span class="o">=</span> <span class="n">source</span>
+      <span class="k">for</span> <span class="o">((</span><span class="n">escaped</span><span class="o">,</span> <span class="n">unescaped</span><span class="o">)</span> <span class="k">&lt;-</span> <span class="n">escapeableChars</span><span class="o">.</span><span class="n">map</span><span class="o">(</span><span class="n">ch</span> <span class="k">=&gt;</span> <span class="o">(</span><span class="s">&quot;\\&quot;</span> <span class="o">+</span> <span class="n">ch</span><span class="o">,</span> <span class="n">ch</span><span class="o">)))</span>
+          <span class="n">buf</span> <span class="k">=</span> <span class="n">buf</span><span class="o">.</span><span class="n">replace</span><span class="o">(</span><span class="n">escaped</span><span class="o">,</span> <span class="n">unescaped</span><span class="o">)</span>
+      <span class="n">buf</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+</td></tr></tbody></table>
+  </div>
+<script type="text/javascript">
+$(function() {
+    var $navList = $("#nav-list"),
+        $change = $(".title .change-link");
+    
+    $change.click(function() { $navList.toggleClass("hidden") });
+});
+</script>
+</body>
+</html>

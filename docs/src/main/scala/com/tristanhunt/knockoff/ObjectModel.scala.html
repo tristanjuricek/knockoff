@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>ObjectModel.scala</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" href="../../../../../../res/style.css"></style>
+  <script type="text/javascript" 
+    src="../../../../../../res/jquery.js"></script>
+</head>
+<body>
+  <div id="container">
+    <h1 class="title">ObjectModel.scala&nbsp;<span class="change-link">Change</span></h1>
+    <ul id="nav-list" class="hidden">
+                    
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/Discounter.scala.html">src/main/scala/com/tristanhunt/knockoff/Discounter.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/MarkdownParsing.scala.html">src/main/scala/com/tristanhunt/knockoff/MarkdownParsing.scala</a></li>
+                                
+                <li class="active">src/main/scala/com/tristanhunt/knockoff/ObjectModel.scala</li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/StringExtras.scala.html">src/main/scala/com/tristanhunt/knockoff/StringExtras.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/TextWriter.scala.html">src/main/scala/com/tristanhunt/knockoff/TextWriter.scala</a></li>
+                                
+                <li><a href="../../../../../../src/main/scala/com/tristanhunt/knockoff/XHTMLWriter.scala.html">src/main/scala/com/tristanhunt/knockoff/XHTMLWriter.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/ChunkParsersSpec.scala.html">src/test/scala/com/tristanhunt/knockoff/ChunkParsersSpec.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/KnockoffIntegrationTests.scala.html">src/test/scala/com/tristanhunt/knockoff/KnockoffIntegrationTests.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/SpanConverterSpec.scala.html">src/test/scala/com/tristanhunt/knockoff/SpanConverterSpec.scala</a></li>
+                                
+                <li><a href="../../../../../../src/test/scala/com/tristanhunt/knockoff/StringExtrasSpec.scala.html">src/test/scala/com/tristanhunt/knockoff/StringExtrasSpec.scala</a></li>
+                        </ul>
+    <table><tbody><tr><td><h2>The Object Model</h2><p>The object model for Knockoff of course models the components of a Markdown
+document. If you have to extend these, you will run into complexity issues with
+any conversion format you want to extend into. Each new output format will need
+to take care of those new types.
+</p><h3>Spanning Elements</h3><p>Spanning elements either are strings that are simply tagged with specific
+meaning, which make them simple, or they are composed of sequences of those
+strings.
+</p><p>Links can be direct or indirect, or tagged as image variations of those links.
+</p></td><td><div class="highlight"><pre><span class="k">package</span> <span class="nn">com.tristanhunt.knockoff</span>
+
+<span class="k">import</span> <span class="nn">scala.io.</span><span class="o">{</span> <span class="nc">Source</span> <span class="o">}</span>
+<span class="k">import</span> <span class="nn">scala.util.parsing.input.</span><span class="o">{</span> <span class="nc">NoPosition</span><span class="o">,</span> <span class="nc">Position</span> <span class="o">}</span>
+
+<span class="k">trait</span> <span class="nc">Span</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Text</span><span class="o">(</span> <span class="n">content</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">)</span> <span class="k">extends</span> <span class="nc">Span</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">HTMLSpan</span><span class="o">(</span> <span class="n">html</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">)</span> <span class="k">extends</span> <span class="nc">Span</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">CodeSpan</span><span class="o">(</span> <span class="n">content</span> <span class="k">:</span> <span class="kt">String</span> <span class="o">)</span> <span class="k">extends</span> <span class="nc">Span</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Strong</span><span class="o">(</span> <span class="n">children</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">]</span> <span class="o">)</span> <span class="k">extends</span> <span class="nc">Span</span>
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Emphasis</span><span class="o">(</span> <span class="n">children</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">]</span> <span class="o">)</span> <span class="k">extends</span> <span class="nc">Span</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Link</span><span class="o">(</span> <span class="n">children</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">],</span> <span class="n">url</span> <span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">title</span> <span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="o">)</span>
+<span class="k">extends</span> <span class="nc">Span</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">IndirectLink</span><span class="o">(</span> <span class="n">children</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">],</span> <span class="n">definition</span> <span class="k">:</span> <span class="kt">LinkDefinition</span> <span class="o">)</span>
+<span class="k">extends</span> <span class="nc">Span</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">ImageLink</span><span class="o">(</span> <span class="n">children</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">],</span> <span class="n">url</span> <span class="k">:</span> <span class="kt">String</span><span class="o">,</span>
+                      <span class="n">title</span> <span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="o">)</span>
+<span class="k">extends</span> <span class="nc">Span</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">IndirectImageLink</span><span class="o">(</span> <span class="n">children</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">],</span>
+                              <span class="n">definition</span> <span class="k">:</span> <span class="kt">LinkDefinition</span> <span class="o">)</span>
+<span class="k">extends</span> <span class="nc">Span</span>
+</pre></div>
+</td></tr><tr><td><h3>Block Elements</h3><p>Most of the block elements contain sequences of spanning elements, and
+importantly, their parsing Position.
+</p><p>This position cannot currently be used to rebuild the actual source document,
+just mark where we found the start of the block.
+</p></td><td><div class="highlight"><pre><span class="k">trait</span> <span class="nc">Block</span> <span class="o">{</span> <span class="k">def</span> <span class="n">position</span> <span class="k">:</span> <span class="kt">Position</span> <span class="o">}</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Paragraph</span><span class="o">(</span> <span class="n">spans</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">],</span> <span class="n">position</span> <span class="k">:</span> <span class="kt">Position</span> <span class="o">)</span> <span class="k">extends</span> <span class="nc">Block</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Header</span><span class="o">(</span> <span class="n">level</span> <span class="k">:</span> <span class="kt">Int</span><span class="o">,</span> <span class="n">spans</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Span</span><span class="o">],</span> <span class="n">position</span> <span class="k">:</span> <span class="kt">Position</span> <span class="o">)</span>
+<span class="k">extends</span> <span class="nc">Block</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">LinkDefinition</span><span class="o">(</span> <span class="n">id</span> <span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">url</span> <span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">title</span> <span class="k">:</span> <span class="kt">Option</span><span class="o">[</span><span class="kt">String</span><span class="o">],</span>
+                           <span class="n">position</span> <span class="k">:</span> <span class="kt">Position</span> <span class="o">)</span>
+<span class="k">extends</span> <span class="nc">Block</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">Blockquote</span><span class="o">(</span> <span class="n">children</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Block</span><span class="o">],</span> <span class="n">position</span> <span class="k">:</span> <span class="kt">Position</span> <span class="o">)</span>
+<span class="k">extends</span> <span class="nc">Block</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">CodeBlock</span><span class="o">(</span> <span class="n">text</span> <span class="k">:</span> <span class="kt">Text</span><span class="o">,</span> <span class="n">position</span> <span class="k">:</span> <span class="kt">Position</span> <span class="o">)</span> <span class="k">extends</span> <span class="nc">Block</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">HorizontalRule</span><span class="o">(</span> <span class="n">position</span> <span class="k">:</span> <span class="kt">Position</span> <span class="o">)</span> <span class="k">extends</span> <span class="nc">Block</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">OrderedItem</span><span class="o">(</span> <span class="n">children</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Block</span><span class="o">],</span> <span class="n">position</span> <span class="k">:</span> <span class="kt">Position</span> <span class="o">)</span>
+<span class="k">extends</span> <span class="nc">Block</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">UnorderedItem</span><span class="o">(</span> <span class="n">children</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">Block</span><span class="o">],</span> <span class="n">position</span> <span class="k">:</span> <span class="kt">Position</span> <span class="o">)</span>
+<span class="k">extends</span> <span class="nc">Block</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">OrderedList</span><span class="o">(</span> <span class="n">items</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">OrderedItem</span><span class="o">]</span> <span class="o">)</span> <span class="k">extends</span> <span class="nc">Block</span> <span class="o">{</span>
+  <span class="k">lazy</span> <span class="k">val</span> <span class="n">position</span> <span class="k">=</span> <span class="k">if</span> <span class="o">(</span> <span class="n">items</span><span class="o">.</span><span class="n">isEmpty</span> <span class="o">)</span> <span class="nc">NoPosition</span> <span class="k">else</span> <span class="n">items</span><span class="o">.</span><span class="n">first</span><span class="o">.</span><span class="n">position</span>
+<span class="o">}</span>
+
+<span class="k">case</span> <span class="k">class</span> <span class="nc">UnorderedList</span><span class="o">(</span> <span class="n">items</span> <span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">UnorderedItem</span><span class="o">]</span> <span class="o">)</span> <span class="k">extends</span> <span class="nc">Block</span> <span class="o">{</span>
+  <span class="k">lazy</span> <span class="k">val</span> <span class="n">position</span> <span class="k">=</span> <span class="k">if</span> <span class="o">(</span> <span class="n">items</span><span class="o">.</span><span class="n">isEmpty</span> <span class="o">)</span> <span class="nc">NoPosition</span> <span class="k">else</span> <span class="n">items</span><span class="o">.</span><span class="n">first</span><span class="o">.</span><span class="n">position</span>      
+<span class="o">}</span>
+</pre></div>
+</td></tr></tbody></table>
+  </div>
+<script type="text/javascript">
+$(function() {
+    var $navList = $("#nav-list"),
+        $change = $(".title .change-link");
+    
+    $change.click(function() { $navList.toggleClass("hidden") });
+});
+</script>
+</body>
+</html>
