@@ -13,22 +13,16 @@ You can use the blocks returned from the `knockoff` method to do useful things, 
 
 ## Using the latest version
 
-In sbt:
+The short story, in an sbt project/Build.scala file:
 
-    val scalatools = "scalatools" at "http://scala-tools.org/repo-releases"
-    
-    val knockoff  = "com.tristanhunt" %% "knockoff" % "0.8.0-16"
+      lazy val root = Project("root", file(".")) dependsOn(knockoffProject)
+      lazy val knockoffProject = RootProject(uri(
+          "git://github.com/tristanjuricek/knockoff.git"))
 
-In maven:
-
-    <dependency>
-      <groupId>com.tristanhunt</groupId>
-      <artifactId>knockoff_2.8.1</artifactId>
-      <version>0.8.0-16</version>
-    </dependency>
+The longer version can be read on this [nice dev daily overview](http://www.devdaily.com/scala/using-github-projects-scala-library-dependencies-sbt-sbteclipse).
 
 ## More information
 
-See the [home page](http://tristanhunt.com/projects/knockoff) for more information: [http://tristanhunt.com/projects/knockoff](). This page is somewhat out-of-date, because I'm going to be altering my approach to the site's generation for a little bit.
+See the [home page](http://tristanhunt.com/projects/knockoff) for more information: [http://tristanhunt.com/projects/knockoff]().
 
 License is BSD. Patches are welcome, if the patch is clean, I'll probably accept it.
