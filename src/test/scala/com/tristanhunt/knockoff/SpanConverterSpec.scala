@@ -10,7 +10,7 @@ import scala.util.parsing.input.NoPosition
 class SpanConverterSpec extends Spec with ShouldMatchers {
 
   def convert( txt : String ) : List[Span] = convert( txt, Nil )
-  
+
   def convert( txt : String, defs : Seq[LinkDefinitionChunk] ) : List[Span] =
     new SpanConverter( defs )( TextChunk(txt) ).toList
 
@@ -20,19 +20,19 @@ class SpanConverterSpec extends Spec with ShouldMatchers {
       convert( txt ) should equal {
         List( Text("a "), CodeSpan("code1"), Text(" and a "), CodeSpan("code 2") ) }
     }
-    
+
     it("should not care about other elements in the code") {
       val txt = "This `code block *with em*` is OK"
       convert( txt ) should equal {
         List( Text("This "), CodeSpan( "code block *with em*" ), Text(" is OK") ) }
     }
-      
+
     it("double-tick code markers should preserve whitespace") {
       val txt = "AA `` ` `` BB"
       convert( txt ) should equal {
         List( Text("AA "), CodeSpan(" ` "), Text(" BB") ) }
     }
-  
+
     it("should match emphasis underscores containing asterix emphases") {
       val txt = "an _underscore *and block* em_"
       convert( txt ) should equal {
@@ -52,17 +52,16 @@ class SpanConverterSpec extends Spec with ShouldMatchers {
                             Text(" strong") ) ) )
       }
     }
-  
+
     it("should find an <a> and an <img>") {
-      val txt = """with <a href="http://example.com">a link</a> and an 
-                  |<img src="foo.img"/> ha!""".stripMargin
+      val txt = """with <a href="http://example.com">a link</a> and an <img src="foo.img"/> ha!"""
       convert( txt ) should equal {
         List( Text("with "),
               HTMLSpan("""<a href="http://example.com">a link</a>"""),
-              Text(" and an \n"), HTMLSpan("""<img src="foo.img"/>"""),
+              Text(" and an "), HTMLSpan("""<img src="foo.img"/>"""),
               Text(" ha!") ) }
     }
-      
+
     it("should wrap a <span> that contains another <span>") {
       val txt = """a <span class="container">contains <span>something</span>
                   | else</span> without a problem <br /> !""".stripMargin
@@ -72,20 +71,20 @@ class SpanConverterSpec extends Spec with ShouldMatchers {
                         "<span>something</span>\n else</span>" ),
               Text(" without a problem "), HTMLSpan("<br />"), Text(" !") ) }
     }
-      
+
     it("should find a couple of entities and pass them through") {
       val txt = "an &amp; and an &em; are in here"
       convert( txt ) should equal {
         List( Text("an "), HTMLSpan("&amp;"), Text(" and an "), HTMLSpan("&em;"),
               Text(" are in here") ) }
     }
-      
+
     it("should handle HTML headers defined in text") {
       val txt = "<h2 id=\"overview\">Overview</h2>"
       convert( txt ) should equal {
         List( HTMLSpan("<h2 id=\"overview\">Overview</h2>") ) }
     }
-  
+
     it("should discover inline, image, automatic, and reference links") {
       val defs = List( new LinkDefinitionChunk( "link1", "http://example.com",
                                                 Some("title") ) )
@@ -105,7 +104,7 @@ class SpanConverterSpec extends Spec with ShouldMatchers {
               Link( List(Text("reference link")), "http://example.com",
                     Some("title") ) ) }
     }
-      
+
     it("should hande link references in different case") {
       val defs = List( new LinkDefinitionChunk( "link 1", "http://example.com/1",
                                                 None ),
@@ -117,21 +116,30 @@ class SpanConverterSpec extends Spec with ShouldMatchers {
               Text(" and "),
               Link( List(Text("link 2")), "http://example.com/2", None ) ) }
     }
-  
+
     it("should escape asterixes in content") {
       val txt = """an \*escaped\* emphasis"""
       convert( txt ) should equal( List( Text("""an \*escaped\* emphasis""") ) )
     }
-      
+
     it("should escape backticks in content") {
       val txt = """an escaped \' backtick"""
       convert( txt ) should equal( List( Text("""an escaped \' backtick""") ) )
     }
-      
+
     it("should ignore backslashes in code") {
       val txt = """a backslash `\` in code"""
       convert( txt ) should equal(
         List( Text("""a backslash """), CodeSpan("\\"), Text(""" in code""") ) )
+    }
+
+    it("should parse links ending in brackets") {
+      var text = """a [link](http://example.com/path_(foo))"""
+      var parsed = List( Text("a "),
+                         Link( List(Text("link")),
+                               "http://example.com/path_(foo)",
+                               None))
+      convert(text) should equal (parsed)
     }
   }
 }

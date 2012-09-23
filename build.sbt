@@ -2,20 +2,47 @@ name := "knockoff"
 
 organization := "com.tristanhunt"
 
-version := "0.8.0-16"
+version := "0.8.1"
 
-// I'm not sure how this can be automated for multiple versions like it
-// used to be. Knockoff should be buildable from version 2.7.5
 scalaVersion := "2.9.2"
 
 crossScalaVersions := Seq(
-  "2.9.2", "2.9.1-1", "2.9.1",
-  "2.9.0-1", "2.9.0", "2.8.2", "2.8.1"
+  "2.9.2", "2.9.1-1", "2.9.1", "2.9.0-1", "2.9.0", "2.8.2"
 )
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "1.7.2" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "1.8" % "test"
 
-publishTo := Some("scala-tools.org releases" at 
-                  "http://nexus.scala-tools.org/content/repositories/releases/")
+// Publishing setup to Sonatype's OSS hosting.
+//
+// We generally do not publish anything but releases for this project.
 
-credentials +=  Credentials(Path.userHome / ".ivy2" / "credentials_scala-tools")
+publishMavenStyle := true
+
+// Do not publish test artifacts
+publishArtifact in Test := false
+
+pomExtra := (
+  <url>http://tristanjuricek.com/knockoff</url>
+  <licenses>
+    <license>
+      <name>BSD-style</name>
+      <url>https://github.com/tristanjuricek/knockoff/blob/master/license.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>git://github.com/tristanjuricek/knockoff.git</url>
+    <connection>scm:git:git@github.com:tristanjuricek/knockoff.git</connection>
+  </scm>
+  <developers>
+    <developer>
+      <id>tristanjuricek</id>
+      <name>Tristan Juricek</name>
+      <url>http://tristanjuricek.com</url>
+    </developer>
+  </developers>)
+
+publishTo := Some("Sonatype releases" at
+                  "https://oss.sonatype.org/service/local/staging/deploy/maven2")
+
+credentials +=  Credentials(Path.userHome / ".sbt" / "sonatype.sbt")
