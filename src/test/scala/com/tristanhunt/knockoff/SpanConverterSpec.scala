@@ -132,5 +132,14 @@ class SpanConverterSpec extends Spec with ShouldMatchers {
       convert( txt ) should equal(
         List( Text("""a backslash """), CodeSpan("\\"), Text(""" in code""") ) )
     }
+
+    it("should parse links ending in brackets") {
+      var text = """a [link](http://example.com/path_(foo))"""
+      var parsed = List( Text("a "),
+                         Link( List(Text("link")),
+                               "http://example.com/path_(foo)",
+                               None))
+      convert(text) should equal (parsed)
+    }
   }
 }

@@ -83,7 +83,7 @@ object DefaultDiscounter extends Discounter with ConsoleLogger {
     }
     if ( args.contains("--version") || args.contains("-shortversion") ) {
       Console.err.println( "0.7.1-SNAPSHOT" )
-      return 0
+      return
     }
 
     if ( args.isEmpty ) {

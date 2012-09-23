@@ -2,7 +2,7 @@ name := "knockoff"
 
 organization := "com.tristanhunt"
 
-version := "0.8.0-16"
+version := "0.8.1"
 
 scalaVersion := "2.9.2"
 

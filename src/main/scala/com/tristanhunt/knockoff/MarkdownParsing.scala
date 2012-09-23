@@ -626,11 +626,11 @@ extends Function1[ Chunk, Seq[Span] ] with StringExtras {
                       Some('\\') )
 
   val matchDoubleCodes =
-    new DelimMatcher( "``", s => CodeSpan( s.first.asInstanceOf[Text].content ),
+    new DelimMatcher( "``", s => CodeSpan( s.head.asInstanceOf[Text].content ),
                       false, None )
 
   val matchSingleCodes =
-    new DelimMatcher( "`", s => CodeSpan( s.first.asInstanceOf[Text].content ),
+    new DelimMatcher( "`", s => CodeSpan( s.head.asInstanceOf[Text].content ),
                       false, None )
 
 
@@ -727,26 +727,68 @@ extends Function1[ Chunk, Seq[Span] ] with StringExtras {
       SpanMatch( aMatch.start, before, link, aMatch.after.toOption )
     }
 
-  def findNormalMatch( source : String ) : Option[SpanMatch] =
-    normalLinks.findFirstMatchIn( source )
-               .flatMap { matchr => findNormalMatch( source, matchr ) }
+  // Finds links in the format [name](link) for normal links or ![name](link)
+  // for images.
+  def findNormalMatch( source : String ) : Option[SpanMatch] = {
+    var imageIdx = source.indexOf('!')
 
-  def findNormalMatch( source : String, matchr : Match ) : Option[ SpanMatch ] = {
-    val isImage     = matchr.group(1) == "!" || matchr.group(4) == "!"
-    val hasTitle    = matchr.group(7) != null
-    val wrapped     = if( hasTitle ) matchr.group(5) else matchr.group(2)
-    val url         = if( hasTitle ) matchr.group(6) else matchr.group(3)
-    val titleOption = if ( hasTitle ) Some( matchr.group(7) ) else None
-    val before = matchr.before.toOption.map( Text(_) )
-    val link = if ( isImage ) ImageLink( convert(wrapped, Nil), url, titleOption )
-               else Link( convert(wrapped, Nil), url, titleOption )
-    Some( SpanMatch( matchr.start, before, link, matchr.after.toOption ) )
+    val firstOpen = source.indexOf('[')
+    if ( firstOpen == -1 ) return None
+
+    val firstClose =
+      source.findBalanced('[', ']', firstOpen).getOrElse( return None )
+
+    val wrapped = source.substring( firstOpen + 1, firstClose )
+
+    val secondPart = source.substring( firstClose + 1 )
+
+    val secondMatch = """^\s*(\()""".r.findFirstMatchIn( secondPart ).getOrElse( return None )
+
+    val secondOpen = secondMatch.start(1)
+
+    var secondClose =
+      secondPart.findBalanced( '(', ')', secondOpen ).get
+
+    if ( secondClose == -1 ) return None
+
+    var titleMatcher = """<?([\S&&[^)>]]*)>?[\t ]+"([^)]*)"""".r // "
+
+    var linkContent = secondPart.substring( secondOpen + 1, secondClose )
+
+    var titleOpt:Option[String] = None
+    var url:String = ""
+
+    titleMatcher.findFirstMatchIn(linkContent) match {
+      case Some(matcher) =>
+        url = matcher.group(1)
+        titleOpt = Some(matcher.group(2))
+
+      case None =>
+        url = linkContent
+        titleOpt = None
+    }
+
+    """<(.*)>""".r.findFirstMatchIn(url).foreach( x => url = x.group(1) )
+
+    val link = if (imageIdx < firstOpen && imageIdx != -1)
+                 ImageLink( convert(wrapped, Nil), url, titleOpt )
+               else
+                 Link( convert(wrapped, Nil), url, titleOpt )
+
+    val start = if (imageIdx != -1) Math.min( imageIdx, firstOpen )
+                else firstOpen
+
+    val beforeOpt = if (start > 0) Some( Text( source.substring(0, start) ) )
+                    else None
+
+    val close = firstClose + secondClose + 1
+
+    val afterOpt = if (source.length > close + 1)
+                      Some( source.substring(close + 1))
+                   else None
+
+    Some( SpanMatch( start, beforeOpt, link, afterOpt ) )
   }
-
-  val normalLinks =
-    ( """(!?)\[([^\]]*)\][\t ]*\(<?([\S&&[^)>]]*)>?\)|""" +
-      """(!?)\[([^\]]*)\][\t ]*\(<?([\S&&[^)>]]*)>?[\t ]+"([^)]*)"\)""" ).r
-
 
   /** We have to match parens, to support this stuff: [wr [app] ed] [thing] */
   def findReferenceMatch( source : String ) : Option[SpanMatch] = {

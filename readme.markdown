@@ -3,7 +3,7 @@
 This is a simple Markdown to object model to XHTML system.
 
     import com.tristanhunt.knockoff.DefaultDiscounter._
-    
+
     toXHTML(knockoff("""# My Markdown Content """))
 
 You can use the blocks returned from the `knockoff` method to do useful things, like fetch the header:
@@ -21,8 +21,10 @@ The short story, in an sbt project/Build.scala file:
 
 The longer version can be read on this [nice dev daily overview](http://www.devdaily.com/scala/using-github-projects-scala-library-dependencies-sbt-sbteclipse).
 
+I do publish versions to the sonatype repository.
+
 ## More information
 
-See the [home page](http://tristanhunt.com/projects/knockoff) for more information: [http://tristanhunt.com/projects/knockoff]().
+See the [home page](http://tristanjuricek.com/knockoff) for more information: [http://tristanjuricek.com/knockoff]().
 
 License is BSD. Patches are welcome, if the patch is clean, I'll probably accept it.
