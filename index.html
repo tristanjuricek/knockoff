@@ -85,11 +85,11 @@ toXHTML( knockoff(markdownString) )</code></pre>
 
 <p> (You can use tab completion.) </p>
 
-<p> Use Scala's <code>"""</code> delimiter to create a markdown document as a 
+<p> Use Scala's <code>"""</code> delimiter to create a markdown document as a
 string for messing around. It should look like this: </p>
 
 <pre>scala&gt; val markdown = """# I'm the *title*
-     | 
+     |
      | And I'm a paragraph"""</pre>
 
 <p> Kind of funky, but if you run into issues, this is really, really handy for
@@ -113,15 +113,20 @@ want the text of it, convert it: </p>
 <pre> toXHTML(headers) </pre>
 
 <p> It's things like this that you might want to use to seed information in
-a templating system based on actual data within the markdown file. You know, 
+a templating system based on actual data within the markdown file. You know,
 like the HTML title or a table of contents. </p>
 
 <h2 id="Using"> Using from SBT </h2>
 
+<p> Knockoff is hosted via Sonatype repositories, which should make it easy
+    to include: </p>
+
+<pre><code> libraryDependencies += "com.tristanhunt" %% "knockoff" % "0.8.1" </code></pre>
+
 <p> Knockoff can be downloaded and built automatically from Github, which is
     the current recommended way of pulling it into your project. </p>
 
-<p> A great way to read about this feature of sbt is to read 
+<p> A great way to read about this feature of sbt is to read
     <a href="http://www.devdaily.com/scala/using-github-projects-scala-library-dependencies-sbt-sbteclipse">this article from the Dev Daily blog.</a> </p>
 
 <h2 id="Building"> Building </h2>
