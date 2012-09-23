@@ -81,10 +81,13 @@ extends Block
 case class UnorderedItem( children : Seq[Block], position : Position )
 extends Block
 
+case class HTMLBlock( html: String, position: Position )
+extends Block
+
 case class OrderedList( items : Seq[OrderedItem] ) extends Block {
-  lazy val position = if ( items.isEmpty ) NoPosition else items.first.position
+  lazy val position = if ( items.isEmpty ) NoPosition else items.head.position
 }
 
 case class UnorderedList( items : Seq[UnorderedItem] ) extends Block {
-  lazy val position = if ( items.isEmpty ) NoPosition else items.first.position      
+  lazy val position = if ( items.isEmpty ) NoPosition else items.head.position
 }

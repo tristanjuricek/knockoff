@@ -98,7 +98,7 @@ class ChunkParser extends RegexParsers with StringExtras {
   def chunk : Parser[ Chunk ] = {
     horizontalRule | leadingStrongTextBlock | leadingEmTextBlock | bulletItem |
     numberedItem | indentedChunk | header | blockquote | linkDefinition |
-    textBlockWithBreak | textBlock | emptyLines | emptySpace
+    htmlBlock | textBlockWithBreak | textBlock | emptyLines | emptySpace
   }
 
   def emptyLines : Parser[ Chunk ] =
@@ -221,6 +221,56 @@ class ChunkParser extends RegexParsers with StringExtras {
       case ~( idAndURL, titleOpt ) =>
         LinkDefinitionChunk( idAndURL._1, idAndURL._2, titleOpt ) }
 
+  def htmlBlock = new Parser[Chunk] {
+
+    def apply( in : Reader[Char] ) : ParseResult[Chunk] = {
+      findStart( in, new StringBuilder ) match {
+        case Some((tagName, sb, rest)) =>
+          findEnd( rest, tagName, 1, sb, new StringBuilder ) match {
+
+            case Some((text, rest)) =>
+              Success( HTMLChunk(text), rest )
+
+            case None =>
+              Failure("No end tag found for " + tagName, in)
+          }
+
+        case None =>
+          Failure("No HTML start tag found", in)
+      }
+    }
+
+    private val startElement = """^<[ ]*([a-zA-Z0-9:_]+)[ \t]*[^>]*?(/?+)>""".r
+
+    def findStart(in: Reader[Char], sb: StringBuilder): Option[(String, StringBuilder, Reader[Char])] = {
+      if ( ! in.atEnd ) sb.append(in.first)
+      if ( in.atEnd || in.first == '\n' ) return None
+      startElement.findFirstMatchIn(sb.toString).foreach { matcher =>
+        return Some((matcher.group(1), sb, in.rest))
+      }
+      findStart(in.rest, sb)
+    }
+
+    def findEnd(in: Reader[Char], tagName: String, openCount: Int,
+                sb: StringBuilder, buf: StringBuilder): Option[(String, Reader[Char])] = {
+      if ( ! in.atEnd ) {
+        sb.append(in.first)
+        buf.append(in.first)
+      }
+      if ( in.atEnd ) return None
+      ("(?i)<[ ]*" + tagName + "[ ]*[^>]*>").r.findFirstMatchIn( buf.toString ).foreach { matcher =>
+        return findEnd(in.rest, tagName, openCount + 1, sb, new StringBuilder )
+      }
+      ("(?i)</[ ]*" + tagName + "[ ]*>").r.findFirstMatchIn( buf.toString ).foreach { matcher =>
+        if (openCount == 1)
+          return Some((sb.toString, in.rest))
+        else
+          return findEnd( in.rest, tagName, openCount - 1, sb, new StringBuilder )
+      }
+      findEnd(in.rest, tagName, openCount, sb, buf)
+    }
+  }
+
   private def linkIDAndURL : Parser[ (String, String) ] =
     """[ ]{0,3}\[[^\[\]]*\]:[ ]+<?[\w\p{Punct}]+>?""".r ^^ { linkString =>
       val linkMatch = """^\[([^\[\]]+)\]:[ ]+<?([\w\p{Punct}]+)>?$""".r
@@ -261,6 +311,16 @@ trait Chunk {
                       remaining : List[ (Chunk, Seq[Span], Position) ],
                       spans : Seq[Span], position : Position,
                       discounter : Discounter )
+}
+
+case class HTMLChunk( content: String ) extends Chunk {
+
+  def appendNewBlock( list : ListBuffer[Block],
+                      remaining : List[ (Chunk, Seq[Span], Position) ],
+                      spans : Seq[Span], position : Position,
+                      discounter : Discounter ) {
+    list += HTMLBlock(content, position)
+  }
 }
 
 /*

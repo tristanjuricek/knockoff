@@ -1,0 +1,11 @@
+In knockoff you can add blocks of HTML.
+
+<div class="paragraph"><div class="line">
+
+I'm a line
+
+</div></div>
+
+The line *must* start with HTML. It will then look for closing tags.
+
+It's probably slow.

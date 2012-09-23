@@ -20,11 +20,11 @@ trait XHTMLWriter {
 
   /** Backwards compatibility? *cough* */
   def toXML( blocks : Seq[Block] ) : Node = toXHTML( blocks )
-  
+
   /** Creates a Group representation of the document. */
   def toXHTML( blocks : Seq[Block] ) : Node =
     Group( blocks.map( blockToXHTML(_) ) )
-  
+
   def blockToXHTML : Block => Node = block => block match {
     case Paragraph( spans, _ ) => paragraphToXHTML( spans )
     case Header( level, spans, _ ) => headerToXHTML( level, spans )
@@ -36,8 +36,11 @@ trait XHTMLWriter {
     case UnorderedItem( children, _ ) => liToXHTML( children )
     case OrderedList( items ) => olToXHTML( items )
     case UnorderedList( items ) => ulToXHTML( items )
+    case HTMLBlock( content, _ ) => htmlBlockToXHTML( content )
   }
-  
+
+  def htmlBlockToXHTML : String => Node = html => Unparsed( html )
+
   def paragraphToXHTML : Seq[Span] => Node = spans => {
     def isHTML( s : Span ) = s match {
       case y : HTMLSpan => true
@@ -49,7 +52,7 @@ trait XHTMLWriter {
     else
       <p>{ spans.map( spanToXHTML(_) ) }</p>
   }
-  
+
   def headerToXHTML : ( Int, Seq[Span] ) => Node = (level, spans) => {
     val spanned = spans.map( spanToXHTML(_) )
     level match {
@@ -65,12 +68,12 @@ trait XHTMLWriter {
 
   def blockquoteToXHTML : Seq[Block] => Node =
     children => <blockquote>{ children.map( blockToXHTML(_) ) }</blockquote>
-  
+
   def codeToXHTML : Text => Node =
     text => <pre><code>{ text.content }</code></pre>
-    
+
   def hrXHTML : Node = <hr/>
-  
+
   def liToXHTML : Seq[Block] => Node =
     children => <li>{ simpleOrComplex( children ) }</li>
 
@@ -89,7 +92,7 @@ trait XHTMLWriter {
 
   def ulToXHTML : Seq[Block] => Node =
     items => <ul>{ items.map( blockToXHTML(_) ) }</ul>
-  
+
   def spanToXHTML : Span => Node = span => span match {
     case Text( content ) => textToXHTML( content )
     case HTMLSpan( html ) => htmlSpanToXHTML( html )
@@ -103,31 +106,31 @@ trait XHTMLWriter {
     case IndirectImageLink( children, definition ) =>
       imageLinkToXHTML( children, definition.url, definition.title )
   }
-  
+
   def textToXHTML : String => Node = content => XMLText( unescape(content) )
-  
+
   def htmlSpanToXHTML : String => Node = html => Unparsed( html )
-  
+
   def codeSpanToXHTML : String => Node = code => <code>{ code }</code>
-  
+
   def strongToXHTML : Seq[Span] => Node =
     spans => <strong>{ spans.map( spanToXHTML(_) ) }</strong>
-  
+
   def emphasisToXHTML : Seq[Span] => Node =
     spans => <em>{ spans.map( spanToXHTML(_) ) }</em>
-  
+
   def linkToXHTML : ( Seq[Span], String, Option[String] ) => Node = {
     ( spans, url, title ) => <a href={ escapeURL(url) }
                                    title={ title.getOrElse(null) }>{
                                   spans.map( spanToXHTML(_) )
                                 }</a>
   }
-  
+
   def imageLinkToXHTML : ( Seq[Span], String, Option[String] ) => Node = {
     ( spans, url, title ) => <img src={ url } title={ title.getOrElse(null) }
-                                     alt={ spans.map( spanToXHTML(_) ) } ></img> 
+                                     alt={ spans.map( spanToXHTML(_) ) } ></img>
   }
-  
+
   def escapeURL( url : String ) : Node = {
     if ( url.startsWith( "mailto:" ) ) {
       val rand = new Random
@@ -142,9 +145,9 @@ trait XHTMLWriter {
       XMLText( url )
     }
   }
-  
+
   // TODO put this somewhere else
-  val escapeableChars = List( "\\", "`", "*", "_", "{", "}", "[", "]", "(", ")", 
+  val escapeableChars = List( "\\", "`", "*", "_", "{", "}", "[", "]", "(", ")",
                               "#", "+", "-", ".", "!", ">" )
 
   def unescape(source:String):String = {
