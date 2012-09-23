@@ -42,7 +42,7 @@ pomExtra := (
     </developer>
   </developers>)
 
-publishTo := Some("Sonatype releases" at
+publishTo := Some("knockoff Sonatype releases" at
                   "https://oss.sonatype.org/service/local/staging/deploy/maven2")
 
-credentials +=  Credentials(Path.userHome / ".sbt" / "sonatype.sbt")
+credentials += Credentials(Path.userHome / ".sbt" / "sonatype.sbt")

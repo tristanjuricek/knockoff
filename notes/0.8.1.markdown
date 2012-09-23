@@ -1,0 +1,21 @@
+HTML blocks have been added to the object model. This allows you to append HTML
+around markdown lines, that might have whitespace.
+
+Example:
+
+    This is a markdown line.
+
+    <div class="section">
+        <h1> A title </h1>
+
+        <p> A line </p>
+    </div>
+
+    This is some more markdown.
+
+knockoff is now published via Sonatype to ibiblio.
+
+There were other bugs fixed:
+
+* Stack overflow error with an empty code block [#17](https://github.com/tristanjuricek/knockoff/issues/17)
+* Match parens within HTML links [#29](https://github.com/tristanjuricek/knockoff/issues/29)
