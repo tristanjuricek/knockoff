@@ -422,7 +422,7 @@ case class IndentedChunk( val content : String ) extends Chunk {
                       spans : Seq[Span], position : Position,
                       discounter : Discounter ) {
     if ( list.isEmpty ) {
-      spans.first match {
+      spans.head match {
         case text : Text => list += CodeBlock( text, position )
       }
     } else {
@@ -439,14 +439,14 @@ case class IndentedChunk( val content : String ) extends Chunk {
           list.update( list.length - 1, UnorderedList( items.take( items.length - 1) ++ List(li) ) )
 
         case CodeBlock( text, position ) =>
-          spans.first match {
+          spans.head match {
             case next : Text =>
               list.update( list.length - 1,
                            CodeBlock(Text(text.content + next.content), position) )
           }
 
         case _ =>
-          spans.first match {
+          spans.head match {
             case text : Text => list += CodeBlock( text, position )
           }
       }
