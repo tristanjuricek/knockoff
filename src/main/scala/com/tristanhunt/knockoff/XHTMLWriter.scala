@@ -79,7 +79,7 @@ trait XHTMLWriter {
 
   private def simpleOrComplex( children : Seq[Block] ) : Seq[Node] = {
     if ( children.length == 1 )
-      children.first match {
+      children.head match {
         case Paragraph( spans, _ ) => spans.map( spanToXHTML(_) )
         case _ => children.map( blockToXHTML(_) )
       }
