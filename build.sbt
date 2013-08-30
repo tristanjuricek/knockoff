@@ -4,7 +4,7 @@ organization := "com.tristanhunt"
 
 version := "0.8.1"
 
-scalaVersion := "2.10.0"
+scalaVersion := "2.10.2"
 
 scalacOptions <++= scalaVersion map {
   case sv if sv startsWith "2.10" => Seq("-language:implicitConversions")
@@ -12,7 +12,7 @@ scalacOptions <++= scalaVersion map {
 }
 
 crossScalaVersions := Seq(
-  "2.10.0",
+  "2.10.2", "2.10.1", "2.10.0",
   "2.9.2", "2.9.1-1", "2.9.1", "2.9.0-1", "2.9.0",
   "2.8.2"
 )

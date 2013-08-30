@@ -11,10 +11,10 @@ import scala.xml.{ Node, XML }
 
 //@RunWith(classOf[JUnitRunner])
 class KnockoffIntegrationTests extends Spec with ShouldMatchers {
-  
-  
+
+
   val basedir = "src/test/resources/tests"
-  
+
   val jtidy = {
     val tidy = new Tidy
     tidy.setXmlOut(true)
@@ -24,27 +24,27 @@ class KnockoffIntegrationTests extends Spec with ShouldMatchers {
     tidy.setForceOutput( true )
     tidy
   }
-  
+
   def file( src : String, child : String ) = new File( src, child )
-  
+
   def writeString( node : Node ) : String = {
     val sw = new StringWriter
     XML.write( sw, node, "UTF-8", false, null )
     sw.toString
   }
-  
+
   def tidy( src : String ) = {
     val reader = new StringReader( src )
     val writer = new StringWriter
     jtidy.parse( reader, writer )
     XML.loadString( writer.toString )
   }
-  
+
   def normalizeSpace( str : String ) : String =
     str.replaceAll( "\\s+", " " )
-  
+
   class FileHelper( wrapped : File ) {
-    
+
     /** Try to match files based on the fromExt to the toExt. */
     def listTests( fromExt : String, toExt : String ) : Seq[ (File, File) ] = {
       val endsWithFrom = new FileFilter {
@@ -56,7 +56,7 @@ class KnockoffIntegrationTests extends Spec with ShouldMatchers {
                       from.getName.replace( fromExt, toExt ) )
       files.map( f => (f, mapName(f)) )
     }
-    
+
     /** A version that will actually compile under 2.8. */
     def text : String = {
       val reader = new BufferedReader( new FileReader( wrapped ) )
@@ -73,9 +73,9 @@ class KnockoffIntegrationTests extends Spec with ShouldMatchers {
       lines.mkString("\n")
     }
   }
-  
+
   implicit def FileHelper( f : File ) = new FileHelper( f )
-  
+
   // Skipped because attributes are printed in order causing test failures
   describe( "Discounter" ) {
     import DefaultDiscounter._
@@ -86,10 +86,10 @@ class KnockoffIntegrationTests extends Spec with ShouldMatchers {
         to should be ('exists)
         println( "Test: " + from.getName )
         val fromXHTML = writeString( toXHTML( knockoff( from.text ) ) )
-        // tidy( fromXHTML ) should equal ( tidy( to.text ) )
+        //tidy( fromXHTML ) should equal ( tidy( to.text ) )
       }
     }
-    
+
     it( "should convert tests from Markdown to plain text" ) {
       val dir = file( basedir, "discounter_markdown-text" )
       dir.listTests(".markdown", ".txt").foreach { case (from, to) =>
