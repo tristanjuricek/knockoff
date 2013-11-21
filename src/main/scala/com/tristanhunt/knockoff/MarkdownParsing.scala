@@ -46,6 +46,7 @@ any errors in the document if possible. Errors are logged and we move ahead.
 
 package com.tristanhunt.knockoff
 
+import scala.annotation.tailrec
 import scala.util.parsing.combinator.Parsers
 import scala.util.parsing.input.{ CharSequenceReader, Position, Reader }
 import scala.util.logging.Logged
@@ -251,23 +252,31 @@ class ChunkParser extends RegexParsers with StringExtras {
       findStart(in.rest, sb)
     }
 
+    @tailrec
     def findEnd(in: Reader[Char], tagName: String, openCount: Int,
                 sb: StringBuilder, buf: StringBuilder): Option[(String, Reader[Char])] = {
-      if ( ! in.atEnd ) {
+      if (!in.atEnd) {
         sb.append(in.first)
         buf.append(in.first)
       }
-      if ( in.atEnd ) return None
-      ("(?i)<[ ]*" + tagName + "[ ]*[^>]*>").r.findFirstMatchIn( buf.toString ).foreach { matcher =>
-        return findEnd(in.rest, tagName, openCount + 1, sb, new StringBuilder )
+      if (in.atEnd) return None
+      var openCountArg = openCount
+      var bufArg = buf
+      ("(?i)<[ ]*" + tagName + "[ ]*[^>]*>").r.findFirstMatchIn(buf.toString) match {
+        case Some(matcher) ⇒
+          openCountArg = openCount + 1
+          bufArg = new StringBuilder
+        case None ⇒
+          ("(?i)</[ ]*" + tagName + "[ ]*>").r.findFirstMatchIn(buf.toString) match {
+            case Some(matcher) if openCount == 1 ⇒
+              return Some((sb.toString, in.rest))
+            case Some(matcher) ⇒
+              openCountArg = openCount - 1
+              bufArg = new StringBuilder
+            case None ⇒
+          }
       }
-      ("(?i)</[ ]*" + tagName + "[ ]*>").r.findFirstMatchIn( buf.toString ).foreach { matcher =>
-        if (openCount == 1)
-          return Some((sb.toString, in.rest))
-        else
-          return findEnd( in.rest, tagName, openCount - 1, sb, new StringBuilder )
-      }
-      findEnd(in.rest, tagName, openCount, sb, buf)
+      findEnd(in.rest, tagName, openCountArg, sb, bufArg)
     }
   }
 
