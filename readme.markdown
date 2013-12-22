@@ -11,18 +11,6 @@ You can use the blocks returned from the `knockoff` method to do useful things, 
     val blocks = knockoff("""# My markdown""")
     blocks.find( _.isInstanceOf[Header] ).map( toText ).getOrElse( "No header" )
 
-## Using the latest version
-
-The short story, in an sbt project/Build.scala file:
-
-      lazy val root = Project("root", file(".")) dependsOn(knockoffProject)
-      lazy val knockoffProject = RootProject(uri(
-          "git://github.com/tristanjuricek/knockoff.git"))
-
-The longer version can be read on this [nice dev daily overview](http://www.devdaily.com/scala/using-github-projects-scala-library-dependencies-sbt-sbteclipse).
-
-I do publish versions to the sonatype repository.
-
 ## More information
 
 See the [home page](http://tristanjuricek.com/knockoff) for more information: [http://tristanjuricek.com/knockoff]().

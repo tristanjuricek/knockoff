@@ -10,3 +10,5 @@ target/
 *.sublime-workspace
 .ensime_lucene
 .ensime
+.idea
+*.iml

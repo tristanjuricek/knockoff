@@ -1,7 +1,8 @@
 package com.tristanhunt.knockoff
 
 import java.io._
-//import org.junit.runner.RunWith
+import org.junit.runner.RunWith
+
 import org.scalatest.matchers._
 import org.scalatest._
 import org.scalatest.junit.JUnitRunner
@@ -9,7 +10,7 @@ import org.w3c.tidy.Tidy
 import scala.collection.mutable.ListBuffer
 import scala.xml.{ Node, XML }
 
-//@RunWith(classOf[JUnitRunner])
+@RunWith(classOf[JUnitRunner])
 class KnockoffIntegrationTests extends Spec with ShouldMatchers {
 
 
