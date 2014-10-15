@@ -3,11 +3,10 @@ package com.tristanhunt.knockoff
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest._
-import org.scalatest.matchers._
 import scala.util.parsing.input.NoPosition
 
 @RunWith(classOf[JUnitRunner])
-class SpanConverterSpec extends Spec with ShouldMatchers {
+class SpanConverterSpec extends FunSpec with Matchers {
 
   def convert( txt : String ) : List[Span] = convert( txt, Nil )
 
