@@ -11,7 +11,7 @@ import scala.collection.mutable.ListBuffer
 import scala.xml.{ Node, XML }
 
 @RunWith(classOf[JUnitRunner])
-class KnockoffIntegrationTests extends Spec with ShouldMatchers {
+class KnockoffIntegrationTests extends FunSpecLike with ShouldMatchers {
 
 
   val basedir = "src/test/resources/tests"

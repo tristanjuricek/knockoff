@@ -75,9 +75,8 @@ The `--html4tags` argument will just do nothing, but not be processed as a file.
 */
 
 import java.io.File
-import scala.util.logging.ConsoleLogger
 
-object DefaultDiscounter extends Discounter with ConsoleLogger {
+object DefaultDiscounter extends Discounter {
   def main(args: Array[String]): Unit = try {
     if (args.contains("--version")) {
       Console.err.print("DefaultDiscounter ")

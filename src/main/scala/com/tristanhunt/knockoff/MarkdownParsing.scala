@@ -48,9 +48,8 @@ package com.tristanhunt.knockoff
 
 import scala.annotation.tailrec
 import scala.util.parsing.input.{CharSequenceReader, Position, Reader}
-import scala.util.logging.Logged
 
-trait ChunkStreamFactory extends Logged {
+trait ChunkStreamFactory  {
 
   /** Overridable factory method. */
   def newChunkParser: ChunkParser = new ChunkParser
@@ -64,13 +63,9 @@ trait ChunkStreamFactory extends Logged {
     if (reader.atEnd) return Stream.empty
     chunkParser.parse(chunkParser.chunk, reader) match {
       case chunkParser.Error(msg, next) => {
-        log(msg)
-        log("next == reader : " + (next == reader))
         createChunkStream(next)
       }
       case chunkParser.Failure(msg, next) => {
-        log(msg)
-        log("next == reader : " + (next == reader))
         createChunkStream(next)
       }
       case chunkParser.Success(result, next) => {
