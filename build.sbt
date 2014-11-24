@@ -6,6 +6,8 @@ scalaVersion:="2.10.4"
 
 crossScalaVersions := Seq("2.10.4", "2.11.4")
 
+organization := "com.tristanhunt"
+
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.2.2" % "test",
   "junit" % "junit" % "4.11" % "test",
