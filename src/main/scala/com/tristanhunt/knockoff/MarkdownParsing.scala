@@ -94,6 +94,15 @@ class ChunkParser extends RegexParsers with StringExtras {
     horizontalRule | leadingStrongTextBlock | leadingEmTextBlock | bulletItem |
       numberedItem | indentedChunk | header | blockquote | linkDefinition |
       htmlBlock | textBlockWithBreak | textBlock | emptyLines | emptySpace
+  } ^^ {
+    // Remove an unnecessary trailing line break from Chunk.
+    case BlockquotedChunk(content)   => BlockquotedChunk(dropTrailingBreak(content))
+    case HeaderChunk(level, content) => HeaderChunk(level, dropTrailingBreak(content))
+    case IndentedChunk(content)      => IndentedChunk(dropTrailingBreak(content))
+    case NumberedLineChunk(content)  => NumberedLineChunk(dropTrailingBreak(content))
+    case TextChunk(content)          => TextChunk(dropTrailingBreak(content))
+    case BulletLineChunk(content)    => BulletLineChunk(dropTrailingBreak(content))
+    case chunk => chunk
   }
 
   def emptyLines: Parser[Chunk] =
@@ -311,6 +320,14 @@ class ChunkParser extends RegexParsers with StringExtras {
   /** Take a series of very similar chunks and group them. */
   private def foldedString(texts: List[Chunk]): String =
     ("" /: texts)((current, text) => current + text.content)
+
+  private def dropTrailingBreak(content : String) : String =
+    content match {
+      case s if s.endsWith("\r\n") => s.stripSuffix("\r\n")
+      case s if s.endsWith("\r") => s.stripSuffix("\r")
+      case s if s.endsWith("\n") => s.stripSuffix("\n")
+      case s => s
+    }
 }
 
 /*
@@ -415,7 +432,7 @@ case class HeaderChunk(val level: Int, val content: String) extends Chunk {
 }
 
 case object HorizontalRuleChunk extends Chunk {
-  val content = "* * *\n"
+  val content = "* * *"
 
   def appendNewBlock(list: ListBuffer[Block],
                      remaining: List[(Chunk, Seq[Span], Position)],
