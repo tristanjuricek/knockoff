@@ -3,10 +3,9 @@ package com.tristanhunt.knockoff
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest._
-import org.scalatest.matchers._
 
 @RunWith(classOf[JUnitRunner])
-class StringExtrasSpec extends FunSpecLike with ShouldMatchers with StringExtras {
+class StringExtrasSpec extends FunSpecLike with Matchers with StringExtras {
     
   describe("StringExtras") {
     it( "should find two different groups of the same time" ) {

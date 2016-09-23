@@ -3,11 +3,10 @@ package com.tristanhunt.knockoff
 //import org.junit.runner.RunWith
 import org.scalatest.junit._
 import org.junit.runner._
-import org.scalatest.matchers._
 import org.scalatest._
 
 @RunWith(classOf[JUnitRunner])
-class ChunkParsersSpec extends ChunkParser with FunSpecLike with ShouldMatchers {
+class ChunkParsersSpec extends ChunkParser with FunSpecLike with Matchers {
 
   describe("ChunkParser") {
     it("should handle simple bullet items") {
