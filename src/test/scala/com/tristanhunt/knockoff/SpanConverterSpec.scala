@@ -152,7 +152,7 @@ class SpanConverterSpec extends FunSpecLike with ShouldMatchers {
     }
 
     it("should parse a link definition with preceding exclamation mark and text") {
-       var text = """! a [link](http://example.com/path_(foo))"""
+      val text = """! a [link](http://example.com/path_(foo))"""
       var parsed = List( Text("! a "),
                          Link( List(Text("link")),
                                "http://example.com/path_(foo)",

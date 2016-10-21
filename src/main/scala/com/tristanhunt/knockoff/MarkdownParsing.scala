@@ -818,14 +818,16 @@ class SpanConverter(definitions: Seq[LinkDefinitionChunk])
   // Finds links in the format [name](link) for normal links or ![name](link)
   // for images.
   def findNormalMatch(source: String): Option[SpanMatch] = {
-    var imageIdx = source.indexOf('!')
-
     val firstOpen = source.indexOf('[')
     if (firstOpen == -1) return None
+
+    val imageIdx = source.indexOf('!')
+    val isImage = imageIdx + 1 == firstOpen // only image if "!" directly precedes starting "["
 
     val firstClose =
       source.findBalanced('[', ']', firstOpen).getOrElse(return None)
 
+    // text wrapped between '[' and ']'
     val wrapped = source.substring(firstOpen + 1, firstClose)
 
     val secondPart = source.substring(firstClose + 1)
@@ -834,37 +836,34 @@ class SpanConverter(definitions: Seq[LinkDefinitionChunk])
 
     val secondOpen = secondMatch.start(1)
 
-    var secondClose =
-      secondPart.findBalanced('(', ')', secondOpen).get
+    val secondClose = secondPart.findBalanced('(', ')', secondOpen).get
 
     if (secondClose == -1) return None
 
-    var titleMatcher = """<?([\S&&[^)>]]*)>?[\t ]+"([^)]*)"""".r // "
+    val titleMatcher = """<?([\S&&[^)>]]*)>?[\t ]+"([^)]*)"""".r // "
 
-    var linkContent = secondPart.substring(secondOpen + 1, secondClose)
+    val linkContent = secondPart.substring(secondOpen + 1, secondClose)
 
-    var titleOpt: Option[String] = None
-    var url: String = ""
+    val (titleOpt, _url) = {
+      titleMatcher.findFirstMatchIn(linkContent) match {
+        case Some(matcher) =>
+          (Some(matcher.group(2)), matcher.group(1))
 
-    titleMatcher.findFirstMatchIn(linkContent) match {
-      case Some(matcher) =>
-        url = matcher.group(1)
-        titleOpt = Some(matcher.group(2))
-
-      case None =>
-        url = linkContent
-        titleOpt = None
+        case None =>
+          (None, linkContent)
+      }
     }
 
-    """<(.*)>""".r.findFirstMatchIn(url).foreach(x => url = x.group(1))
+    val url = """<(.*)>""".r.findFirstMatchIn(_url).map(_.group(1)).getOrElse(_url)
 
-    val link = if (imageIdx < firstOpen && imageIdx != -1)
+    val link = if (isImage) {
       ImageLink(convert(wrapped, Nil), url, titleOpt)
-    else
+    } else {
       Link(convert(wrapped, Nil), url, titleOpt)
+    }
 
-    val start = if (imageIdx != -1) Math.min(imageIdx, firstOpen)
-    else firstOpen
+    // where the link definition starts
+    val start = if (isImage) imageIdx else firstOpen
 
     val beforeOpt = if (start > 0) Some(Text(source.substring(0, start)))
     else None
