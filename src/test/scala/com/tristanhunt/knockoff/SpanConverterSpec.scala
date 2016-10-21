@@ -141,5 +141,23 @@ class SpanConverterSpec extends FunSpecLike with ShouldMatchers {
                                None))
       convert(text) should equal (parsed)
     }
+
+    it("should parse an image definition") {
+       var text = """![image](http://example.com/path_(foo))"""
+      var parsed = List(
+                         ImageLink( List(Text("image")),
+                               "http://example.com/path_(foo)",
+                               None))
+      convert(text) should equal (parsed)
+    }
+
+    it("should parse a link definition with preceding exclamation mark and text") {
+       var text = """! a [link](http://example.com/path_(foo))"""
+      var parsed = List( Text("! a "),
+                         Link( List(Text("link")),
+                               "http://example.com/path_(foo)",
+                               None))
+      convert(text) should equal (parsed)
+    }
   }
 }
