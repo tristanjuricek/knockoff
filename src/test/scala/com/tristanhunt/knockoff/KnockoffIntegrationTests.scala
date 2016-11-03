@@ -3,7 +3,6 @@ package com.tristanhunt.knockoff
 import java.io._
 import org.junit.runner.RunWith
 
-import org.scalatest.matchers._
 import org.scalatest._
 import org.scalatest.junit.JUnitRunner
 import org.w3c.tidy.Tidy
@@ -11,7 +10,7 @@ import scala.collection.mutable.ListBuffer
 import scala.xml.{ Node, XML }
 
 @RunWith(classOf[JUnitRunner])
-class KnockoffIntegrationTests extends FunSpecLike with ShouldMatchers {
+class KnockoffIntegrationTests extends FunSpecLike with Matchers {
 
 
   val basedir = "src/test/resources/tests"
