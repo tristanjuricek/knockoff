@@ -7,7 +7,7 @@ import org.scalatest.matchers._
 import scala.util.parsing.input.NoPosition
 
 @RunWith(classOf[JUnitRunner])
-class SpanConverterSpec extends FunSpecLike with ShouldMatchers {
+class SpanConverterSpec extends FunSpecLike with Matchers {
 
   def convert( txt : String ) : List[Span] = convert( txt, Nil )
 

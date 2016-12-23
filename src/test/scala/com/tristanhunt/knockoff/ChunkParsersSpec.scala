@@ -7,7 +7,7 @@ import org.scalatest.matchers._
 import org.scalatest._
 
 @RunWith(classOf[JUnitRunner])
-class ChunkParsersSpec extends ChunkParser with FunSpecLike with ShouldMatchers {
+class ChunkParsersSpec extends ChunkParser with FunSpecLike with Matchers {
 
   describe("ChunkParser") {
     it("should handle simple bullet items") {
